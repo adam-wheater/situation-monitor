@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Module Tests</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <style>
+        body { font-family: monospace; background: #111; color: #0f0; padding: 20px; }
+        .pass { color: #0f0; }
+        .fail { color: #f00; }
+        .test-group { margin: 20px 0; padding: 10px; border: 1px solid #333; }
+        h2 { color: #0ff; margin: 0 0 10px 0; }
+        .result { padding: 2px 0; }
+    </style>
+</head>
+<body>
+    <h1>Module Test Results</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        const results = document.getElementById('results');
+        let totalPass = 0;
+        let totalFail = 0;
+
+        function log(module, test, passed, error = null) {
+            const div = document.createElement('div');
+            div.className = `result ${passed ? 'pass' : 'fail'}`;
+            div.textContent = `${passed ? '✓' : '✗'} ${module}: ${test}${error ? ' - ' + error : ''}`;
+            results.appendChild(div);
+            if (passed) totalPass++; else totalFail++;
+        }
+
+        function createGroup(name) {
+            const group = document.createElement('div');
+            group.className = 'test-group';
+            group.innerHTML = `<h2>${name}</h2>`;
+            results.appendChild(group);
+            return group;
+        }
+
+        async function runTests() {
+            // Test 1: constants.js
+            const group1 = createGroup('constants.js');
+            try {
+                const constants = await import('./js/constants.js');
+                log('constants', 'Module loads', true);
+                log('constants', 'PANELS defined', !!constants.PANELS);
+                log('constants', 'FEEDS defined', !!constants.FEEDS);
+                log('constants', 'ALERT_KEYWORDS defined', Array.isArray(constants.ALERT_KEYWORDS));
+                log('constants', 'INTEL_HOTSPOTS defined', Array.isArray(constants.INTEL_HOTSPOTS));
+                log('constants', 'CORRELATION_TOPICS defined', Array.isArray(constants.CORRELATION_TOPICS));
+                log('constants', 'NARRATIVE_PATTERNS defined', Array.isArray(constants.NARRATIVE_PATTERNS));
+                log('constants', 'US_CITIES count > 0', constants.US_CITIES?.length > 0);
+                log('constants', 'SECTORS count > 0', constants.SECTORS?.length > 0);
+            } catch (e) {
+                log('constants', 'Module loads', false, e.message);
+            }
+
+            // Test 2: utils.js
+            const group2 = createGroup('utils.js');
+            try {
+                const utils = await import('./js/utils.js');
+                log('utils', 'Module loads', true);
+                log('utils', 'getTimeAgo exists', typeof utils.getTimeAgo === 'function');
+                log('utils', 'timeAgo exists', typeof utils.timeAgo === 'function');
+                log('utils', 'escapeHtml exists', typeof utils.escapeHtml === 'function');
+                log('utils', 'setStatus exists', typeof utils.setStatus === 'function');
+
+                // Functional tests
+                const timeResult = utils.timeAgo(new Date().toISOString());
+                log('utils', 'timeAgo returns string', typeof timeResult === 'string');
+
+                const escaped = utils.escapeHtml('<script>alert("xss")</script>');
+                log('utils', 'escapeHtml works', escaped.includes('&lt;'));
+            } catch (e) {
+                log('utils', 'Module loads', false, e.message);
+            }
+
+            // Test 3: data.js
+            const group3 = createGroup('data.js');
+            try {
+                const data = await import('./js/data.js');
+                log('data', 'Module loads', true);
+                log('data', 'fetchWithProxy exists', typeof data.fetchWithProxy === 'function');
+                log('data', 'fetchFeed exists', typeof data.fetchFeed === 'function');
+                log('data', 'fetchCategory exists', typeof data.fetchCategory === 'function');
+                log('data', 'fetchMarkets exists', typeof data.fetchMarkets === 'function');
+                log('data', 'fetchSectors exists', typeof data.fetchSectors === 'function');
+                log('data', 'fetchCommodities exists', typeof data.fetchCommodities === 'function');
+                log('data', 'fetchEarthquakes exists', typeof data.fetchEarthquakes === 'function');
+                log('data', 'hasAlertKeyword exists', typeof data.hasAlertKeyword === 'function');
+
+                // Functional test
+                const isAlert = data.hasAlertKeyword('Breaking: Nuclear attack warning');
+                log('data', 'hasAlertKeyword detects alert', isAlert === true);
+            } catch (e) {
+                log('data', 'Module loads', false, e.message);
+            }
+
+            // Test 4: popups.js
+            const group4 = createGroup('popups.js');
+            try {
+                const popups = await import('./js/popups.js');
+                log('popups', 'Module loads', true);
+                log('popups', 'showHotspotPopup exists', typeof popups.showHotspotPopup === 'function');
+                log('popups', 'hideHotspotPopup exists', typeof popups.hideHotspotPopup === 'function');
+                log('popups', 'showConflictPopup exists', typeof popups.showConflictPopup === 'function');
+                log('popups', 'showUSCityPopup exists', typeof popups.showUSCityPopup === 'function');
+                log('popups', 'showChokepointPopup exists', typeof popups.showChokepointPopup === 'function');
+                log('popups', 'showQuakePopup exists', typeof popups.showQuakePopup === 'function');
+                log('popups', 'showAircraftPopup exists', typeof popups.showAircraftPopup === 'function');
+                log('popups', 'hideAllPopups exists', typeof popups.hideAllPopups === 'function');
+            } catch (e) {
+                log('popups', 'Module loads', false, e.message);
+            }
+
+            // Test 5: map.js
+            const group5 = createGroup('map.js');
+            try {
+                const map = await import('./js/map.js');
+                log('map', 'Module loads', true);
+                log('map', 'renderGlobalMap exists', typeof map.renderGlobalMap === 'function');
+                log('map', 'mapZoomIn exists', typeof map.mapZoomIn === 'function');
+                log('map', 'mapZoomOut exists', typeof map.mapZoomOut === 'function');
+                log('map', 'mapZoomReset exists', typeof map.mapZoomReset === 'function');
+                log('map', 'setMapView exists', typeof map.setMapView === 'function');
+                log('map', 'analyzeHotspotActivity exists', typeof map.analyzeHotspotActivity === 'function');
+                log('map', 'calculateNewsDensity exists', typeof map.calculateNewsDensity === 'function');
+                log('map', 'loadWorldMap exists', typeof map.loadWorldMap === 'function');
+                log('map', 'initMapPan exists', typeof map.initMapPan === 'function');
+            } catch (e) {
+                log('map', 'Module loads', false, e.message);
+            }
+
+            // Test 6: layers.js
+            const group6 = createGroup('layers.js');
+            try {
+                const layers = await import('./js/layers.js');
+                log('layers', 'Module loads', true);
+                log('layers', 'mapLayers object exists', typeof layers.mapLayers === 'object');
+                log('layers', 'toggleLayer exists', typeof layers.toggleLayer === 'function');
+                log('layers', 'toggleSatelliteLayer exists', typeof layers.toggleSatelliteLayer === 'function');
+                log('layers', 'fetchFlightData exists', typeof layers.fetchFlightData === 'function');
+                log('layers', 'classifyAircraft exists', typeof layers.classifyAircraft === 'function');
+                log('layers', 'getAircraftArrow exists', typeof layers.getAircraftArrow === 'function');
+
+                // Functional tests
+                const arrow = layers.getAircraftArrow(90);
+                log('layers', 'getAircraftArrow returns arrow', arrow === '→');
+
+                const type = layers.classifyAircraft('RCH123', 'United States');
+                log('layers', 'classifyAircraft detects military', type === 'military');
+            } catch (e) {
+                log('layers', 'Module loads', false, e.message);
+            }
+
+            // Test 7: panels.js
+            const group7 = createGroup('panels.js');
+            try {
+                const panels = await import('./js/panels.js');
+                log('panels', 'Module loads', true);
+                log('panels', 'isPanelEnabled exists', typeof panels.isPanelEnabled === 'function');
+                log('panels', 'togglePanel exists', typeof panels.togglePanel === 'function');
+                log('panels', 'getPanelSettings exists', typeof panels.getPanelSettings === 'function');
+                log('panels', 'savePanelSettings exists', typeof panels.savePanelSettings === 'function');
+                log('panels', 'applyPanelSettings exists', typeof panels.applyPanelSettings === 'function');
+                log('panels', 'initDragAndDrop exists', typeof panels.initDragAndDrop === 'function');
+                log('panels', 'extractYouTubeId exists', typeof panels.extractYouTubeId === 'function');
+
+                // Functional tests
+                const ytId = panels.extractYouTubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+                log('panels', 'extractYouTubeId works', ytId === 'dQw4w9WgXcQ');
+
+                const enabled = panels.isPanelEnabled('map');
+                log('panels', 'isPanelEnabled returns boolean', typeof enabled === 'boolean');
+            } catch (e) {
+                log('panels', 'Module loads', false, e.message);
+            }
+
+            // Test 8: renderers.js
+            const group8 = createGroup('renderers.js');
+            try {
+                const renderers = await import('./js/renderers.js');
+                log('renderers', 'Module loads', true);
+                log('renderers', 'renderNews exists', typeof renderers.renderNews === 'function');
+                log('renderers', 'renderMarkets exists', typeof renderers.renderMarkets === 'function');
+                log('renderers', 'renderHeatmap exists', typeof renderers.renderHeatmap === 'function');
+                log('renderers', 'renderCommodities exists', typeof renderers.renderCommodities === 'function');
+                log('renderers', 'renderPolymarket exists', typeof renderers.renderPolymarket === 'function');
+                log('renderers', 'renderCongressTrades exists', typeof renderers.renderCongressTrades === 'function');
+                log('renderers', 'renderMainCharacter exists', typeof renderers.renderMainCharacter === 'function');
+                log('renderers', 'renderIntelFeed exists', typeof renderers.renderIntelFeed === 'function');
+                log('renderers', 'renderMoneyPrinter exists', typeof renderers.renderMoneyPrinter === 'function');
+            } catch (e) {
+                log('renderers', 'Module loads', false, e.message);
+            }
+
+            // Test 9: intelligence.js
+            const group9 = createGroup('intelligence.js');
+            try {
+                const intel = await import('./js/intelligence.js');
+                log('intelligence', 'Module loads', true);
+                log('intelligence', 'analyzeCorrelations exists', typeof intel.analyzeCorrelations === 'function');
+                log('intelligence', 'renderCorrelationEngine exists', typeof intel.renderCorrelationEngine === 'function');
+                log('intelligence', 'analyzeNarratives exists', typeof intel.analyzeNarratives === 'function');
+                log('intelligence', 'renderNarrativeTracker exists', typeof intel.renderNarrativeTracker === 'function');
+                log('intelligence', 'calculateMainCharacter exists', typeof intel.calculateMainCharacter === 'function');
+                log('intelligence', 'detectRegions exists', typeof intel.detectRegions === 'function');
+                log('intelligence', 'detectTopics exists', typeof intel.detectTopics === 'function');
+
+                // Functional tests
+                const mockNews = [
+                    { title: 'Trump announces new tariffs on China', source: 'Reuters' },
+                    { title: 'Biden responds to tariff announcement', source: 'AP' },
+                    { title: 'Federal Reserve considers rate cut', source: 'WSJ' }
+                ];
+                const mainChar = intel.calculateMainCharacter(mockNews);
+                log('intelligence', 'calculateMainCharacter returns array', Array.isArray(mainChar));
+
+                const regions = intel.detectRegions('Ukraine conflict escalates near Kyiv');
+                log('intelligence', 'detectRegions finds Ukraine', regions.includes('Ukraine'));
+            } catch (e) {
+                log('intelligence', 'Module loads', false, e.message);
+            }
+
+            // Test 10: monitors.js
+            const group10 = createGroup('monitors.js');
+            try {
+                const monitors = await import('./js/monitors.js');
+                log('monitors', 'Module loads', true);
+                log('monitors', 'loadMonitors exists', typeof monitors.loadMonitors === 'function');
+                log('monitors', 'saveMonitors exists', typeof monitors.saveMonitors === 'function');
+                log('monitors', 'renderMonitorsList exists', typeof monitors.renderMonitorsList === 'function');
+                log('monitors', 'openMonitorForm exists', typeof monitors.openMonitorForm === 'function');
+                log('monitors', 'closeMonitorForm exists', typeof monitors.closeMonitorForm === 'function');
+                log('monitors', 'saveMonitor exists', typeof monitors.saveMonitor === 'function');
+                log('monitors', 'scanMonitorsForMatches exists', typeof monitors.scanMonitorsForMatches === 'function');
+                log('monitors', 'getMonitorHotspots exists', typeof monitors.getMonitorHotspots === 'function');
+
+                // Functional test
+                const loaded = monitors.loadMonitors();
+                log('monitors', 'loadMonitors returns array', Array.isArray(loaded));
+            } catch (e) {
+                log('monitors', 'Module loads', false, e.message);
+            }
+
+            // Test 11: main.js
+            const group11 = createGroup('main.js');
+            try {
+                const main = await import('./js/main.js');
+                log('main', 'Module loads', true);
+                log('main', 'window.refreshAll exposed', typeof window.refreshAll === 'function');
+                log('main', 'window.togglePanel exposed', typeof window.togglePanel === 'function');
+                log('main', 'window.toggleSettings exposed', typeof window.toggleSettings === 'function');
+                log('main', 'window.mapZoomIn exposed', typeof window.mapZoomIn === 'function');
+                log('main', 'window.setMapView exposed', typeof window.setMapView === 'function');
+                log('main', 'window.openMonitorForm exposed', typeof window.openMonitorForm === 'function');
+                log('main', 'window.showHotspotPopup exposed', typeof window.showHotspotPopup === 'function');
+            } catch (e) {
+                log('main', 'Module loads', false, e.message);
+            }
+
+            // Summary
+            const summary = document.createElement('div');
+            summary.className = 'test-group';
+            summary.innerHTML = `
+                <h2>SUMMARY</h2>
+                <div class="pass">Passed: ${totalPass}</div>
+                <div class="fail">Failed: ${totalFail}</div>
+                <div style="color: ${totalFail === 0 ? '#0f0' : '#f00'}; font-size: 20px; margin-top: 10px;">
+                    ${totalFail === 0 ? '✓ ALL TESTS PASSED' : '✗ SOME TESTS FAILED'}
+                </div>
+            `;
+            results.appendChild(summary);
+        }
+
+        runTests();
+    </script>
+</body>
+</html>
