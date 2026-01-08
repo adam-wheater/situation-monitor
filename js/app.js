@@ -835,6 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ========== PENTAGON TRACKER (BESTTIME) ==========
 const PENTAGON_TRACKER_STORAGE_KEY = 'pentagonTrackerSettings';
+const BESTTIME_PRIVATE_KEY_STORAGE_KEY = 'besttimeApiKeyPrivate';
 const DEFAULT_PENTAGON_LOCATIONS = [
     { id: 'pentagon', name: 'Pentagon', lat: 38.8719, lng: -77.0563, radiusM: 30000 }
 ];
@@ -849,6 +850,15 @@ function getPentagonTrackerSettings() {
 
         let apiKeyPrivate = typeof parsed?.apiKeyPrivate === 'string' ? parsed.apiKeyPrivate : '';
         apiKeyPrivate = (apiKeyPrivate || '').trim();
+
+        // Fallback: a dedicated storage key makes this resilient if the settings blob is missing/corrupt.
+        if (!apiKeyPrivate) {
+            try {
+                const fallback = (localStorage.getItem(BESTTIME_PRIVATE_KEY_STORAGE_KEY) || '').trim();
+                if (fallback) apiKeyPrivate = fallback;
+            } catch { }
+        }
+
         // If an old bad value was stored (e.g. a URL), treat it as missing (and self-heal storage).
         const lowered = apiKeyPrivate.toLowerCase();
         const looksLikeUrl = lowered.includes('://') || lowered.startsWith('http') || lowered.includes('localhost') || lowered.includes('127.0.0.1');
@@ -863,6 +873,8 @@ function getPentagonTrackerSettings() {
             locations
         };
     } catch {
+        // If the settings blob is corrupt, clear it so future saves work normally.
+        try { localStorage.removeItem(PENTAGON_TRACKER_STORAGE_KEY); } catch { }
         return { apiKeyPrivate: '', locations: DEFAULT_PENTAGON_LOCATIONS };
     }
 }
@@ -901,6 +913,8 @@ function saveBestTimePrivateKey() {
 
     const settings = getPentagonTrackerSettings();
     savePentagonTrackerSettings({ ...settings, apiKeyPrivate });
+    try { localStorage.setItem(BESTTIME_PRIVATE_KEY_STORAGE_KEY, apiKeyPrivate); } catch { }
+    try { setStatus('Pentagon Tracker: key saved'); } catch { }
     renderPentagonLocationsList();
     refreshAll();
 }
@@ -1113,28 +1127,94 @@ function classifyBestTimeVenues(venues) {
 
 function getBestTimeVenueBusyText(v) {
     // BestTime responses vary by plan and endpoint flags.
+    const toFinite = (val) => {
+        if (val === null || val === undefined) return null;
+        const n = (typeof val === 'string') ? Number(val) : val;
+        return Number.isFinite(n) ? n : null;
+    };
+
     const live = v?.venue_live;
     if (live && typeof live === 'object') {
-        const busy = live?.busy;
-        const density = live?.venue_live_busyness || live?.venue_live_forecasted_busyness;
-        if (Number.isFinite(busy)) return `${busy}% busy`;
-        if (Number.isFinite(density)) return `${density}% busy`;
+        const numericCandidates = [
+            live?.busy,
+            live?.busyness,
+            live?.venue_live_busyness,
+            live?.venue_live_forecasted_busyness,
+            live?.current_busyness,
+            live?.current_density
+        ];
+        for (const cand of numericCandidates) {
+            const n = toFinite(cand);
+            if (n !== null) return `${Math.round(n)}% busy`;
+        }
+
+        const statusCandidates = [
+            live?.venue_live_busyness_status,
+            live?.busyness_status,
+            live?.status
+        ];
+        for (const s of statusCandidates) {
+            if (typeof s === 'string' && s.trim()) return s.trim();
+        }
     }
-    if (Number.isFinite(v?.busy)) return `${v.busy}% busy`;
-    if (Number.isFinite(v?.busyness)) return `${v.busyness}% busy`;
+
+    const rootNumericCandidates = [
+        v?.busy,
+        v?.busyness,
+        v?.venue_live_busyness,
+        v?.venue_live_forecasted_busyness,
+        v?.current_busyness,
+        v?.current_density
+    ];
+    for (const cand of rootNumericCandidates) {
+        const n = toFinite(cand);
+        if (n !== null) return `${Math.round(n)}% busy`;
+    }
+
+    const rootStatusCandidates = [v?.busyness_status, v?.venue_live_busyness_status, v?.status];
+    for (const s of rootStatusCandidates) {
+        if (typeof s === 'string' && s.trim()) return s.trim();
+    }
+
     return '';
 }
 
 function getBestTimeVenueCurrentBusyPercent(v) {
+    const toFinite = (val) => {
+        if (val === null || val === undefined) return null;
+        const n = (typeof val === 'string') ? Number(val) : val;
+        return Number.isFinite(n) ? n : null;
+    };
+
     const live = v?.venue_live;
     if (live && typeof live === 'object') {
-        const busy = live?.busy;
-        const density = live?.venue_live_busyness || live?.venue_live_forecasted_busyness;
-        if (Number.isFinite(busy)) return busy;
-        if (Number.isFinite(density)) return density;
+        const candidates = [
+            live?.busy,
+            live?.busyness,
+            live?.venue_live_busyness,
+            live?.venue_live_forecasted_busyness,
+            live?.current_busyness,
+            live?.current_density
+        ];
+        for (const cand of candidates) {
+            const n = toFinite(cand);
+            if (n !== null) return n;
+        }
     }
-    if (Number.isFinite(v?.busy)) return v.busy;
-    if (Number.isFinite(v?.busyness)) return v.busyness;
+
+    const rootCandidates = [
+        v?.busy,
+        v?.busyness,
+        v?.venue_live_busyness,
+        v?.venue_live_forecasted_busyness,
+        v?.current_busyness,
+        v?.current_density
+    ];
+    for (const cand of rootCandidates) {
+        const n = toFinite(cand);
+        if (n !== null) return n;
+    }
+
     return null;
 }
 
@@ -1299,7 +1379,24 @@ function renderPentagonTracker(resultByLocation) {
 
 async function fetchPentagonTracker() {
     const settings = getPentagonTrackerSettings();
-    const apiKeyPrivate = (settings.apiKeyPrivate || '').trim();
+    let apiKeyPrivate = (settings.apiKeyPrivate || '').trim();
+
+    // UX: if the user has a key in the input (e.g. autofill) but hasn't clicked "Save key" yet,
+    // use it automatically and persist it.
+    if (!apiKeyPrivate) {
+        const keyInput = document.getElementById('besttimeApiKeyPrivateInput');
+        const fromInput = (keyInput?.value || '').trim();
+        const lowered = fromInput.toLowerCase();
+        const looksLikeUrl = lowered.includes('://') || lowered.startsWith('http') || lowered.includes('localhost') || lowered.includes('127.0.0.1');
+        if (fromInput && !looksLikeUrl) {
+            apiKeyPrivate = fromInput;
+            try {
+                savePentagonTrackerSettings({ ...settings, apiKeyPrivate });
+            } catch { }
+            try { localStorage.setItem(BESTTIME_PRIVATE_KEY_STORAGE_KEY, apiKeyPrivate); } catch { }
+        }
+    }
+
     if (!apiKeyPrivate) return { error: 'missing_key' };
 
     const locations = settings.locations || [];
