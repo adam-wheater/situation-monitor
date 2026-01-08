@@ -1,7 +1,2 @@
-Fix Contracts
-Fix Sector heat map
-fix click on map tooltip no longer pops up modal i.e earthquakes. no longer shows modal to go to data
-click on undersea cable to show modal for cable, i.e who owns, it, between what countries, etc.
-BestTime says found results, but never populates matches (even though i literally provided the data for the places i need to show as a minimum lol?)
 everytime i load the app, i need to 'click save key' again on the pentagon tracker.
 pentagrom tracker doesnt show status for current businest from best time? 
