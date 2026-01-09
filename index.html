@@ -30,11 +30,6 @@
                 <div id="panelToggles"></div>
             </div>
             <div class="settings-section">
-                <div class="settings-section-title">Livestream URL</div>
-                <input type="text" id="livestreamUrl" class="settings-input" placeholder="YouTube URL (e.g. https://youtube.com/watch?v=...)" onchange="saveLivestreamUrl()">
-                <div class="settings-hint">Paste any YouTube video or livestream URL</div>
-            </div>
-            <div class="settings-section">
                 <div class="settings-section-title">Layout</div>
                 <div class="settings-hint" style="margin-bottom: 0.5rem;">Drag panel headers to reorder</div>
                 <button class="settings-reset" onclick="resetPanelOrder()">Reset Layout</button>
@@ -87,26 +82,672 @@
         <section class="panel" data-panel="map" style="grid-column: span 4;">
             <div class="panel-header">
                 <span class="panel-title">Global Activity Monitor</span>
-                <span class="panel-count" id="mapLegend">
-                    <span style="color: var(--green);">● Low</span>
-                    <span style="color: var(--yellow); margin-left: 0.5rem;">● Elevated</span>
-                    <span style="color: var(--red); margin-left: 0.5rem;">● High</span>
+                <span class="panel-count" id="mapLegend" style="font-size: 9px;">
+                    <span style="color: #00ff88;">● Low</span>
+                    <span style="color: #ffcc00; margin-left: 0.4rem;">● Elevated</span>
+                    <span style="color: #ff4444; margin-left: 0.4rem;">● High</span>
+                    <span style="color: #ff6600; margin-left: 0.4rem;">▲ Wx</span>
+                    <span style="color: #ff8800; margin-left: 0.4rem;">◉ Quake</span>
+                    <span style="color: #00aaff; margin-left: 0.4rem;">◆ Ship</span>
+                    <span style="color: #aa44ff; margin-left: 0.4rem;">◎ Cable</span>
+                    <span style="color: #ffff00; margin-left: 0.4rem;">☢ Nuke</span>
+                    <span style="color: #ff00ff; margin-left: 0.4rem;">★ Base</span>
                 </span>
             </div>
-            <div class="panel-content" id="mapPanel" style="max-height: none; height: 550px; overflow: hidden;">
-                <div class="loading-msg">Loading map...</div>
+            <div class="panel-content" id="mapPanel" style="max-height: none; height: 550px; overflow: hidden; background: #0a1a14; position: relative;">
+                <svg id="mapSvg" style="width:100%;height:100%;"></svg>
+                <div id="mapTooltip" style="position:absolute;display:none;background:rgba(0,20,15,0.95);border:1px solid #00ff88;padding:10px 14px;border-radius:4px;font-size:11px;color:#00ff88;pointer-events:none;z-index:1000;max-width:280px;font-family:monospace;line-height:1.4;"></div>
             </div>
-        </section>
+            <script>
+                // Inline map render with hotspots
+                (async function() {
+                    const svg = d3.select('#mapSvg');
+                    const tooltip = document.getElementById('mapTooltip');
+                    const mapPanel = document.getElementById('mapPanel');
+                    const width = 800, height = 500;
+                    svg.attr('viewBox', `0 0 ${width} ${height}`);
 
-        <!-- TBPN Livestream -->
-        <section class="panel panel-livestream" data-panel="tbpn">
-            <div class="panel-header">
-                <span class="panel-title">Livestream</span>
-                <span class="live-indicator">LIVE</span>
-            </div>
-            <div class="panel-content livestream-container" id="tbpnPanel">
-                <div class="loading-msg">Loading stream...</div>
-            </div>
+                    const projection = d3.geoEquirectangular()
+                        .scale(130)
+                        .center([0, 20])
+                        .translate([width/2, height/2]);
+
+                    const path = d3.geoPath().projection(projection);
+
+                    // Data cache for tooltips
+                    const dataCache = {};
+
+                    // Get local time at longitude
+                    function getLocalTime(lon) {
+                        const now = new Date();
+                        const utcHours = now.getUTCHours();
+                        const utcMinutes = now.getUTCMinutes();
+                        const offsetHours = Math.round(lon / 15);
+                        let localHours = (utcHours + offsetHours + 24) % 24;
+                        const ampm = localHours >= 12 ? 'PM' : 'AM';
+                        localHours = localHours % 12 || 12;
+                        return `${localHours}:${utcMinutes.toString().padStart(2, '0')} ${ampm}`;
+                    }
+
+                    // Fetch weather from Open-Meteo
+                    async function getWeather(lat, lon) {
+                        const key = `weather_${lat}_${lon}`;
+                        if (dataCache[key]) return dataCache[key];
+                        try {
+                            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
+                            const data = await res.json();
+                            const temp = data.current?.temperature_2m;
+                            const tempF = temp ? Math.round(temp * 9/5 + 32) : null;
+                            const wind = data.current?.wind_speed_10m;
+                            const code = data.current?.weather_code;
+                            const conditions = {
+                                0: '☀️ Clear', 1: '🌤️ Mostly clear', 2: '⛅ Partly cloudy', 3: '☁️ Overcast',
+                                45: '🌫️ Fog', 48: '🌫️ Fog', 51: '🌧️ Drizzle', 53: '🌧️ Drizzle', 55: '🌧️ Drizzle',
+                                61: '🌧️ Rain', 63: '🌧️ Rain', 65: '🌧️ Heavy rain', 71: '🌨️ Snow', 73: '🌨️ Snow',
+                                75: '🌨️ Heavy snow', 77: '🌨️ Snow', 80: '🌧️ Showers', 81: '🌧️ Showers', 82: '⛈️ Heavy showers',
+                                85: '🌨️ Snow', 86: '🌨️ Snow', 95: '⛈️ Thunderstorm', 96: '⛈️ Thunderstorm', 99: '⛈️ Thunderstorm'
+                            };
+                            const result = { temp: tempF, wind: wind ? Math.round(wind) : null, condition: conditions[code] || '—' };
+                            dataCache[key] = result;
+                            return result;
+                        } catch (e) { return null; }
+                    }
+
+                    // Fetch news from GDELT
+                    async function getNews(query, lat, lon) {
+                        const key = `news_${query}`;
+                        if (dataCache[key]) return dataCache[key];
+                        try {
+                            const searchTerm = encodeURIComponent(query);
+                            const res = await fetch(`https://api.gdeltproject.org/api/v2/doc/doc?query=${searchTerm}&mode=artlist&maxrecords=3&format=json`);
+                            const data = await res.json();
+                            const articles = data.articles?.slice(0, 2).map(a => a.title?.substring(0, 60) + '...') || [];
+                            dataCache[key] = articles;
+                            return articles;
+                        } catch (e) { return []; }
+                    }
+
+                    // Fetch flight count from OpenSky
+                    async function getFlightCount(lat, lon) {
+                        const key = `flights_${Math.round(lat)}_${Math.round(lon)}`;
+                        if (dataCache[key] !== undefined) return dataCache[key];
+                        try {
+                            const bbox = `${lon-3},${lat-3},${lon+3},${lat+3}`;
+                            const res = await fetch(`https://opensky-network.org/api/states/all?lamin=${lat-2}&lomin=${lon-2}&lamax=${lat+2}&lomax=${lon+2}`);
+                            const data = await res.json();
+                            const count = data.states?.length || 0;
+                            dataCache[key] = count;
+                            return count;
+                        } catch (e) { dataCache[key] = null; return null; }
+                    }
+
+                    // Build enhanced tooltip content
+                    async function buildTooltip(name, lat, lon, baseContent, color) {
+                        const localTime = getLocalTime(lon);
+                        let html = `<strong style="color:${color}">${baseContent}</strong>`;
+                        html += `<br><span style="opacity:0.7">🕐 Local: ${localTime}</span>`;
+
+                        // Show loading, then fetch data
+                        tooltip.innerHTML = html + '<br><span style="opacity:0.5">Loading data...</span>';
+
+                        const [weather, flights, news] = await Promise.all([
+                            getWeather(lat, lon),
+                            getFlightCount(lat, lon),
+                            getNews(name, lat, lon)
+                        ]);
+
+                        if (weather) {
+                            html += `<br><span style="opacity:0.7">${weather.condition} ${weather.temp}°F, ${weather.wind}mph</span>`;
+                        }
+                        if (flights !== null) {
+                            html += `<br><span style="opacity:0.7">✈️ ${flights} aircraft nearby</span>`;
+                        }
+                        if (news && news.length > 0) {
+                            html += `<br><span style="color:#888;font-size:9px">📰 ${news[0]}</span>`;
+                        }
+
+                        return html;
+                    }
+
+                    // Threat level colors
+                    const threatColors = {
+                        high: '#ff4444',
+                        elevated: '#ffcc00',
+                        low: '#00ff88'
+                    };
+
+                    // Hotspots data with descriptions and threat levels
+                    const hotspots = [
+                        { name: 'DC', lat: 38.9, lon: -77.0, level: 'low', desc: 'Washington DC — US political center, White House, Pentagon, Capitol' },
+                        { name: 'Moscow', lat: 55.75, lon: 37.6, level: 'elevated', desc: 'Moscow — Kremlin, Russian military command, sanctions hub' },
+                        { name: 'Beijing', lat: 39.9, lon: 116.4, level: 'elevated', desc: 'Beijing — CCP headquarters, US-China tensions, tech rivalry' },
+                        { name: 'Kyiv', lat: 50.45, lon: 30.5, level: 'high', desc: 'Kyiv — Active conflict zone, Russian invasion ongoing' },
+                        { name: 'Taipei', lat: 25.03, lon: 121.5, level: 'elevated', desc: 'Taipei — Taiwan Strait tensions, TSMC, China threat' },
+                        { name: 'Tehran', lat: 35.7, lon: 51.4, level: 'high', desc: 'Tehran — Iran nuclear program, proxy conflicts, regional escalation' },
+                        { name: 'Tel Aviv', lat: 32.07, lon: 34.78, level: 'high', desc: 'Tel Aviv — Israel-Gaza conflict, active military operations' },
+                        { name: 'London', lat: 51.5, lon: -0.12, level: 'low', desc: 'London — Financial center, Five Eyes, NATO ally' },
+                        { name: 'Brussels', lat: 50.85, lon: 4.35, level: 'low', desc: 'Brussels — EU/NATO headquarters, European policy' },
+                        { name: 'Pyongyang', lat: 39.03, lon: 125.75, level: 'elevated', desc: 'Pyongyang — North Korea nuclear threat, missile tests' },
+                        { name: 'Riyadh', lat: 24.7, lon: 46.7, level: 'elevated', desc: 'Riyadh — Saudi oil, OPEC+, Yemen conflict, regional power' },
+                        { name: 'Delhi', lat: 28.6, lon: 77.2, level: 'low', desc: 'Delhi — India rising power, China border tensions' },
+                        { name: 'Singapore', lat: 1.35, lon: 103.82, level: 'low', desc: 'Singapore — Shipping chokepoint, Asian finance hub' },
+                        { name: 'Tokyo', lat: 35.68, lon: 139.76, level: 'low', desc: 'Tokyo — US ally, regional security, economic power' },
+                        { name: 'Caracas', lat: 10.5, lon: -66.9, level: 'high', desc: 'Caracas — Venezuela crisis, Maduro regime, US sanctions, humanitarian emergency' },
+                        { name: 'Nuuk', lat: 64.18, lon: -51.72, level: 'elevated', desc: 'Nuuk — Greenland, US acquisition interest, Arctic strategy, Denmark tensions' }
+                    ];
+
+                    try {
+                        const response = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+                        const world = await response.json();
+                        const countries = topojson.feature(world, world.objects.countries);
+
+                        // Sanctioned countries (ISO numeric codes)
+                        const sanctionedIds = [364, 408, 760, 862, 112, 643, 728, 729]; // Iran, NK, Syria, Venezuela, Belarus, Russia, South Sudan, Sudan
+
+                        // Draw countries with sanctions highlighting
+                        svg.selectAll('path.country')
+                            .data(countries.features)
+                            .enter()
+                            .append('path')
+                            .attr('class', 'country')
+                            .attr('d', path)
+                            .attr('fill', d => sanctionedIds.includes(+d.id) ? '#2a1a1a' : '#0f3028')
+                            .attr('stroke', d => sanctionedIds.includes(+d.id) ? '#4a2020' : '#1a5040')
+                            .attr('stroke-width', 0.5);
+
+                        // Draw graticule (grid lines)
+                        const graticule = d3.geoGraticule().step([30, 30]);
+                        svg.append('path')
+                            .datum(graticule)
+                            .attr('d', path)
+                            .attr('fill', 'none')
+                            .attr('stroke', '#1a3830')
+                            .attr('stroke-width', 0.3)
+                            .attr('stroke-dasharray', '2,2');
+
+                        // Ocean labels
+                        const oceans = [
+                            { name: 'ATLANTIC', lat: 25, lon: -40 },
+                            { name: 'PACIFIC', lat: 0, lon: -150 },
+                            { name: 'INDIAN', lat: -20, lon: 75 },
+                            { name: 'ARCTIC', lat: 75, lon: 0 },
+                            { name: 'SOUTHERN', lat: -60, lon: 0 }
+                        ];
+                        oceans.forEach(o => {
+                            const [x, y] = projection([o.lon, o.lat]);
+                            if (x && y) {
+                                svg.append('text')
+                                    .attr('x', x).attr('y', y)
+                                    .attr('fill', '#1a4a40')
+                                    .attr('font-size', '10px')
+                                    .attr('font-family', 'monospace')
+                                    .attr('text-anchor', 'middle')
+                                    .attr('opacity', 0.6)
+                                    .text(o.name);
+                            }
+                        });
+
+                        // Day/night terminator
+                        const now = new Date();
+                        const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+                        const declination = -23.45 * Math.cos((360/365) * (dayOfYear + 10) * Math.PI/180);
+                        const hourAngle = (now.getUTCHours() + now.getUTCMinutes()/60) * 15 - 180;
+
+                        const terminatorPoints = [];
+                        for (let lat = -90; lat <= 90; lat += 2) {
+                            const cosLat = Math.cos(lat * Math.PI/180);
+                            const tanDec = Math.tan(declination * Math.PI/180);
+                            const tanLat = Math.tan(lat * Math.PI/180);
+                            let lon = -hourAngle + Math.acos(-tanDec * tanLat) * 180/Math.PI;
+                            if (isNaN(lon)) lon = (lat * declination > 0) ? -hourAngle + 180 : -hourAngle;
+                            terminatorPoints.push([lon, lat]);
+                        }
+                        for (let lat = 90; lat >= -90; lat -= 2) {
+                            const cosLat = Math.cos(lat * Math.PI/180);
+                            const tanDec = Math.tan(declination * Math.PI/180);
+                            const tanLat = Math.tan(lat * Math.PI/180);
+                            let lon = -hourAngle - Math.acos(-tanDec * tanLat) * 180/Math.PI;
+                            if (isNaN(lon)) lon = (lat * declination > 0) ? -hourAngle - 180 : -hourAngle;
+                            terminatorPoints.push([lon, lat]);
+                        }
+
+                        svg.append('path')
+                            .datum({type: 'Polygon', coordinates: [terminatorPoints]})
+                            .attr('d', path)
+                            .attr('fill', 'rgba(0,0,0,0.3)')
+                            .attr('stroke', 'none');
+
+                        // Conflict zones (approximate bounding boxes)
+                        const conflictZones = [
+                            { name: 'Ukraine', coords: [[30,52],[40,52],[40,45],[30,45],[30,52]], color: '#ff4444' },
+                            { name: 'Gaza', coords: [[34,32],[35,32],[35,31],[34,31],[34,32]], color: '#ff4444' },
+                            { name: 'Taiwan Strait', coords: [[117,28],[122,28],[122,22],[117,22],[117,28]], color: '#ffaa00' },
+                            { name: 'Yemen', coords: [[42,19],[54,19],[54,12],[42,12],[42,19]], color: '#ff6644' },
+                            { name: 'Sudan', coords: [[22,23],[38,23],[38,8],[22,8],[22,23]], color: '#ff6644' },
+                            { name: 'Myanmar', coords: [[92,28],[101,28],[101,10],[92,10],[92,28]], color: '#ff8844' }
+                        ];
+                        conflictZones.forEach(zone => {
+                            svg.append('path')
+                                .datum({type: 'Polygon', coordinates: [zone.coords]})
+                                .attr('d', path)
+                                .attr('fill', zone.color)
+                                .attr('fill-opacity', 0.15)
+                                .attr('stroke', zone.color)
+                                .attr('stroke-width', 0.5)
+                                .attr('stroke-opacity', 0.4);
+                        });
+
+                        // Shipping chokepoints
+                        const chokepoints = [
+                            { name: 'Suez', lat: 30.0, lon: 32.5, desc: 'Suez Canal — 12% of global trade, Europe-Asia route' },
+                            { name: 'Panama', lat: 9.1, lon: -79.7, desc: 'Panama Canal — Americas transit, Pacific-Atlantic link' },
+                            { name: 'Hormuz', lat: 26.5, lon: 56.5, desc: 'Strait of Hormuz — 21% of global oil, Persian Gulf exit' },
+                            { name: 'Malacca', lat: 2.5, lon: 101.0, desc: 'Strait of Malacca — 25% of global trade, China supply line' },
+                            { name: 'Bab el-M', lat: 12.5, lon: 43.3, desc: 'Bab el-Mandeb — Red Sea gateway, Houthi threat zone' },
+                            { name: 'Gibraltar', lat: 36.0, lon: -5.5, desc: 'Strait of Gibraltar — Mediterranean access' },
+                            { name: 'Bosporus', lat: 41.1, lon: 29.0, desc: 'Bosporus Strait — Black Sea access, Russia exports' }
+                        ];
+                        chokepoints.forEach(cp => {
+                            const [x, y] = projection([cp.lon, cp.lat]);
+                            if (x && y) {
+                                svg.append('rect')
+                                    .attr('x', x - 4).attr('y', y - 4)
+                                    .attr('width', 8).attr('height', 8)
+                                    .attr('fill', '#00aaff')
+                                    .attr('opacity', 0.8)
+                                    .attr('transform', `rotate(45,${x},${y})`);
+                                svg.append('text')
+                                    .attr('x', x + 8).attr('y', y + 3)
+                                    .attr('fill', '#00aaff')
+                                    .attr('font-size', '7px')
+                                    .attr('font-family', 'monospace')
+                                    .text(cp.name);
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 10)
+                                    .attr('fill', 'transparent')
+                                    .attr('class', 'hotspot-hit')
+                                    .on('mouseenter', function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        tooltip.innerHTML = `<strong style="color:#00aaff">⬥ ${cp.desc}</strong>`;
+                                        tooltip.style.display = 'block';
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                    })
+                                    .on('mousemove', function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                    })
+                                    .on('mouseleave', () => tooltip.style.display = 'none');
+                            }
+                        });
+
+                        // Undersea cable landing points (major hubs)
+                        const cableLandings = [
+                            { name: 'NYC', lat: 40.7, lon: -74.0, desc: 'New York — Transatlantic hub, 10+ cables' },
+                            { name: 'Cornwall', lat: 50.1, lon: -5.5, desc: 'Cornwall UK — Europe-Americas gateway' },
+                            { name: 'Marseille', lat: 43.3, lon: 5.4, desc: 'Marseille — Mediterranean hub, SEA-ME-WE' },
+                            { name: 'Mumbai', lat: 19.1, lon: 72.9, desc: 'Mumbai — India gateway, 10+ cables' },
+                            { name: 'Singapore', lat: 1.3, lon: 103.8, desc: 'Singapore — Asia-Pacific nexus' },
+                            { name: 'Hong Kong', lat: 22.3, lon: 114.2, desc: 'Hong Kong — China connectivity hub' },
+                            { name: 'Tokyo', lat: 35.5, lon: 139.8, desc: 'Tokyo — Trans-Pacific terminus' },
+                            { name: 'Sydney', lat: -33.9, lon: 151.2, desc: 'Sydney — Australia/Pacific hub' },
+                            { name: 'LA', lat: 33.7, lon: -118.2, desc: 'Los Angeles — Pacific gateway' },
+                            { name: 'Miami', lat: 25.8, lon: -80.2, desc: 'Miami — Americas/Caribbean hub' }
+                        ];
+                        cableLandings.forEach(cl => {
+                            const [x, y] = projection([cl.lon, cl.lat]);
+                            if (x && y) {
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 3)
+                                    .attr('fill', 'none')
+                                    .attr('stroke', '#aa44ff')
+                                    .attr('stroke-width', 1.5);
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 10)
+                                    .attr('fill', 'transparent')
+                                    .attr('class', 'hotspot-hit')
+                                    .on('mouseenter', function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        tooltip.innerHTML = `<strong style="color:#aa44ff">◎ ${cl.desc}</strong>`;
+                                        tooltip.style.display = 'block';
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                    })
+                                    .on('mousemove', function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                    })
+                                    .on('mouseleave', () => tooltip.style.display = 'none');
+                            }
+                        });
+
+                        // Nuclear facilities (major sites)
+                        const nuclearSites = [
+                            { name: 'Natanz', lat: 33.7, lon: 51.7, desc: 'Natanz — Iran uranium enrichment' },
+                            { name: 'Yongbyon', lat: 39.8, lon: 125.8, desc: 'Yongbyon — North Korea nuclear complex' },
+                            { name: 'Dimona', lat: 31.0, lon: 35.1, desc: 'Dimona — Israel nuclear facility' },
+                            { name: 'Bushehr', lat: 28.8, lon: 50.9, desc: 'Bushehr — Iran nuclear power plant' },
+                            { name: 'Zaporizhzhia', lat: 47.5, lon: 34.6, desc: 'Zaporizhzhia — Europe largest NPP, conflict zone' },
+                            { name: 'Chernobyl', lat: 51.4, lon: 30.1, desc: 'Chernobyl — Exclusion zone, occupied 2022' },
+                            { name: 'Fukushima', lat: 37.4, lon: 141.0, desc: 'Fukushima — Decommissioning site' }
+                        ];
+                        nuclearSites.forEach(ns => {
+                            const [x, y] = projection([ns.lon, ns.lat]);
+                            if (x && y) {
+                                // Radiation symbol (simplified)
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 2)
+                                    .attr('fill', '#ffff00');
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 5)
+                                    .attr('fill', 'none')
+                                    .attr('stroke', '#ffff00')
+                                    .attr('stroke-width', 1)
+                                    .attr('stroke-dasharray', '3,3');
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 10)
+                                    .attr('fill', 'transparent')
+                                    .attr('class', 'hotspot-hit')
+                                    .on('mouseenter', function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        tooltip.innerHTML = `<strong style="color:#ffff00">☢ ${ns.desc}</strong>`;
+                                        tooltip.style.display = 'block';
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                    })
+                                    .on('mousemove', function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                    })
+                                    .on('mouseleave', () => tooltip.style.display = 'none');
+                            }
+                        });
+
+                        // Major military bases
+                        const militaryBases = [
+                            { name: 'Ramstein', lat: 49.4, lon: 7.6, desc: 'Ramstein — US Air Force, NATO hub Germany' },
+                            { name: 'Diego Garcia', lat: -7.3, lon: 72.4, desc: 'Diego Garcia — US/UK Indian Ocean base' },
+                            { name: 'Okinawa', lat: 26.5, lon: 127.9, desc: 'Okinawa — US Forces Japan, Pacific presence' },
+                            { name: 'Guam', lat: 13.5, lon: 144.8, desc: 'Guam — US Pacific Command, bomber base' },
+                            { name: 'Djibouti', lat: 11.5, lon: 43.1, desc: 'Djibouti — US/China/France bases, Horn of Africa' },
+                            { name: 'Qatar', lat: 25.1, lon: 51.3, desc: 'Al Udeid — US CENTCOM forward HQ' },
+                            { name: 'Kaliningrad', lat: 54.7, lon: 20.5, desc: 'Kaliningrad — Russian Baltic exclave, missiles' },
+                            { name: 'Sevastopol', lat: 44.6, lon: 33.5, desc: 'Sevastopol — Russian Black Sea Fleet' },
+                            { name: 'Hainan', lat: 18.2, lon: 109.5, desc: 'Hainan — Chinese submarine base, South China Sea' }
+                        ];
+                        militaryBases.forEach(mb => {
+                            const [x, y] = projection([mb.lon, mb.lat]);
+                            if (x && y) {
+                                // Star shape for military
+                                const starPath = `M${x},${y-5} L${x+1.5},${y-1.5} L${x+5},${y-1.5} L${x+2.5},${y+1} L${x+3.5},${y+5} L${x},${y+2.5} L${x-3.5},${y+5} L${x-2.5},${y+1} L${x-5},${y-1.5} L${x-1.5},${y-1.5} Z`;
+                                svg.append('path')
+                                    .attr('d', starPath)
+                                    .attr('fill', '#ff00ff')
+                                    .attr('opacity', 0.8);
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 10)
+                                    .attr('fill', 'transparent')
+                                    .attr('class', 'hotspot-hit')
+                                    .on('mouseenter', function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        tooltip.innerHTML = `<strong style="color:#ff00ff">★ ${mb.desc}</strong>`;
+                                        tooltip.style.display = 'block';
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                    })
+                                    .on('mousemove', function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                    })
+                                    .on('mouseleave', () => tooltip.style.display = 'none');
+                            }
+                        });
+
+                        // Add pulse animation style
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            @keyframes pulse {
+                                0% { r: 3; opacity: 0.9; }
+                                50% { r: 6; opacity: 0.4; }
+                                100% { r: 3; opacity: 0.9; }
+                            }
+                            @keyframes weatherPulse {
+                                0% { opacity: 0.9; }
+                                50% { opacity: 0.5; }
+                                100% { opacity: 0.9; }
+                            }
+                            .hotspot-pulse { animation: pulse 2s ease-in-out infinite; }
+                            .hotspot-hit { cursor: pointer; }
+                            .weather-alert { animation: weatherPulse 1.5s ease-in-out infinite; }
+                        `;
+                        document.head.appendChild(style);
+
+                        // Draw hotspots
+                        hotspots.forEach(h => {
+                            const [x, y] = projection([h.lon, h.lat]);
+                            const color = threatColors[h.level] || threatColors.low;
+                            if (x && y) {
+                                // Outer pulsing ring
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 6)
+                                    .attr('fill', 'none').attr('stroke', color)
+                                    .attr('stroke-width', 1.5).attr('opacity', 0.6)
+                                    .attr('class', 'hotspot-pulse');
+                                // Inner solid circle
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 3)
+                                    .attr('fill', color).attr('opacity', 0.9);
+                                // Label
+                                svg.append('text')
+                                    .attr('x', x + 8).attr('y', y + 3)
+                                    .attr('fill', color).attr('font-size', '8px')
+                                    .attr('font-family', 'monospace')
+                                    .text(h.name);
+                                // Invisible hit area for tooltip
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 12)
+                                    .attr('fill', 'transparent')
+                                    .attr('class', 'hotspot-hit')
+                                    .on('mouseenter', async function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        const levelLabel = h.level.charAt(0).toUpperCase() + h.level.slice(1);
+                                        tooltip.style.display = 'block';
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                        const html = await buildTooltip(h.name, h.lat, h.lon, `[${levelLabel}] ${h.desc}`, color);
+                                        tooltip.innerHTML = html;
+                                    })
+                                    .on('mousemove', function(event) {
+                                        const rect = mapPanel.getBoundingClientRect();
+                                        tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                    })
+                                    .on('mouseleave', function() {
+                                        tooltip.style.display = 'none';
+                                    });
+                            }
+                        });
+
+                        // Fetch and render weather alerts (US - NWS API)
+                        try {
+                            const weatherRes = await fetch('https://api.weather.gov/alerts/active?status=actual&severity=Extreme,Severe');
+                            const weatherData = await weatherRes.json();
+
+                            // Weather severity colors
+                            const weatherColors = {
+                                'Extreme': '#ff0000',
+                                'Severe': '#ff6600',
+                                'Moderate': '#ffaa00',
+                                'Minor': '#ffcc00'
+                            };
+
+                            // US state centroids for positioning alerts
+                            const stateCentroids = {
+                                'AL': [32.7, -86.7], 'AK': [64.0, -153.0], 'AZ': [34.2, -111.6], 'AR': [34.8, -92.4],
+                                'CA': [37.2, -119.4], 'CO': [39.0, -105.5], 'CT': [41.6, -72.7], 'DE': [39.0, -75.5],
+                                'FL': [28.6, -82.4], 'GA': [32.6, -83.4], 'HI': [20.8, -156.3], 'ID': [44.4, -114.6],
+                                'IL': [40.0, -89.2], 'IN': [39.9, -86.3], 'IA': [42.0, -93.5], 'KS': [38.5, -98.4],
+                                'KY': [37.5, -85.3], 'LA': [31.0, -92.0], 'ME': [45.4, -69.2], 'MD': [39.0, -76.8],
+                                'MA': [42.2, -71.5], 'MI': [44.3, -85.4], 'MN': [46.3, -94.3], 'MS': [32.7, -89.7],
+                                'MO': [38.3, -92.4], 'MT': [47.0, -109.6], 'NE': [41.5, -99.8], 'NV': [39.3, -116.6],
+                                'NH': [43.7, -71.6], 'NJ': [40.1, -74.7], 'NM': [34.4, -106.1], 'NY': [42.9, -75.5],
+                                'NC': [35.5, -79.4], 'ND': [47.4, -100.3], 'OH': [40.4, -82.8], 'OK': [35.6, -97.5],
+                                'OR': [43.9, -120.6], 'PA': [40.9, -77.8], 'RI': [41.7, -71.5], 'SC': [33.9, -80.9],
+                                'SD': [44.4, -100.2], 'TN': [35.9, -86.4], 'TX': [31.5, -99.4], 'UT': [39.3, -111.7],
+                                'VT': [44.0, -72.7], 'VA': [37.5, -78.8], 'WA': [47.4, -120.5], 'WV': [38.9, -80.5],
+                                'WI': [44.6, -89.7], 'WY': [43.0, -107.5], 'DC': [38.9, -77.0], 'PR': [18.2, -66.4]
+                            };
+
+                            // Group alerts by state to avoid clutter
+                            const alertsByState = {};
+                            weatherData.features?.forEach(alert => {
+                                const props = alert.properties;
+                                const state = props.areaDesc?.match(/,\s*([A-Z]{2})(?:\s|$|;)/)?.[1] ||
+                                              props.senderName?.match(/([A-Z]{2})$/)?.[1];
+                                if (state && stateCentroids[state]) {
+                                    if (!alertsByState[state] ||
+                                        (props.severity === 'Extreme' && alertsByState[state].severity !== 'Extreme')) {
+                                        alertsByState[state] = {
+                                            state,
+                                            severity: props.severity,
+                                            event: props.event,
+                                            headline: props.headline,
+                                            description: props.description?.substring(0, 200) + '...',
+                                            count: (alertsByState[state]?.count || 0) + 1
+                                        };
+                                    } else {
+                                        alertsByState[state].count++;
+                                    }
+                                }
+                            });
+
+                            // Draw weather alerts as triangles
+                            Object.values(alertsByState).forEach(alert => {
+                                const coords = stateCentroids[alert.state];
+                                if (!coords) return;
+                                const [x, y] = projection([coords[1], coords[0]]);
+                                const color = weatherColors[alert.severity] || '#ffaa00';
+
+                                if (x && y) {
+                                    // Triangle warning symbol
+                                    const size = 6;
+                                    const triangle = `M${x},${y-size} L${x+size},${y+size/2} L${x-size},${y+size/2} Z`;
+
+                                    svg.append('path')
+                                        .attr('d', triangle)
+                                        .attr('fill', color)
+                                        .attr('stroke', '#000')
+                                        .attr('stroke-width', 0.5)
+                                        .attr('class', 'weather-alert');
+
+                                    // Hit area for tooltip
+                                    svg.append('circle')
+                                        .attr('cx', x).attr('cy', y).attr('r', 10)
+                                        .attr('fill', 'transparent')
+                                        .attr('class', 'hotspot-hit')
+                                        .on('mouseenter', function(event) {
+                                            const rect = mapPanel.getBoundingClientRect();
+                                            const countText = alert.count > 1 ? ` (+${alert.count - 1} more)` : '';
+                                            tooltip.innerHTML = `<strong style="color:${color}">⚠ ${alert.event}</strong>${countText}<br>${alert.headline || alert.state}`;
+                                            tooltip.style.display = 'block';
+                                            tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                            tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                        })
+                                        .on('mousemove', function(event) {
+                                            const rect = mapPanel.getBoundingClientRect();
+                                            tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                            tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                        })
+                                        .on('mouseleave', function() {
+                                            tooltip.style.display = 'none';
+                                        });
+                                }
+                            });
+
+                            console.log(`Loaded ${Object.keys(alertsByState).length} weather alert regions`);
+                        } catch(weatherErr) {
+                            console.log('Weather alerts unavailable:', weatherErr.message);
+                        }
+
+                        // Fetch and render global earthquakes (USGS API)
+                        try {
+                            const quakeRes = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson');
+                            const quakeData = await quakeRes.json();
+
+                            // Earthquake magnitude colors
+                            const getQuakeColor = (mag) => {
+                                if (mag >= 7) return '#ff0000';
+                                if (mag >= 6) return '#ff4400';
+                                if (mag >= 5) return '#ff8800';
+                                return '#ffaa00';
+                            };
+
+                            // Draw earthquakes as concentric circles
+                            quakeData.features?.slice(0, 30).forEach(quake => {
+                                const coords = quake.geometry.coordinates;
+                                const props = quake.properties;
+                                const [x, y] = projection([coords[0], coords[1]]);
+                                const mag = props.mag;
+                                const color = getQuakeColor(mag);
+                                const radius = Math.max(3, mag - 2);
+
+                                if (x && y) {
+                                    // Outer ring
+                                    svg.append('circle')
+                                        .attr('cx', x).attr('cy', y)
+                                        .attr('r', radius + 3)
+                                        .attr('fill', 'none')
+                                        .attr('stroke', color)
+                                        .attr('stroke-width', 1)
+                                        .attr('opacity', 0.4);
+
+                                    // Inner circle
+                                    svg.append('circle')
+                                        .attr('cx', x).attr('cy', y)
+                                        .attr('r', radius)
+                                        .attr('fill', color)
+                                        .attr('opacity', 0.7);
+
+                                    // Hit area for tooltip
+                                    svg.append('circle')
+                                        .attr('cx', x).attr('cy', y)
+                                        .attr('r', 10)
+                                        .attr('fill', 'transparent')
+                                        .attr('class', 'hotspot-hit')
+                                        .on('mouseenter', function(event) {
+                                            const rect = mapPanel.getBoundingClientRect();
+                                            const time = new Date(props.time).toLocaleString();
+                                            const depth = coords[2].toFixed(1);
+                                            tooltip.innerHTML = `<strong style="color:${color}">M${mag.toFixed(1)} Earthquake</strong><br>${props.place}<br><span style="opacity:0.7">Depth: ${depth}km • ${time}</span>`;
+                                            tooltip.style.display = 'block';
+                                            tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                            tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                        })
+                                        .on('mousemove', function(event) {
+                                            const rect = mapPanel.getBoundingClientRect();
+                                            tooltip.style.left = (event.clientX - rect.left + 15) + 'px';
+                                            tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+                                        })
+                                        .on('mouseleave', function() {
+                                            tooltip.style.display = 'none';
+                                        });
+                                }
+                            });
+
+                            console.log(`Loaded ${Math.min(quakeData.features?.length || 0, 30)} earthquakes`);
+                        } catch(quakeErr) {
+                            console.log('Earthquake data unavailable:', quakeErr.message);
+                        }
+
+                    } catch(e) {
+                        console.error('Map error:', e);
+                    }
+                })();
+            </script>
         </section>
 
         <!-- Political / World News -->
@@ -226,17 +867,6 @@
                 <span class="panel-count" id="polymarketCount">-</span>
             </div>
             <div class="panel-content" id="polymarketPanel">
-                <div class="loading-msg">Loading...</div>
-            </div>
-        </section>
-
-        <!-- Congressional Trading -->
-        <section class="panel" data-panel="congress">
-            <div class="panel-header">
-                <span class="panel-title">Congress Trades</span>
-                <span class="panel-count" id="congressCount">-</span>
-            </div>
-            <div class="panel-content" id="congressPanel">
                 <div class="loading-msg">Loading...</div>
             </div>
         </section>

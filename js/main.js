@@ -5,25 +5,18 @@ import { FEEDS } from './constants.js';
 import { setStatus } from './utils.js';
 import {
     fetchCategory, fetchMarkets, fetchSectors, fetchCommodities,
-    fetchEarthquakes, fetchCongressTrades, fetchWhaleTransactions,
+    fetchEarthquakes, fetchWhaleTransactions,
     fetchGovContracts, fetchAINews, fetchFedBalance, fetchPolymarket,
-    fetchLayoffs, fetchSituationNews, fetchIntelFeed
+    fetchLayoffs, fetchSituationNews, fetchIntelFeed, fetchGDELTNews
 } from './data.js';
-import {
-    renderGlobalMap, analyzeHotspotActivity, setMapView,
-    mapZoomIn, mapZoomOut, mapZoomReset, updateFlashback
-} from './map.js';
-import {
-    mapLayers, toggleLayer, toggleSatelliteLayer,
-    fetchFlightData, classifyAircraft, getAircraftArrow
-} from './layers.js';
+import { renderGlobalMap } from './map.js';
 import {
     isPanelEnabled, togglePanel, toggleSettings, applyPanelSettings,
-    initPanels, saveLivestreamUrl, resetPanelOrder
+    initPanels, resetPanelOrder
 } from './panels.js';
 import {
     renderNews, renderMarkets, renderHeatmap, renderCommodities,
-    renderPolymarket, renderCongressTrades, renderWhaleWatch,
+    renderPolymarket, renderWhaleWatch,
     renderMainCharacter, renderGovContracts, renderAINews,
     renderMoneyPrinter, renderIntelFeed, renderLayoffs, renderSituation
 } from './renderers.js';
@@ -35,55 +28,34 @@ import {
 import {
     renderMonitorsList, openMonitorForm, closeMonitorForm,
     selectMonitorColor, saveMonitor, editMonitor, deleteMonitor,
-    renderMonitorsPanel, getMonitorHotspots
+    renderMonitorsPanel
 } from './monitors.js';
-import {
-    showHotspotPopup, showConflictPopup, showUSCityPopup,
-    showUSHotspotPopup, showChokepointPopup, showQuakePopup,
-    showCyberPopup, showCustomHotspotPopup, showAircraftPopup
-} from './popups.js';
 
 // Expose functions to window for onclick handlers
 window.togglePanel = (id) => togglePanel(id, refreshAll);
 window.toggleSettings = () => toggleSettings(renderMonitorsList);
-window.saveLivestreamUrl = saveLivestreamUrl;
 window.resetPanelOrder = resetPanelOrder;
-window.setMapView = (mode) => setMapView(mode, refreshAll);
-window.mapZoomIn = mapZoomIn;
-window.mapZoomOut = mapZoomOut;
-window.mapZoomReset = mapZoomReset;
-window.toggleLayer = (layer) => {
-    toggleLayer(layer, refreshAll);
-};
-window.toggleSatelliteLayer = () => toggleSatelliteLayer(refreshAll);
-window.updateFlashback = updateFlashback;
 window.openMonitorForm = openMonitorForm;
 window.closeMonitorForm = closeMonitorForm;
 window.selectMonitorColor = selectMonitorColor;
 window.saveMonitor = () => saveMonitor(refreshAll);
 window.editMonitor = editMonitor;
 window.deleteMonitor = (id) => deleteMonitor(id, refreshAll);
-window.showHotspotPopup = showHotspotPopup;
-window.showConflictPopup = showConflictPopup;
-window.showUSCityPopup = showUSCityPopup;
-window.showUSHotspotPopup = showUSHotspotPopup;
-window.showChokepointPopup = showChokepointPopup;
-window.showQuakePopup = showQuakePopup;
-window.showCyberPopup = showCyberPopup;
-window.showCustomHotspotPopup = showCustomHotspotPopup;
-window.showAircraftPopup = showAircraftPopup;
 
 // Staged refresh - loads critical data first for faster perceived startup
 async function refreshAll() {
+    console.log('refreshAll started');
     const btn = document.getElementById('refreshBtn');
     if (btn) btn.disabled = true;
     setStatus('Loading critical...', true);
 
     let allNews = [];
+    let politics = [], tech = [], finance = [], markets = [], sectors = [];
+    let gov = [], commodities = [], polymarket = [], fedBalance = { value: 0, change: 0, changePercent: 0, percentOfMax: 0 }, earthquakes = [];
 
+    // STAGE 1: Critical data (news + markets) - loads first
     try {
-        // STAGE 1: Critical data (news + markets) - loads first
-        const stage1Promise = Promise.all([
+        const stage1Promise = Promise.allSettled([
             isPanelEnabled('politics') ? fetchCategory(FEEDS.politics) : Promise.resolve([]),
             isPanelEnabled('tech') ? fetchCategory(FEEDS.tech) : Promise.resolve([]),
             isPanelEnabled('finance') ? fetchCategory(FEEDS.finance) : Promise.resolve([]),
@@ -91,20 +63,29 @@ async function refreshAll() {
             isPanelEnabled('heatmap') ? fetchSectors() : Promise.resolve([])
         ]);
 
-        const [politics, tech, finance, markets, sectors] = await stage1Promise;
+        const results = await stage1Promise;
+        politics = results[0].status === 'fulfilled' ? results[0].value : [];
+        tech = results[1].status === 'fulfilled' ? results[1].value : [];
+        finance = results[2].status === 'fulfilled' ? results[2].value : [];
+        markets = results[3].status === 'fulfilled' ? results[3].value : [];
+        sectors = results[4].status === 'fulfilled' ? results[4].value : [];
+    } catch (e) {
+        console.error('Stage 1 error:', e);
+    }
 
-        // Render Stage 1 immediately
-        if (isPanelEnabled('politics')) renderNews(politics, 'politicsPanel', 'politicsCount');
-        if (isPanelEnabled('tech')) renderNews(tech, 'techPanel', 'techCount');
-        if (isPanelEnabled('finance')) renderNews(finance, 'financePanel', 'financeCount');
-        if (isPanelEnabled('markets')) renderMarkets(markets);
-        if (isPanelEnabled('heatmap')) renderHeatmap(sectors);
+    // Render Stage 1 immediately
+    if (isPanelEnabled('politics')) renderNews(politics, 'politicsPanel', 'politicsCount');
+    if (isPanelEnabled('tech')) renderNews(tech, 'techPanel', 'techCount');
+    if (isPanelEnabled('finance')) renderNews(finance, 'financePanel', 'financeCount');
+    if (isPanelEnabled('markets')) renderMarkets(markets);
+    if (isPanelEnabled('heatmap')) renderHeatmap(sectors);
 
-        allNews = [...politics, ...tech, ...finance];
-        setStatus('Loading more...', true);
+    allNews = [...politics, ...tech, ...finance];
+    setStatus('Loading more...', true);
 
-        // STAGE 2: Secondary data
-        const stage2Promise = Promise.all([
+    // STAGE 2: Secondary data
+    try {
+        const stage2Promise = Promise.allSettled([
             isPanelEnabled('gov') ? fetchCategory(FEEDS.gov) : Promise.resolve([]),
             isPanelEnabled('commodities') ? fetchCommodities() : Promise.resolve([]),
             isPanelEnabled('polymarket') ? fetchPolymarket() : Promise.resolve([]),
@@ -112,50 +93,71 @@ async function refreshAll() {
             isPanelEnabled('map') ? fetchEarthquakes() : Promise.resolve([])
         ]);
 
-        const [gov, commodities, polymarket, fedBalance, earthquakes] = await stage2Promise;
+        const results = await stage2Promise;
+        gov = results[0].status === 'fulfilled' ? results[0].value : [];
+        commodities = results[1].status === 'fulfilled' ? results[1].value : [];
+        polymarket = results[2].status === 'fulfilled' ? results[2].value : [];
+        fedBalance = results[3].status === 'fulfilled' ? results[3].value : { value: 0, change: 0, changePercent: 0, percentOfMax: 0 };
+        earthquakes = results[4].status === 'fulfilled' ? results[4].value : [];
+    } catch (e) {
+        console.error('Stage 2 error:', e);
+    }
 
-        if (isPanelEnabled('gov')) {
-            renderNews(gov, 'govPanel', 'govCount');
-            allNews = [...allNews, ...gov];
-        }
-        if (isPanelEnabled('commodities')) renderCommodities(commodities);
-        if (isPanelEnabled('polymarket')) renderPolymarket(polymarket);
-        if (isPanelEnabled('printer')) renderMoneyPrinter(fedBalance);
+    if (isPanelEnabled('gov')) {
+        renderNews(gov, 'govPanel', 'govCount');
+        allNews = [...allNews, ...gov];
+    }
+    if (isPanelEnabled('commodities')) renderCommodities(commodities);
+    if (isPanelEnabled('polymarket')) renderPolymarket(polymarket);
+    if (isPanelEnabled('printer')) renderMoneyPrinter(fedBalance);
 
-        // Render map with earthquakes and shipping alert data
-        if (isPanelEnabled('map')) {
-            const activityData = analyzeHotspotActivity(allNews);
-            await renderGlobalMap(
-                activityData,
-                earthquakes,
-                allNews,
-                mapLayers,
-                getMonitorHotspots,
-                fetchFlightData,
-                classifyAircraft,
-                getAircraftArrow
-            );
+    // Render map
+    if (isPanelEnabled('map')) {
+        try {
+            await renderGlobalMap();
+        } catch (mapError) {
+            console.error('Map render error:', mapError);
         }
-        if (isPanelEnabled('mainchar')) {
+    }
+
+    // If RSS feeds failed, use GDELT as fallback for analysis panels
+    if (allNews.length < 10) {
+        try {
+            const gdeltNews = await fetchGDELTNews();
+            allNews = [...allNews, ...gdeltNews];
+            console.log(`Added ${gdeltNews.length} GDELT articles as fallback`);
+        } catch (e) {
+            console.error('GDELT fallback error:', e);
+        }
+    }
+
+    if (isPanelEnabled('mainchar')) {
+        try {
             const mainCharRankings = calculateMainCharacter(allNews);
             renderMainCharacter(mainCharRankings);
-        }
+        } catch (e) { console.error('mainchar error:', e); }
+    }
 
-        if (isPanelEnabled('correlation')) {
+    if (isPanelEnabled('correlation')) {
+        try {
             const correlations = analyzeCorrelations(allNews);
             renderCorrelationEngine(correlations);
-        }
+        } catch (e) { console.error('correlation error:', e); }
+    }
 
-        if (isPanelEnabled('narrative')) {
+    if (isPanelEnabled('narrative')) {
+        try {
             const narratives = analyzeNarratives(allNews);
             renderNarrativeTracker(narratives);
-        }
+        } catch (e) { console.error('narrative error:', e); }
+    }
 
-        setStatus('Loading extras...', true);
+    setStatus('Loading extras...', true);
 
-        // STAGE 3: Extra data - lowest priority
-        const stage3Promise = Promise.all([
-            isPanelEnabled('congress') ? fetchCongressTrades() : Promise.resolve([]),
+    // STAGE 3: Extra data - lowest priority
+    let whales = [], contracts = [], aiNews = [], layoffs = [], venezuelaNews = [], greenlandNews = [], intelFeed = [];
+    try {
+        const stage3Promise = Promise.allSettled([
             isPanelEnabled('whales') ? fetchWhaleTransactions() : Promise.resolve([]),
             isPanelEnabled('contracts') ? fetchGovContracts() : Promise.resolve([]),
             isPanelEnabled('ai') ? fetchAINews() : Promise.resolve([]),
@@ -165,40 +167,45 @@ async function refreshAll() {
             isPanelEnabled('intel') ? fetchIntelFeed() : Promise.resolve([])
         ]);
 
-        const [congressTrades, whales, contracts, aiNews, layoffs, venezuelaNews, greenlandNews, intelFeed] = await stage3Promise;
-
-        if (isPanelEnabled('congress')) renderCongressTrades(congressTrades);
-        if (isPanelEnabled('whales')) renderWhaleWatch(whales);
-        if (isPanelEnabled('contracts')) renderGovContracts(contracts);
-        if (isPanelEnabled('ai')) renderAINews(aiNews);
-        if (isPanelEnabled('layoffs')) renderLayoffs(layoffs);
-        if (isPanelEnabled('intel')) renderIntelFeed(intelFeed);
-        if (isPanelEnabled('venezuela')) {
-            renderSituation('venezuelaPanel', 'venezuelaStatus', venezuelaNews, {
-                title: 'Venezuela Crisis',
-                subtitle: 'Political instability & humanitarian situation',
-                criticalKeywords: ['invasion', 'military', 'coup', 'violence', 'sanctions', 'arrested']
-            });
-        }
-        if (isPanelEnabled('greenland')) {
-            renderSituation('greenlandPanel', 'greenlandStatus', greenlandNews, {
-                title: 'Greenland Dispute',
-                subtitle: 'US-Denmark tensions over Arctic territory',
-                criticalKeywords: ['purchase', 'trump', 'military', 'takeover', 'independence', 'referendum']
-            });
-        }
-
-        // Render My Monitors panel with all news
-        if (isPanelEnabled('monitors')) {
-            renderMonitorsPanel(allNews);
-        }
-
-        const now = new Date();
-        setStatus(`Updated ${now.toLocaleTimeString()}`);
-    } catch (error) {
-        console.error('Refresh error:', error);
-        setStatus('Error updating');
+        const results = await stage3Promise;
+        whales = results[0].status === 'fulfilled' ? results[0].value : [];
+        contracts = results[1].status === 'fulfilled' ? results[1].value : [];
+        aiNews = results[2].status === 'fulfilled' ? results[2].value : [];
+        layoffs = results[3].status === 'fulfilled' ? results[3].value : [];
+        venezuelaNews = results[4].status === 'fulfilled' ? results[4].value : [];
+        greenlandNews = results[5].status === 'fulfilled' ? results[5].value : [];
+        intelFeed = results[6].status === 'fulfilled' ? results[6].value : [];
+    } catch (e) {
+        console.error('Stage 3 error:', e);
     }
+
+    if (isPanelEnabled('whales')) renderWhaleWatch(whales);
+    if (isPanelEnabled('contracts')) renderGovContracts(contracts);
+    if (isPanelEnabled('ai')) renderAINews(aiNews);
+    if (isPanelEnabled('layoffs')) renderLayoffs(layoffs);
+    if (isPanelEnabled('intel')) renderIntelFeed(intelFeed);
+    if (isPanelEnabled('venezuela')) {
+        renderSituation('venezuelaPanel', 'venezuelaStatus', venezuelaNews, {
+            title: 'Venezuela Crisis',
+            subtitle: 'Political instability & humanitarian situation',
+            criticalKeywords: ['invasion', 'military', 'coup', 'violence', 'sanctions', 'arrested']
+        });
+    }
+    if (isPanelEnabled('greenland')) {
+        renderSituation('greenlandPanel', 'greenlandStatus', greenlandNews, {
+            title: 'Greenland Dispute',
+            subtitle: 'US-Denmark tensions over Arctic territory',
+            criticalKeywords: ['purchase', 'trump', 'military', 'takeover', 'independence', 'referendum']
+        });
+    }
+
+    // Render My Monitors panel with all news
+    if (isPanelEnabled('monitors')) {
+        renderMonitorsPanel(allNews);
+    }
+
+    const now = new Date();
+    setStatus(`Updated ${now.toLocaleTimeString()}`);
 
     if (btn) btn.disabled = false;
 }
