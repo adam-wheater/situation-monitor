@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Situation Monitor</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="index.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 </head>
@@ -783,6 +783,41 @@
             </div>
         </section>
 
+        <!-- Pentagon Tracker -->
+        <section class="panel" data-panel="pentagon">
+            <div class="panel-header">
+                <span class="panel-title">Pentagon Tracker</span>
+                <div class="panel-header-right">
+                    <details class="panel-config" id="pentagonConfig">
+                        <summary class="panel-config-summary">Config</summary>
+                        <div class="panel-config-body" onclick="event.stopPropagation()">
+                            <div class="panel-config-section">
+                                <div class="panel-config-label">BestTime private API key</div>
+                                <input class="settings-input panel-config-input" id="besttimeApiKeyPrivateInput" type="password" placeholder="api_key_private" autocomplete="off" spellcheck="false" />
+                                <button class="panel-config-btn" onclick="saveBestTimePrivateKey()">Save key</button>
+                                <div class="settings-hint">Stored in localStorage (client-side). Don’t use a sensitive key on a public host.</div>
+                            </div>
+                            <div class="panel-config-section">
+                                <div class="panel-config-label">Locations</div>
+                                <div class="panel-config-grid">
+                                    <input class="settings-input panel-config-input" id="pentagonLocName" type="text" placeholder="Name" autocomplete="off" spellcheck="false" />
+                                    <input class="settings-input panel-config-input" id="pentagonLocLat" type="number" step="0.000001" placeholder="Lat" />
+                                    <input class="settings-input panel-config-input" id="pentagonLocLng" type="number" step="0.000001" placeholder="Lng" />
+                                    <input class="settings-input panel-config-input" id="pentagonLocRadius" type="number" step="50" placeholder="Radius (m)" />
+                                </div>
+                                <button class="panel-config-btn" onclick="addPentagonLocationFromInputs()">Add location</button>
+                                <div class="panel-config-list" id="pentagonLocationsList"></div>
+                            </div>
+                        </div>
+                    </details>
+                    <span class="panel-count" id="pentagonCount">-</span>
+                </div>
+            </div>
+            <div class="panel-content" id="pentagonPanel">
+                <div class="loading-msg">Open Config to set BestTime key and locations</div>
+            </div>
+        </section>
+
         <!-- Government / Policy -->
         <section class="panel" data-panel="gov">
             <div class="panel-header">
@@ -935,102 +970,6 @@
             </div>
         </section>
 
-        <!-- Correlation Engine -->
-        <section class="panel wide" data-panel="correlation">
-            <div class="panel-header">
-                <span class="panel-title">Correlation Engine</span>
-                <span class="panel-count" id="correlationStatus">ANALYZING</span>
-            </div>
-            <div class="panel-content correlation-panel" id="correlationPanel">
-                <div class="correlation-sections">
-                    <div class="correlation-section">
-                        <div class="correlation-section-header">
-                            <span class="correlation-icon">🔮</span>
-                            <span class="correlation-section-title">Emerging Patterns</span>
-                        </div>
-                        <div class="correlation-content" id="emergingPatterns">
-                            <div class="loading-msg">Scanning for patterns...</div>
-                        </div>
-                    </div>
-                    <div class="correlation-section">
-                        <div class="correlation-section-header">
-                            <span class="correlation-icon">📈</span>
-                            <span class="correlation-section-title">Momentum Signals</span>
-                        </div>
-                        <div class="correlation-content" id="momentumSignals">
-                            <div class="loading-msg">Calculating momentum...</div>
-                        </div>
-                    </div>
-                    <div class="correlation-section">
-                        <div class="correlation-section-header">
-                            <span class="correlation-icon">🔗</span>
-                            <span class="correlation-section-title">Cross-Source Correlations</span>
-                        </div>
-                        <div class="correlation-content" id="crossSourceCorrelations">
-                            <div class="loading-msg">Correlating sources...</div>
-                        </div>
-                    </div>
-                    <div class="correlation-section">
-                        <div class="correlation-section-header">
-                            <span class="correlation-icon">⚡</span>
-                            <span class="correlation-section-title">Predictive Signals</span>
-                        </div>
-                        <div class="correlation-content" id="predictiveSignals">
-                            <div class="loading-msg">Generating predictions...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Narrative Tracker -->
-        <section class="panel wide" data-panel="narrative">
-            <div class="panel-header">
-                <span class="panel-title">Narrative Tracker</span>
-                <span class="panel-count" id="narrativeStatus">TRACKING</span>
-            </div>
-            <div class="panel-content narrative-panel" id="narrativePanel">
-                <div class="narrative-sections">
-                    <div class="narrative-section">
-                        <div class="narrative-section-header">
-                            <span class="narrative-icon">🌱</span>
-                            <span class="narrative-section-title">Emerging Fringe</span>
-                        </div>
-                        <div class="narrative-content" id="emergingFringe">
-                            <div class="loading-msg">Scanning alternative sources...</div>
-                        </div>
-                    </div>
-                    <div class="narrative-section">
-                        <div class="narrative-section-header">
-                            <span class="narrative-icon">🔄</span>
-                            <span class="narrative-section-title">Fringe → Mainstream</span>
-                        </div>
-                        <div class="narrative-content" id="fringeToMainstream">
-                            <div class="loading-msg">Tracking crossover narratives...</div>
-                        </div>
-                    </div>
-                    <div class="narrative-section">
-                        <div class="narrative-section-header">
-                            <span class="narrative-icon">👁</span>
-                            <span class="narrative-section-title">Narrative Watch</span>
-                        </div>
-                        <div class="narrative-content" id="narrativeWatch">
-                            <div class="loading-msg">Monitoring active narratives...</div>
-                        </div>
-                    </div>
-                    <div class="narrative-section">
-                        <div class="narrative-section-header">
-                            <span class="narrative-icon">🎭</span>
-                            <span class="narrative-section-title">Disinfo Signals</span>
-                        </div>
-                        <div class="narrative-content" id="disinfoSignals">
-                            <div class="loading-msg">Analyzing signals...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- My Monitors -->
         <section class="panel" data-panel="monitors">
             <div class="panel-header">
@@ -1047,7 +986,7 @@
 
     </main>
 
-    <!-- Load the modular JavaScript -->
-    <script type="module" src="js/main.js"></script>
+    <script src="js/constants.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
