@@ -138,18 +138,37 @@
                             .attr('stroke', '#1a5040')
                             .attr('stroke-width', 0.5);
 
+                        // Add pulse animation style
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            @keyframes pulse {
+                                0% { r: 3; opacity: 0.9; }
+                                50% { r: 6; opacity: 0.4; }
+                                100% { r: 3; opacity: 0.9; }
+                            }
+                            .hotspot-pulse { animation: pulse 2s ease-in-out infinite; }
+                        `;
+                        document.head.appendChild(style);
+
                         // Draw hotspots
                         hotspots.forEach(h => {
                             const [x, y] = projection([h.lon, h.lat]);
                             if (x && y) {
-                                // Pulsing circle
+                                // Outer pulsing ring
                                 svg.append('circle')
-                                    .attr('cx', x).attr('cy', y).attr('r', 4)
-                                    .attr('fill', '#00ff88').attr('opacity', 0.8);
+                                    .attr('cx', x).attr('cy', y).attr('r', 6)
+                                    .attr('fill', 'none').attr('stroke', '#00ff88')
+                                    .attr('stroke-width', 1.5).attr('opacity', 0.6)
+                                    .attr('class', 'hotspot-pulse');
+                                // Inner solid circle
+                                svg.append('circle')
+                                    .attr('cx', x).attr('cy', y).attr('r', 3)
+                                    .attr('fill', '#00ff88').attr('opacity', 0.9);
                                 // Label
                                 svg.append('text')
-                                    .attr('x', x + 6).attr('y', y + 3)
+                                    .attr('x', x + 8).attr('y', y + 3)
                                     .attr('fill', '#00ff88').attr('font-size', '8px')
+                                    .attr('font-family', 'monospace')
                                     .text(h.name);
                             }
                         });
