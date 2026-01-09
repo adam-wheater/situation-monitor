@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Situation Monitor: Start proxy+server (8001)",
+      "type": "shell",
+      "command": "python3",
+      "args": ["proxy_server.py", "8001"],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Situation Monitor: Start proxy+server (8010)",
+      "type": "shell",
+      "command": "python3",
+      "args": ["proxy_server.py", "8010"],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Situation Monitor: Open http://localhost:8001/",
+      "type": "shell",
+      "command": "open",
+      "args": ["http://localhost:8001/"]
+    },
+    {
+      "label": "Situation Monitor: Open http://localhost:8010/",
+      "type": "shell",
+      "command": "open",
+      "args": ["http://localhost:8010/"]
+    },
+    {
+      "label": "Situation Monitor: Start + Open (8001)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Situation Monitor: Start proxy+server (8001)",
+        "Situation Monitor: Open http://localhost:8001/"
+      ]
+    },
+    {
+      "label": "Situation Monitor: Start + Open (8010)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Situation Monitor: Start proxy+server (8010)",
+        "Situation Monitor: Open http://localhost:8010/"
+      ]
+    }
+  ]
+}

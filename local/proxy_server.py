@@ -62,6 +62,13 @@ ALLOWED_HOSTS = {
     "query1.finance.yahoo.com",
     "api.coingecko.com",
     "api.usaspending.gov",
+    # Inline global map sources
+    "api.open-meteo.com",
+    "api.gdeltproject.org",
+    "opensky-network.org",
+    "api.weather.gov",
+    # OpenStreetMap Overpass (for bases / nuclear plants layers)
+    "overpass-api.de",
     "www.csis.org",
     "www.brookings.edu",
     "www.cfr.org",
@@ -237,9 +244,18 @@ def main():
     if len(sys.argv) > 1:
         port = int(sys.argv[1])
 
-    with ReusableTCPServer(("", port), Handler) as httpd:
-        print(f"Serving on http://localhost:{port}/ (with /proxy)")
-        httpd.serve_forever()
+    try:
+        with ReusableTCPServer(("", port), Handler) as httpd:
+            print(f"Serving on http://localhost:{port}/ (with /proxy)")
+            httpd.serve_forever()
+    except OSError as e:
+        # macOS commonly raises Errno 48 when the port is in use.
+        if getattr(e, "errno", None) in (48, 98):
+            print(f"Port {port} is already in use.")
+            print(f"Try:  python3 proxy_server.py 8010")
+            print(f"Or:   lsof -i :{port}  # find the process using the port")
+            raise SystemExit(1)
+        raise
 
 
 if __name__ == "__main__":

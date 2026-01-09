@@ -542,6 +542,15 @@ function applyMapTransform() {
 
     if (wrapper) {
         wrapper.style.transform = `translate(${mapPan.x}px, ${mapPan.y}px) scale(${mapZoom})`;
+
+        // Counter-scale markers inside the zoomed wrapper so they get SMALLER as you zoom in.
+        // (Wrapper scales everything up by mapZoom; marker scale exponent > 1 makes net size shrink.)
+        const z = Math.max(1, mapZoom || 1);
+        const markerScale = 1 / Math.pow(z, 2.0); // net ~ 1/z
+        wrapper.style.setProperty('--sm-marker-scale', markerScale.toFixed(6));
+        wrapper.style.setProperty('--sm-marker-scale-hover', (markerScale * 1.3).toFixed(6));
+        wrapper.style.setProperty('--sm-marker-scale-hover-soft', (markerScale * 1.15).toFixed(6));
+        wrapper.style.setProperty('--sm-marker-scale-pulse', (markerScale * 1.1).toFixed(6));
     }
     if (levelDisplay) {
         levelDisplay.textContent = `${mapZoom.toFixed(1)}x`;
@@ -2633,7 +2642,7 @@ async function renderGlobalMap(activityData, earthquakes = [], allNews = []) {
                 }
                 overlayMarkersHTML += `
                             <div class="density-blob ${level}"
-                                 style="left: ${pos.x}%; top: ${pos.y}%; width: ${size}px; height: ${size}px; transform: translate(-50%, -50%);"></div>
+                                 style="left: ${pos.x}%; top: ${pos.y}%; width: ${size}px; height: ${size}px; transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));"></div>
                         `;
             }
         });

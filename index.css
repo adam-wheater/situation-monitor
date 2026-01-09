@@ -913,7 +913,8 @@
         /* US City Markers */
         .us-city {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             pointer-events: auto;
             z-index: 25;
             cursor: pointer;
@@ -1038,7 +1039,8 @@
         /* US Breaking News Hotspots */
         .us-hotspot {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             pointer-events: auto;
             z-index: 30;
             cursor: pointer;
@@ -1484,11 +1486,13 @@
         }
 
         .coord-label.lat {
-            transform: translateY(-50%);
+            transform: translateY(-50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: left center;
         }
 
         .coord-label.lon {
-            transform: translateX(-50%);
+            transform: translateX(-50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center top;
         }
 
         .map-corner-label {
@@ -1507,7 +1511,8 @@
 
         .hotspot {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             cursor: pointer;
             pointer-events: auto;
             z-index: 20;
@@ -1819,7 +1824,8 @@
         /* Shipping Chokepoints */
         .chokepoint {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             pointer-events: auto;
             z-index: 18;
             cursor: pointer;
@@ -2041,7 +2047,8 @@
         /* Earthquake markers */
         .quake {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             pointer-events: auto;
             z-index: 17;
             cursor: pointer;
@@ -2234,7 +2241,8 @@
         /* Cyber threat indicators */
         .cyber-zone {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             pointer-events: auto;
             z-index: 16;
             cursor: pointer;
@@ -3029,6 +3037,8 @@
             transition: all 0.2s ease;
             box-shadow: 0 0 10px rgba(255, 50, 50, 0.3), inset 0 0 8px rgba(255, 50, 50, 0.1);
             z-index: 100;
+            transform: scale(var(--sm-marker-scale, 1));
+            transform-origin: top left;
         }
 
         .conflict-zone-label::before {
@@ -3051,7 +3061,7 @@
 
         .conflict-zone-label:hover {
             background: rgba(60, 0, 0, 0.95);
-            transform: scale(1.15);
+            transform: scale(var(--sm-marker-scale-hover-soft, 1.15));
             box-shadow: 0 0 20px rgba(255, 51, 51, 0.7), inset 0 0 15px rgba(255, 50, 50, 0.3);
             animation: none;
             z-index: 100;
@@ -3288,7 +3298,8 @@
         /* Military Base Markers */
         .military-base {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             pointer-events: auto;
             z-index: 19;
             cursor: pointer;
@@ -3388,7 +3399,8 @@
         /* Nuclear Facility Markers */
         .nuclear-facility {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             pointer-events: auto;
             z-index: 18;
             cursor: pointer;
@@ -3539,7 +3551,8 @@
         /* Breaking News Pulse */
         .news-pulse {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             pointer-events: none;
             z-index: 25;
         }
@@ -3729,7 +3742,7 @@
         }
 
         .density-blob:hover {
-            transform: translate(-50%, -50%) scale(1.3) !important;
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale-hover, 1.3)) !important;
             filter: brightness(1.5);
         }
 
@@ -3746,8 +3759,8 @@
         }
 
         @keyframes density-glow {
-            0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1)); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(var(--sm-marker-scale-pulse, 1.1)); }
         }
 
         /* Map Layer Toggle */
@@ -4065,7 +4078,8 @@
         /* Custom Hotspot (user-created) */
         .custom-hotspot {
             position: absolute;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(var(--sm-marker-scale, 1));
+            transform-origin: center;
             pointer-events: auto;
             z-index: 21;
             cursor: pointer;
