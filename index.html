@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="index.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <script src="https://unpkg.com/globe.gl"></script>
 </head>
 <body>
     <header class="header">
@@ -88,7 +89,7 @@
                     <span style="color: #ff4444; margin-left: 0.4rem;">● High</span>
                     <span style="color: #ff6600; margin-left: 0.4rem;">▲ Wx</span>
                     <span style="color: #ff8800; margin-left: 0.4rem;">◉ Quake</span>
-                    <span style="color: #00aaff; margin-left: 0.4rem;">◆ Ship</span>
+                    <span style="color: #00aaff; margin-left: 0.4rem;">⚓ Naval</span>
                     <span style="color: #aa44ff; margin-left: 0.4rem;">◎ Cable</span>
                     <span style="color: #ffff00; margin-left: 0.4rem;">☢ Nuke</span>
                     <span style="color: #ff00ff; margin-left: 0.4rem;">★ Base</span>
@@ -998,7 +999,7 @@
                         try {
                             // Keep queries narrow: only nodes/ways/relations that can be represented as points.
                             const bb = `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`;
-                            const q = `
+                                                        const q = `
 [out:json][timeout:25];
 (
   // Nuclear power plants
@@ -1009,10 +1010,18 @@
   way["power"="generator"]["generator:source"="nuclear"](${bb});
   relation["power"="generator"]["generator:source"="nuclear"](${bb});
 
-  // Military bases (broad)
-  node["military"~"^(base|naval_base|airfield)$"](${bb});
-  way["military"~"^(base|naval_base|airfield)$"](${bb});
-  relation["military"~"^(base|naval_base|airfield)$"](${bb});
+    // Military bases / facilities (broad)
+    // Many places are tagged as landuse=military or military=barracks, not just military=base.
+    node["military"~"^(base|naval_base|airfield|barracks)$"](${bb});
+    way["military"~"^(base|naval_base|airfield|barracks)$"](${bb});
+    relation["military"~"^(base|naval_base|airfield|barracks)$"](${bb});
+    node["landuse"="military"](${bb});
+    way["landuse"="military"](${bb});
+    relation["landuse"="military"](${bb});
+    // Military aerodromes are often aeroway=aerodrome + military=yes/airfield.
+    node["aeroway"="aerodrome"]["military"~"^(yes|airfield)$"](${bb});
+    way["aeroway"="aerodrome"]["military"~"^(yes|airfield)$"](${bb});
+    relation["aeroway"="aerodrome"]["military"~"^(yes|airfield)$"](${bb});
 
   // Naval hubs / ports tagged as naval base (infrastructure, not live ships)
   node["harbour"="naval_base"](${bb});
@@ -1063,11 +1072,25 @@ out center;
                                 continue;
                             }
 
-                            // Military base
+                            // Military base / facility
                             const mil = String(tags.military || '').trim();
-                            if (mil === 'base' || mil === 'naval_base' || mil === 'airfield') {
-                                const name = safeNameFromTags(tags, mil === 'airfield' ? 'Air base' : 'Base');
-                                const kind = mil === 'naval_base' ? 'Naval base' : (mil === 'airfield' ? 'Airfield' : 'Base');
+                            const landuse = String(tags.landuse || '').trim();
+                            const aeroway = String(tags.aeroway || '').trim();
+                            const isMil = (
+                                mil === 'base' || mil === 'naval_base' || mil === 'airfield' || mil === 'barracks' ||
+                                landuse === 'military' ||
+                                (aeroway === 'aerodrome' && (mil === 'yes' || mil === 'airfield'))
+                            );
+
+                            if (isMil) {
+                                const fallbackName = (mil === 'airfield' || (aeroway === 'aerodrome' && (mil === 'yes' || mil === 'airfield')))
+                                    ? 'Military airfield'
+                                    : (mil === 'naval_base' ? 'Naval base' : (mil === 'barracks' ? 'Barracks' : 'Military site'));
+                                const name = safeNameFromTags(tags, fallbackName);
+                                const kind = mil === 'naval_base' ? 'Naval base'
+                                    : (mil === 'airfield' ? 'Airfield'
+                                        : (mil === 'barracks' ? 'Barracks'
+                                            : (landuse === 'military' ? 'Military area' : 'Military site')));
                                 const meta = formatTagsSummary(tags, ['operator', 'owner', 'access', 'wikidata']);
                                 const html = `<strong style="color:#ff00ff">★ ${escapeHtml(name)}</strong><br><span style="opacity:0.7">${escapeHtml(kind)}${meta ? ` • ${escapeHtml(meta)}` : ''}</span>`;
                                 drawOsmPoint(osmBaseLayer, lon, lat, '★', '#ff00ff', html, 10);
@@ -1078,8 +1101,8 @@ out center;
                             if (String(tags.harbour || '') === 'naval_base') {
                                 const name = safeNameFromTags(tags, 'Naval hub');
                                 const meta = formatTagsSummary(tags, ['operator', 'access', 'wikidata']);
-                                const html = `<strong style="color:#00aaff">◆ ${escapeHtml(name)}</strong><br><span style="opacity:0.7">Naval harbour (OSM)${meta ? ` • ${escapeHtml(meta)}` : ''}</span>`;
-                                drawOsmPoint(osmNavalLayer, lon, lat, '◆', '#00aaff', html, 10);
+                                const html = `<strong style="color:#00aaff">⚓ ${escapeHtml(name)}</strong><br><span style="opacity:0.7">Naval hub (OSM)${meta ? ` • ${escapeHtml(meta)}` : ''}</span>`;
+                                drawOsmPoint(osmNavalLayer, lon, lat, '⚓', '#00aaff', html, 11);
                                 continue;
                             }
                         }
@@ -1144,11 +1167,25 @@ out center;
                                 const [x, y] = projection([f.lon, f.lat]);
                                 if (!x || !y) continue;
                                 const gF = flightLayer.append('g').attr('transform', `translate(${x},${y})`);
-                                gF.append('circle')
-                                    .attr('r', 2.2)
+
+                                // Visible plane marker: glyph + small dot. (Heuristic MIL/TRANS only.)
+                                const planeGlyph = gF.append('text')
+                                    .attr('x', 0)
+                                    .attr('y', 3)
                                     .attr('fill', '#00aaff')
-                                    .attr('opacity', 0.85)
-                                    .attr('data-base-r', '2.2');
+                                    .attr('font-size', '12')
+                                    .attr('font-family', 'monospace')
+                                    .attr('text-anchor', 'middle')
+                                    .attr('opacity', 0.95)
+                                    .text('✈');
+                                tagScaleKind(planeGlyph, 'icon');
+                                planeGlyph.attr('data-base-font', '12');
+
+                                gF.append('circle')
+                                    .attr('r', 3.2)
+                                    .attr('fill', '#00aaff')
+                                    .attr('opacity', 0.45)
+                                    .attr('data-base-r', '3.2');
                                 gF.append('circle')
                                     .attr('r', 9)
                                     .attr('fill', 'transparent')
@@ -1187,10 +1224,12 @@ out center;
 
                         // We want icons to get SMALLER as we zoom in.
                         // The map group scales by kk, so we downscale markers by kk^p to make net screen size shrink.
-                        const ICON_POWER = 1.85;   // net screen shrink ~= kk^(1-ICON_POWER)
-                        const TEXT_POWER = 1.55;   // shrink text too (otherwise it occludes countries)
-                        const MIN_ICON_SCREEN_PX = 0.8;
-                        const MIN_TEXT_SCREEN_PX = 3.5;
+                        // Tune so markers get smaller when zooming in, but remain visible.
+                        // Screen size ~= base / kk^(power-1)
+                        const ICON_POWER = 1.35;
+                        const TEXT_POWER = 1.25;
+                        const MIN_ICON_SCREEN_PX = 2.2;
+                        const MIN_TEXT_SCREEN_PX = 7.0;
 
                         // Circles: treat as icons by default.
                         g.selectAll('circle[data-base-r]:not(.hotspot-hit)')

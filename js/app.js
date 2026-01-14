@@ -500,27 +500,47 @@ function scheduleApplyMapTransform() {
 }
 
 function mapZoomIn() {
-    if (mapZoom < MAP_ZOOM_MAX) {
-        mapZoom = Math.min(MAP_ZOOM_MAX, mapZoom + MAP_ZOOM_STEP);
-        applyMapTransform();
+    if (globeInstance) {
+        const pov = globeInstance.pointOfView();
+        const newAlt = Math.max(0.3, pov.altitude * 0.7);
+        globeInstance.pointOfView({ ...pov, altitude: newAlt }, 300);
+    } else {
+        if (mapZoom < MAP_ZOOM_MAX) {
+            mapZoom = Math.min(MAP_ZOOM_MAX, mapZoom + MAP_ZOOM_STEP);
+            applyMapTransform();
+        }
     }
 }
 
 function mapZoomOut() {
-    if (mapZoom > MAP_ZOOM_MIN) {
-        mapZoom = Math.max(MAP_ZOOM_MIN, mapZoom - MAP_ZOOM_STEP);
-        // Reset pan if zooming back to 1x
-        if (mapZoom === 1) {
-            mapPan = { x: 0, y: 0 };
+    if (globeInstance) {
+        const pov = globeInstance.pointOfView();
+        const newAlt = Math.min(3.0, pov.altitude * 1.4);
+        globeInstance.pointOfView({ ...pov, altitude: newAlt }, 300);
+    } else {
+        if (mapZoom > MAP_ZOOM_MIN) {
+            mapZoom = Math.max(MAP_ZOOM_MIN, mapZoom - MAP_ZOOM_STEP);
+            if (mapZoom === 1) {
+                mapPan = { x: 0, y: 0 };
+            }
+            applyMapTransform();
         }
-        applyMapTransform();
     }
 }
 
 function mapZoomReset() {
-    mapZoom = 1;
-    mapPan = { x: 0, y: 0 };
-    applyMapTransform();
+    if (globeInstance) {
+        const isUSView = mapViewMode === 'us';
+        if (isUSView) {
+            globeInstance.pointOfView({ lat: 39.0, lng: -98.0, altitude: 0.8 }, 500);
+        } else {
+            globeInstance.pointOfView({ lat: 20, lng: 0, altitude: 2.0 }, 500);
+        }
+    } else {
+        mapZoom = 1;
+        mapPan = { x: 0, y: 0 };
+        applyMapTransform();
+    }
 }
 
 // Switch between global and US map views
@@ -529,9 +549,28 @@ function setMapView(mode) {
     mapViewMode = mode;
     mapZoom = 1;
     mapPan = { x: 0, y: 0 };
-    // Re-render map with new view
-    if (window.cachedAllNews) {
-        renderGlobalMap({}, [], window.cachedAllNews);
+
+    // For Globe.gl, just change the view without full re-render
+    if (globeInstance) {
+        if (mode === 'us') {
+            globeInstance.pointOfView({ lat: 39.0, lng: -98.0, altitude: 0.8 }, 1000);
+        } else {
+            globeInstance.pointOfView({ lat: 20, lng: 0, altitude: 2.0 }, 1000);
+        }
+        // Update button states
+        document.querySelectorAll('.map-view-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.trim().toLowerCase() === mode);
+        });
+        // Update title
+        const titleEl = document.querySelector('.map-corner-label.tl');
+        if (titleEl) {
+            titleEl.textContent = mode === 'us' ? 'US DOMESTIC MONITOR' : 'GLOBAL ACTIVITY MONITOR';
+        }
+    } else {
+        // Legacy SVG mode - re-render
+        if (window.cachedAllNews) {
+            renderGlobalMap({}, [], window.cachedAllNews);
+        }
     }
 }
 
@@ -1893,6 +1932,11 @@ let mapLayers = {
     density: true
 };
 
+// Globe.gl instance for 3D globe view
+let globeInstance = null;
+let globeCountriesData = null;
+let globeCablesData = null;
+
 // Convert lat/lon to map position (simple equirectangular projection)
 function latLonToXY(lat, lon, width, height) {
     const x = ((lon + 180) / 360) * width;
@@ -1985,6 +2029,13 @@ async function loadCableGeoData() {
 // Load world map TopoJSON data
 async function loadWorldMap() {
     if (worldMapData) return worldMapData;
+
+    // Check for file:// protocol which blocks fetch
+    if (location && location.protocol === 'file:') {
+        console.warn('Cannot load local files via file:// protocol. Run a local server.');
+        return null;
+    }
+
     try {
         // Prefer local vendored asset to avoid CORS/CDN issues.
         const local = await fetch('data/countries-110m.json', { cache: 'no-store' });
@@ -1992,7 +2043,11 @@ async function loadWorldMap() {
             worldMapData = await local.json();
             return worldMapData;
         }
+    } catch (e) {
+        console.warn('Local world map failed, trying CDN:', e);
+    }
 
+    try {
         const text = await fetchWithProxy(
             'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
             { accept: 'application/json, text/plain, */*' }
@@ -2027,8 +2082,444 @@ async function loadUSStates() {
     }
 }
 
-// Render the global map - Situation Room Style with accurate borders
+// Render the global map - 3D Globe with Globe.gl
 async function renderGlobalMap(activityData, earthquakes = [], allNews = []) {
+    // Cache allNews for popup access
+    window.cachedAllNews = allNews;
+
+    const panel = document.getElementById('mapPanel');
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+
+    // Set up the container
+    const isUSView = mapViewMode === 'us';
+    const mapTitle = isUSView ? 'US DOMESTIC MONITOR' : 'GLOBAL ACTIVITY MONITOR';
+    const mapLegend = isUSView ? '★ CAPITAL | ● MAJOR | ○ REGIONAL' : '⚓ SHIP | ☢ NUKES | ▪ BASES | ═ CABLES';
+
+    panel.innerHTML = `
+                <div class="world-map" id="worldMapContainer">
+                    <div id="globeContainer"></div>
+                    <div class="map-layer-toggle" id="mapLayerToggle"></div>
+                    <div class="map-view-toggle">
+                        <button class="map-view-btn ${!isUSView ? 'active' : ''}" onclick="setMapView('global')">GLOBAL</button>
+                        <button class="map-view-btn ${isUSView ? 'active' : ''}" onclick="setMapView('us')">US</button>
+                    </div>
+                    <div class="map-zoom-controls">
+                        <button class="map-zoom-btn" onclick="mapZoomIn()" title="Zoom In">+</button>
+                        <div class="map-zoom-level" id="mapZoomLevel">2.0x</div>
+                        <button class="map-zoom-btn" onclick="mapZoomOut()" title="Zoom Out">−</button>
+                        <button class="map-zoom-btn map-zoom-reset" onclick="mapZoomReset()" title="Reset">RST</button>
+                    </div>
+                    <div class="conflict-popup" id="conflictPopup"></div>
+                    <div class="us-city-popup" id="usCityPopup"></div>
+                    <div class="hotspot-popup" id="hotspotPopup"></div>
+                    <div class="chokepoint-popup" id="chokepointPopup"></div>
+                    <div class="quake-popup" id="quakePopup"></div>
+                    <div class="cyber-popup" id="cyberPopup"></div>
+                    <div class="custom-hotspot-popup" id="customHotspotPopup"></div>
+                    <div class="us-hotspot-popup" id="usHotspotPopup"></div>
+                    <div class="chokepoint-popup" id="cablePopup"></div>
+                    <div class="map-corner-label tl">${mapTitle}</div>
+                    <div class="map-corner-label tr">CLASSIFICATION: OPEN SOURCE</div>
+                    <div class="map-corner-label bl">${mapLegend}</div>
+                    <div class="map-corner-label br">${timestamp}</div>
+                </div>
+            `;
+
+    const container = document.getElementById('worldMapContainer');
+    const globeContainer = document.getElementById('globeContainer');
+    const baseWidth = container.offsetWidth || 800;
+    const height = container.offsetHeight || 550;
+
+    // Initialize Globe.gl
+    if (!globeInstance) {
+        globeInstance = Globe()
+            .width(baseWidth)
+            .height(height)
+            .backgroundColor('#020a08')
+            .showAtmosphere(true)
+            .atmosphereColor('#0a4030')
+            .atmosphereAltitude(0.12)
+            .showGraticules(true);
+    }
+
+    // Mount globe to container
+    globeInstance(globeContainer);
+
+    // Update globe size
+    globeInstance.width(baseWidth).height(height);
+
+    // Load world map data if not cached
+    if (!globeCountriesData) {
+        const world = await loadWorldMap();
+        if (world) {
+            globeCountriesData = topojson.feature(world, world.objects.countries).features;
+        }
+    }
+
+    // Load cable data if not cached
+    if (!globeCablesData) {
+        const cableGeo = await loadCableGeoData();
+        if (cableGeo && cableGeo.type === 'FeatureCollection') {
+            globeCablesData = cableGeo.features;
+        }
+    }
+
+    // Configure countries layer with sanction coloring
+    if (globeCountriesData) {
+        globeInstance
+            .globeImageUrl(null)
+            .polygonsData(globeCountriesData)
+            .polygonCapColor(d => {
+                if (mapLayers.sanctions) {
+                    const countryId = d.id;
+                    const sanctionLevel = SANCTIONED_COUNTRIES[countryId];
+                    if (sanctionLevel === 'severe') return '#660000';
+                    if (sanctionLevel === 'high') return '#442200';
+                    if (sanctionLevel === 'moderate') return '#333300';
+                    if (sanctionLevel === 'low') return '#223322';
+                }
+                return '#0a2018';
+            })
+            .polygonSideColor(() => '#0a2018')
+            .polygonStrokeColor(() => '#0f5040')
+            .polygonAltitude(0.006)
+            .polygonsTransitionDuration(300);
+    } else {
+        // Fallback: use a simple earth texture when TopoJSON fails to load
+        globeInstance
+            .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
+            .polygonsData([]);
+    }
+
+    // Configure cables layer
+    if (mapLayers.cables && globeCablesData) {
+        const cablePaths = [];
+        globeCablesData.forEach(feature => {
+            if (!feature || !feature.geometry) return;
+            const props = feature.properties;
+
+            // Handle both LineString and MultiLineString
+            const lineArrays = feature.geometry.type === 'LineString'
+                ? [feature.geometry.coordinates]
+                : (feature.geometry.type === 'MultiLineString'
+                    ? feature.geometry.coordinates
+                    : []);
+
+            // Each line segment becomes a separate path
+            lineArrays.forEach(lineCoords => {
+                if (!Array.isArray(lineCoords) || lineCoords.length < 2) return;
+                // Convert string coordinates to numbers
+                const coords = lineCoords.map(p => [
+                    parseFloat(p[0]),
+                    parseFloat(p[1])
+                ]).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
+
+                if (coords.length >= 2) {
+                    cablePaths.push({
+                        coords: coords,
+                        properties: props
+                    });
+                }
+            });
+        });
+
+        globeInstance
+            .pathsData(mapLayers.cables ? cablePaths : [])
+            .pathPoints(d => d.coords)
+            .pathPointLat(p => p[1])
+            .pathPointLng(p => p[0])
+            .pathColor(() => '#9966ff')
+            .pathStroke(3)
+            .pathDashLength(0.01)
+            .pathDashGap(0.004)
+            .pathDashAnimateTime(100000)
+            .pathTransitionDuration(300)
+            .onPathClick((path, event) => {
+                showCablePopup(event, {
+                    key: `id:${path.properties?.id || ''}`,
+                    name: path.properties?.name || 'Undersea Cable',
+                    id: path.properties?.id || ''
+                });
+            });
+    } else {
+        globeInstance.pathsData([]);
+    }
+
+    // Build marker data arrays
+    const pointMarkers = [];
+    const htmlMarkers = [];
+
+    // Military bases as points
+    if (mapLayers.bases) {
+        MILITARY_BASES.forEach(base => {
+            pointMarkers.push({
+                lat: base.lat,
+                lng: base.lon,
+                size: 0.3,
+                color: base.type === 'us-nato' ? '#ff00ff' :
+                       base.type === 'china' ? '#ff6600' : '#ff3333',
+                type: 'base',
+                data: base
+            });
+        });
+    }
+
+    // Nuclear facilities as points
+    if (mapLayers.nuclear) {
+        NUCLEAR_FACILITIES.forEach(facility => {
+            const isWeapons = facility.type === 'weapons' || facility.type === 'enrichment';
+            pointMarkers.push({
+                lat: facility.lat,
+                lng: facility.lon,
+                size: 0.4,
+                color: isWeapons ? '#ffaa00' : '#ffff00',
+                type: 'nuclear',
+                data: facility
+            });
+        });
+    }
+
+    // Earthquakes as points
+    earthquakes.slice(0, 15).forEach((eq, index) => {
+        const isMajor = eq.mag >= 6.0;
+        pointMarkers.push({
+            lat: eq.lat,
+            lng: eq.lon,
+            size: 0.2 + eq.mag / 15,
+            color: isMajor ? '#ff4444' : '#ff8800',
+            type: 'earthquake',
+            data: { ...eq, id: eq.id || `eq_${index}` }
+        });
+    });
+
+    // Configure points layer
+    globeInstance
+        .pointsData(pointMarkers)
+        .pointLat(d => d.lat)
+        .pointLng(d => d.lng)
+        .pointColor(d => d.color)
+        .pointAltitude(0.01)
+        .pointRadius(d => d.size)
+        .pointsMerge(false)
+        .onPointClick((point, event) => {
+            if (point.type === 'earthquake') {
+                showQuakePopupDirect(event, point.data);
+            } else if (point.type === 'base') {
+                showBasePopupDirect(event, point.data);
+            } else if (point.type === 'nuclear') {
+                showNuclearPopupDirect(event, point.data);
+            }
+        });
+
+    // HTML markers for intel hotspots, chokepoints, conflict zones, etc.
+
+    // Intel hotspots
+    INTEL_HOTSPOTS.forEach(spot => {
+        const activity = activityData[spot.id] || { level: 'low', score: 0, headlines: [] };
+        htmlMarkers.push({
+            lat: spot.lat,
+            lng: spot.lon,
+            type: 'hotspot',
+            data: { ...spot, activity }
+        });
+    });
+
+    // Shipping chokepoints
+    SHIPPING_CHOKEPOINTS.forEach(cp => {
+        const matchedHeadlines = allNews.filter(item => {
+            const title = (item.title || '').toLowerCase();
+            return cp.keywords.some(kw => title.includes(kw));
+        }).slice(0, 5);
+        htmlMarkers.push({
+            lat: cp.lat,
+            lng: cp.lon,
+            type: 'chokepoint',
+            data: { ...cp, isAlert: matchedHeadlines.length > 0, headlines: matchedHeadlines }
+        });
+    });
+
+    // Conflict zones (labels only)
+    if (mapLayers.conflicts) {
+        CONFLICT_ZONES.forEach(zone => {
+            htmlMarkers.push({
+                lat: zone.labelPos.lat,
+                lng: zone.labelPos.lon,
+                type: 'conflict',
+                data: zone
+            });
+        });
+    }
+
+    // Cyber regions
+    CYBER_REGIONS.forEach(cz => {
+        const isActive = Math.random() > 0.6;
+        htmlMarkers.push({
+            lat: cz.lat,
+            lng: cz.lon,
+            type: 'cyber',
+            data: { ...cz, isActive }
+        });
+    });
+
+    // Custom monitor hotspots
+    const customHotspots = getMonitorHotspots(allNews);
+    customHotspots.forEach(monitor => {
+        htmlMarkers.push({
+            lat: monitor.lat,
+            lng: monitor.lon,
+            type: 'custom',
+            data: monitor
+        });
+    });
+
+    // Configure HTML elements layer
+    globeInstance
+        .htmlElementsData(htmlMarkers)
+        .htmlLat(d => d.lat)
+        .htmlLng(d => d.lng)
+        .htmlAltitude(0.02)
+        .htmlElement(d => {
+            const el = document.createElement('div');
+            el.className = 'globe-marker';
+
+            if (d.type === 'hotspot') {
+                const activity = d.data.activity;
+                const popupData = {
+                    ...activity,
+                    name: d.data.name,
+                    subtext: d.data.subtext,
+                    lat: d.data.lat,
+                    lon: d.data.lon,
+                    description: d.data.description || '',
+                    agencies: d.data.agencies || [],
+                    status: d.data.status || ''
+                };
+                el.innerHTML = `
+                    <div class="hotspot ${activity.level}">
+                        <div class="hotspot-dot"></div>
+                        <div class="hotspot-label">
+                            ${d.data.name}
+                            <div class="hotspot-info">${d.data.subtext}</div>
+                        </div>
+                    </div>
+                `;
+                el.querySelector('.hotspot').onclick = (e) => {
+                    e.stopPropagation();
+                    showHotspotPopupDirect(e, popupData);
+                };
+            } else if (d.type === 'chokepoint') {
+                const popupData = d.data;
+                el.innerHTML = `
+                    <div class="chokepoint ${d.data.isAlert ? 'alert' : ''}">
+                        <div class="chokepoint-icon"></div>
+                        <div class="chokepoint-label">${d.data.name}</div>
+                    </div>
+                `;
+                el.querySelector('.chokepoint').onclick = (e) => {
+                    e.stopPropagation();
+                    showChokepointPopupDirect(e, popupData);
+                };
+            } else if (d.type === 'conflict') {
+                const popupData = d.data;
+                const intensityClass = d.data.intensity === 'high' ? 'high-intensity' : '';
+                el.innerHTML = `
+                    <div class="conflict-zone-label ${intensityClass}">
+                        ${d.data.name}
+                    </div>
+                `;
+                el.querySelector('.conflict-zone-label').onclick = (e) => {
+                    e.stopPropagation();
+                    showConflictPopupDirect(e, popupData);
+                };
+            } else if (d.type === 'cyber') {
+                const popupData = d.data;
+                el.innerHTML = `
+                    <div class="cyber-zone ${d.data.isActive ? 'active' : ''}">
+                        <div class="cyber-icon"></div>
+                        <div class="cyber-label">${d.data.group}</div>
+                    </div>
+                `;
+                el.querySelector('.cyber-zone').onclick = (e) => {
+                    e.stopPropagation();
+                    showCyberPopupDirect(e, popupData);
+                };
+            } else if (d.type === 'custom') {
+                const popupData = {
+                    id: d.data.id,
+                    name: d.data.name,
+                    color: d.data.color,
+                    keywords: d.data.keywords,
+                    lat: d.data.lat,
+                    lon: d.data.lon,
+                    matchCount: d.data.matchCount,
+                    matches: d.data.matches.slice(0, 5)
+                };
+                el.innerHTML = `
+                    <div class="custom-hotspot" style="color: ${d.data.color};">
+                        <div class="custom-hotspot-dot" style="background: ${d.data.color}; border-color: ${d.data.color};"></div>
+                        <div class="custom-hotspot-label" style="color: ${d.data.color};">
+                            ${d.data.name}
+                            <span class="custom-hotspot-count">${d.data.matchCount > 0 ? ` (${d.data.matchCount})` : ''}</span>
+                        </div>
+                    </div>
+                `;
+                el.querySelector('.custom-hotspot').onclick = (e) => {
+                    e.stopPropagation();
+                    showCustomHotspotPopupDirect(e, popupData);
+                };
+            }
+
+            return el;
+        });
+
+    // Set initial view based on mode
+    if (isUSView) {
+        globeInstance.pointOfView({ lat: 39.0, lng: -98.0, altitude: 0.8 }, 1000);
+    } else {
+        globeInstance.pointOfView({ lat: 20, lng: 0, altitude: 2.0 }, 1000);
+    }
+
+    // Update zoom level display
+    const zoomLevelEl = document.getElementById('mapZoomLevel');
+    if (zoomLevelEl) {
+        const updateZoomDisplay = () => {
+            const pov = globeInstance.pointOfView();
+            const zoomLevel = (2.5 / pov.altitude).toFixed(1);
+            zoomLevelEl.textContent = `${zoomLevel}x`;
+        };
+        updateZoomDisplay();
+        globeInstance.onZoom(updateZoomDisplay);
+    }
+
+    // Configure layer toggle buttons
+    const layerToggleEl = document.getElementById('mapLayerToggle');
+    if (layerToggleEl) {
+        layerToggleEl.innerHTML = `
+            <button class="layer-btn ${mapLayers.conflicts ? 'active' : ''}" onclick="toggleLayer('conflicts')">Conflicts</button>
+            <button class="layer-btn ${mapLayers.bases ? 'active' : ''}" onclick="toggleLayer('bases')">Bases</button>
+            <button class="layer-btn ${mapLayers.nuclear ? 'active' : ''}" onclick="toggleLayer('nuclear')">Nuclear</button>
+            <button class="layer-btn ${mapLayers.cables ? 'active' : ''}" onclick="toggleLayer('cables')">Cables</button>
+            <button class="layer-btn ${mapLayers.sanctions ? 'active' : ''}" onclick="toggleLayer('sanctions')">Sanctions</button>
+            <button class="layer-btn ${mapLayers.density ? 'active' : ''}" onclick="toggleLayer('density')">Density</button>
+        `;
+    }
+
+    // Close popups when clicking on globe background
+    globeInstance.onGlobeClick(() => {
+        hideHotspotPopup();
+        hideChokepointPopup();
+        hideQuakePopup();
+        hideCyberPopup();
+        hideCustomHotspotPopup();
+        hideConflictPopup();
+        hideUSCityPopup();
+        hideUSHotspotPopup();
+        hideCablePopup();
+    });
+}
+
+// Legacy renderGlobalMap code kept for reference but not used
+async function renderGlobalMapLegacy(activityData, earthquakes = [], allNews = []) {
     // Cache allNews for popup access
     window.cachedAllNews = allNews;
 
@@ -3240,6 +3731,355 @@ function hideHotspotPopup() {
     if (popup) {
         popup.classList.remove('visible');
     }
+}
+
+// Direct popup functions for Globe.gl (data passed directly, not from DOM)
+function showHotspotPopupDirect(event, activityData) {
+    if (event?.stopPropagation) event.stopPropagation();
+
+    hideChokepointPopup();
+    hideQuakePopup();
+    hideCyberPopup();
+    hideCustomHotspotPopup();
+    hideConflictPopup();
+
+    const popup = document.getElementById('hotspotPopup');
+    if (!popup) return;
+
+    let headlinesHTML = '';
+    if (activityData.headlines && activityData.headlines.length > 0) {
+        headlinesHTML = activityData.headlines.map(h => `
+            <div class="hotspot-popup-headline">
+                <div class="hotspot-popup-source">${escapeHtml(h.source || 'News')}</div>
+                <a href="${h.link || '#'}" target="_blank">${escapeHtml(h.title)}</a>
+            </div>
+        `).join('');
+    } else {
+        headlinesHTML = '<div class="hotspot-popup-empty">No recent headlines for this location</div>';
+    }
+
+    let agenciesHTML = '';
+    if (activityData.agencies && activityData.agencies.length > 0) {
+        agenciesHTML = `
+            <div class="hotspot-popup-agencies">
+                <div class="hotspot-popup-agencies-title">Key Entities</div>
+                ${activityData.agencies.map(a => `<span class="hotspot-popup-agency">${escapeHtml(a)}</span>`).join('')}
+            </div>
+        `;
+    }
+
+    popup.innerHTML = `
+        <button class="hotspot-popup-close" onclick="hideHotspotPopup()">&times;</button>
+        <div class="hotspot-popup-header">
+            <span class="hotspot-popup-title">${escapeHtml(activityData.name)}</span>
+            <span class="hotspot-popup-level ${activityData.level}">${(activityData.level || 'low').toUpperCase()}</span>
+        </div>
+        <div class="hotspot-popup-subtext">${escapeHtml(activityData.subtext || '')}</div>
+        ${activityData.description ? `<div class="hotspot-popup-desc">${escapeHtml(activityData.description)}</div>` : ''}
+        ${agenciesHTML}
+        ${headlinesHTML.includes('hotspot-popup-headline') ? '<div class="hotspot-popup-headlines-title">Related Headlines</div>' : ''}
+        <div class="hotspot-popup-headlines">${headlinesHTML}</div>
+    `;
+
+    popup.className = `hotspot-popup visible ${activityData.level || 'low'}`;
+    positionPopupAtEvent(popup, event);
+}
+
+function showChokepointPopupDirect(event, cpData) {
+    if (event?.stopPropagation) event.stopPropagation();
+
+    hideHotspotPopup();
+    hideQuakePopup();
+    hideCyberPopup();
+    hideCustomHotspotPopup();
+    hideConflictPopup();
+
+    const popup = document.getElementById('chokepointPopup');
+    if (!popup) return;
+
+    let headlinesHTML = '<div class="chokepoint-popup-empty">No related news</div>';
+    if (cpData.headlines && cpData.headlines.length > 0) {
+        headlinesHTML = cpData.headlines.map(h => `
+            <div class="chokepoint-popup-headline">
+                <a href="${h.link || '#'}" target="_blank">${escapeHtml(h.title)}</a>
+                <span class="chokepoint-popup-source">${escapeHtml(h.source || '')}</span>
+            </div>
+        `).join('');
+    }
+
+    popup.innerHTML = `
+        <button class="chokepoint-popup-close" onclick="hideChokepointPopup()">&times;</button>
+        <div class="chokepoint-popup-header">
+            <span class="chokepoint-popup-title">${escapeHtml(cpData.name)}</span>
+            <span class="chokepoint-popup-status ${cpData.isAlert ? 'alert' : 'normal'}">${cpData.isAlert ? 'ALERT' : 'NORMAL'}</span>
+        </div>
+        <div class="chokepoint-popup-desc">${escapeHtml(cpData.desc || '')}</div>
+        <div class="chokepoint-popup-info">
+            <div class="chokepoint-popup-stat">
+                <span class="chokepoint-popup-stat-label">Traffic</span>
+                <span class="chokepoint-popup-stat-value">${cpData.traffic || 'N/A'}</span>
+            </div>
+            <div class="chokepoint-popup-stat">
+                <span class="chokepoint-popup-stat-label">Region</span>
+                <span class="chokepoint-popup-stat-value">${cpData.region || 'N/A'}</span>
+            </div>
+        </div>
+        <div class="chokepoint-popup-headlines">${headlinesHTML}</div>
+    `;
+
+    popup.className = `chokepoint-popup visible ${cpData.isAlert ? 'alert' : ''}`;
+    positionPopupAtEvent(popup, event);
+}
+
+function showConflictPopupDirect(event, conflictData) {
+    if (event?.stopPropagation) event.stopPropagation();
+
+    hideHotspotPopup();
+    hideChokepointPopup();
+    hideQuakePopup();
+    hideCyberPopup();
+    hideCustomHotspotPopup();
+
+    const popup = document.getElementById('conflictPopup');
+    if (!popup) return;
+
+    let matchedHeadlines = [];
+    if (window.cachedAllNews && conflictData.keywords) {
+        matchedHeadlines = window.cachedAllNews.filter(item => {
+            const title = (item.title || '').toLowerCase();
+            return conflictData.keywords.some(kw => title.includes(kw.toLowerCase()));
+        }).slice(0, 5);
+    }
+
+    let headlinesHTML = '';
+    if (matchedHeadlines.length > 0) {
+        headlinesHTML = `
+            <div class="conflict-popup-headlines-title">Related Headlines</div>
+            <div class="conflict-popup-headlines">
+                ${matchedHeadlines.map(h => `
+                    <div class="conflict-popup-headline">
+                        <a href="${h.link || '#'}" target="_blank">${escapeHtml(h.title)}</a>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    popup.innerHTML = `
+        <button class="conflict-popup-close" onclick="hideConflictPopup()">&times;</button>
+        <div class="conflict-popup-header">
+            <span class="conflict-popup-title">${escapeHtml(conflictData.name)}</span>
+            <span class="conflict-popup-intensity ${conflictData.intensity}">${(conflictData.intensity || '').toUpperCase()}</span>
+        </div>
+        <div class="conflict-popup-desc">${escapeHtml(conflictData.description || '')}</div>
+        <div class="conflict-popup-stats">
+            <div class="conflict-popup-stat"><strong>Started:</strong> ${conflictData.startDate || 'N/A'}</div>
+            <div class="conflict-popup-stat"><strong>Parties:</strong> ${(conflictData.parties || []).join(', ')}</div>
+            <div class="conflict-popup-stat"><strong>Casualties:</strong> ${conflictData.casualties || 'N/A'}</div>
+        </div>
+        ${headlinesHTML}
+    `;
+
+    popup.className = `conflict-popup visible ${conflictData.intensity}`;
+    positionPopupAtEvent(popup, event);
+}
+
+function showCyberPopupDirect(event, cyberData) {
+    if (event?.stopPropagation) event.stopPropagation();
+
+    hideHotspotPopup();
+    hideChokepointPopup();
+    hideQuakePopup();
+    hideCustomHotspotPopup();
+    hideConflictPopup();
+
+    const popup = document.getElementById('cyberPopup');
+    if (!popup) return;
+
+    popup.innerHTML = `
+        <button class="cyber-popup-close" onclick="hideCyberPopup()">&times;</button>
+        <div class="cyber-popup-header">
+            <span class="cyber-popup-title">${escapeHtml(cyberData.group || cyberData.name)}</span>
+            <span class="cyber-popup-status ${cyberData.isActive ? 'active' : ''}">${cyberData.isActive ? 'ACTIVE' : 'MONITORING'}</span>
+        </div>
+        <div class="cyber-popup-aka">${escapeHtml(cyberData.aka || '')}</div>
+        <div class="cyber-popup-desc">${escapeHtml(cyberData.desc || '')}</div>
+        <div class="cyber-popup-info">
+            <div><strong>Sponsor:</strong> ${escapeHtml(cyberData.sponsor || 'Unknown')}</div>
+            <div><strong>Targets:</strong> ${(cyberData.targets || []).join(', ')}</div>
+        </div>
+    `;
+
+    popup.className = `cyber-popup visible ${cyberData.isActive ? 'active' : ''}`;
+    positionPopupAtEvent(popup, event);
+}
+
+function showCustomHotspotPopupDirect(event, monitorData) {
+    if (event?.stopPropagation) event.stopPropagation();
+
+    hideHotspotPopup();
+    hideChokepointPopup();
+    hideQuakePopup();
+    hideCyberPopup();
+    hideConflictPopup();
+
+    const popup = document.getElementById('customHotspotPopup');
+    if (!popup) return;
+
+    let matchesHTML = '<div class="custom-hotspot-popup-empty">No matches found</div>';
+    if (monitorData.matches && monitorData.matches.length > 0) {
+        matchesHTML = monitorData.matches.map(m => `
+            <div class="custom-hotspot-popup-match">
+                <a href="${m.link || '#'}" target="_blank">${escapeHtml(m.title)}</a>
+            </div>
+        `).join('');
+    }
+
+    popup.innerHTML = `
+        <button class="custom-hotspot-popup-close" onclick="hideCustomHotspotPopup()">&times;</button>
+        <div class="custom-hotspot-popup-header" style="border-color: ${monitorData.color}">
+            <span class="custom-hotspot-popup-title" style="color: ${monitorData.color}">${escapeHtml(monitorData.name)}</span>
+            <span class="custom-hotspot-popup-count">${monitorData.matchCount || 0} matches</span>
+        </div>
+        <div class="custom-hotspot-popup-keywords">Keywords: ${(monitorData.keywords || []).join(', ')}</div>
+        <div class="custom-hotspot-popup-matches">${matchesHTML}</div>
+    `;
+
+    popup.className = 'custom-hotspot-popup visible';
+    positionPopupAtEvent(popup, event);
+}
+
+// Helper function to position popups at click event location
+function positionPopupAtEvent(popup, event) {
+    const mapContainer = document.getElementById('worldMapContainer');
+    if (!mapContainer) return;
+
+    const mapRect = mapContainer.getBoundingClientRect();
+    const popupWidth = 320;
+    const popupHeight = 300;
+
+    let left = (event.clientX - mapRect.left) + 15;
+    let top = (event.clientY - mapRect.top) + 15;
+
+    if (left + popupWidth > mapRect.width) left = mapRect.width - popupWidth - 10;
+    if (top + popupHeight > mapRect.height) top = mapRect.height - popupHeight - 10;
+    if (left < 10) left = 10;
+    if (top < 10) top = 10;
+
+    popup.style.left = `${left}px`;
+    popup.style.top = `${top}px`;
+}
+
+function showQuakePopupDirect(event, quakeData) {
+    if (event?.stopPropagation) event.stopPropagation();
+
+    hideHotspotPopup();
+    hideChokepointPopup();
+    hideCyberPopup();
+    hideCustomHotspotPopup();
+    hideConflictPopup();
+
+    const popup = document.getElementById('quakePopup');
+    if (!popup) return;
+
+    const timeStr = quakeData.time ? new Date(quakeData.time).toLocaleString() : 'Unknown';
+
+    popup.innerHTML = `
+        <button class="quake-popup-close" onclick="hideQuakePopup()">&times;</button>
+        <div class="quake-popup-header">
+            <span class="quake-popup-title">M${(quakeData.mag || 0).toFixed(1)} Earthquake</span>
+            <span class="quake-popup-mag ${quakeData.mag >= 6 ? 'major' : ''}">${quakeData.mag >= 6 ? 'MAJOR' : 'MODERATE'}</span>
+        </div>
+        <div class="quake-popup-place">${escapeHtml(quakeData.place || 'Unknown location')}</div>
+        <div class="quake-popup-info">
+            <div class="quake-popup-stat">
+                <span class="quake-popup-stat-label">Time</span>
+                <span class="quake-popup-stat-value">${timeStr}</span>
+            </div>
+            <div class="quake-popup-stat">
+                <span class="quake-popup-stat-label">Depth</span>
+                <span class="quake-popup-stat-value">${quakeData.depth ? quakeData.depth.toFixed(1) + ' km' : 'N/A'}</span>
+            </div>
+            <div class="quake-popup-stat">
+                <span class="quake-popup-stat-label">Coordinates</span>
+                <span class="quake-popup-stat-value">${quakeData.lat?.toFixed(2) || 0}°, ${quakeData.lon?.toFixed(2) || 0}°</span>
+            </div>
+        </div>
+    `;
+
+    popup.className = `quake-popup visible ${quakeData.mag >= 6 ? 'major' : ''}`;
+    positionPopupAtEvent(popup, event);
+}
+
+function showBasePopupDirect(event, baseData) {
+    if (event?.stopPropagation) event.stopPropagation();
+
+    hideHotspotPopup();
+    hideChokepointPopup();
+    hideQuakePopup();
+    hideCyberPopup();
+    hideCustomHotspotPopup();
+    hideConflictPopup();
+
+    const popup = document.getElementById('conflictPopup'); // Reuse conflict popup
+    if (!popup) return;
+
+    const typeLabel = baseData.type === 'us-nato' ? 'US/NATO' :
+                      baseData.type === 'china' ? 'China' : 'Russia';
+    const typeColor = baseData.type === 'us-nato' ? '#ff00ff' :
+                      baseData.type === 'china' ? '#ff6600' : '#ff3333';
+
+    popup.innerHTML = `
+        <button class="conflict-popup-close" onclick="hideConflictPopup()">&times;</button>
+        <div class="conflict-popup-header">
+            <span class="conflict-popup-title">${escapeHtml(baseData.name)}</span>
+            <span class="conflict-popup-intensity" style="background: ${typeColor}">${typeLabel}</span>
+        </div>
+        <div class="conflict-popup-desc">Military installation</div>
+        <div class="conflict-popup-stats">
+            <div class="conflict-popup-stat"><strong>Type:</strong> ${typeLabel} Base</div>
+            <div class="conflict-popup-stat"><strong>Location:</strong> ${baseData.lat?.toFixed(2) || 0}°, ${baseData.lon?.toFixed(2) || 0}°</div>
+        </div>
+    `;
+
+    popup.className = 'conflict-popup visible';
+    positionPopupAtEvent(popup, event);
+}
+
+function showNuclearPopupDirect(event, nuclearData) {
+    if (event?.stopPropagation) event.stopPropagation();
+
+    hideHotspotPopup();
+    hideChokepointPopup();
+    hideQuakePopup();
+    hideCyberPopup();
+    hideCustomHotspotPopup();
+    hideConflictPopup();
+
+    const popup = document.getElementById('conflictPopup'); // Reuse conflict popup
+    if (!popup) return;
+
+    const isWeapons = nuclearData.type === 'weapons' || nuclearData.type === 'enrichment';
+    const typeLabel = nuclearData.type === 'weapons' ? 'Weapons Facility' :
+                      nuclearData.type === 'enrichment' ? 'Enrichment Facility' :
+                      nuclearData.type === 'reprocessing' ? 'Reprocessing Facility' : 'Power Plant';
+
+    popup.innerHTML = `
+        <button class="conflict-popup-close" onclick="hideConflictPopup()">&times;</button>
+        <div class="conflict-popup-header">
+            <span class="conflict-popup-title">☢ ${escapeHtml(nuclearData.name)}</span>
+            <span class="conflict-popup-intensity ${isWeapons ? 'high' : ''}">${isWeapons ? 'SENSITIVE' : 'CIVILIAN'}</span>
+        </div>
+        <div class="conflict-popup-desc">${typeLabel}</div>
+        <div class="conflict-popup-stats">
+            <div class="conflict-popup-stat"><strong>Type:</strong> ${typeLabel}</div>
+            <div class="conflict-popup-stat"><strong>Status:</strong> ${nuclearData.status || 'Unknown'}</div>
+            <div class="conflict-popup-stat"><strong>Location:</strong> ${nuclearData.lat?.toFixed(2) || 0}°, ${nuclearData.lon?.toFixed(2) || 0}°</div>
+        </div>
+    `;
+
+    popup.className = 'conflict-popup visible';
+    positionPopupAtEvent(popup, event);
 }
 
 // Show conflict zone popup
