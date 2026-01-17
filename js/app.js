@@ -3896,18 +3896,35 @@ function showCyberPopupDirect(event, cyberData) {
     const popup = document.getElementById('cyberPopup');
     if (!popup) return;
 
+    const title = cyberData.group || cyberData.name || 'Cyber';
+    const statusClass = cyberData.isActive ? 'active' : 'dormant';
+    const statusLabel = cyberData.isActive ? 'Active' : 'Dormant';
+    const aptText = [cyberData.group || cyberData.name, cyberData.aka].filter(Boolean).join(' — ');
+    const targets = Array.isArray(cyberData.targets) ? cyberData.targets : [];
+    const targetsHTML = targets.map(t => `<span class="cyber-popup-target-tag">${escapeHtml(t)}</span>`).join('');
+    const aptSection = aptText ? `<div class="cyber-popup-apt">${escapeHtml(aptText)}</div>` : '';
+    const targetsSection = targetsHTML ? `
+        <div class="cyber-popup-targets">
+            <div class="cyber-popup-targets-label">Targets</div>
+            <div class="cyber-popup-target-tags">${targetsHTML}</div>
+        </div>
+    ` : '';
+
     popup.innerHTML = `
         <button class="cyber-popup-close" onclick="hideCyberPopup()">&times;</button>
         <div class="cyber-popup-header">
-            <span class="cyber-popup-title">${escapeHtml(cyberData.group || cyberData.name)}</span>
-            <span class="cyber-popup-status ${cyberData.isActive ? 'active' : ''}">${cyberData.isActive ? 'ACTIVE' : 'MONITORING'}</span>
+            <span class="cyber-popup-title">${escapeHtml(title)}</span>
+            <span class="cyber-popup-status ${statusClass}">${statusLabel}</span>
         </div>
-        <div class="cyber-popup-aka">${escapeHtml(cyberData.aka || '')}</div>
+        ${aptSection}
         <div class="cyber-popup-desc">${escapeHtml(cyberData.desc || '')}</div>
         <div class="cyber-popup-info">
-            <div><strong>Sponsor:</strong> ${escapeHtml(cyberData.sponsor || 'Unknown')}</div>
-            <div><strong>Targets:</strong> ${(cyberData.targets || []).join(', ')}</div>
+            <div class="cyber-popup-stat">
+                <span class="cyber-popup-stat-label">Sponsor</span>
+                <span class="cyber-popup-stat-value">${escapeHtml(cyberData.sponsor || 'Unknown')}</span>
+            </div>
         </div>
+        ${targetsSection}
     `;
 
     popup.className = `cyber-popup visible ${cyberData.isActive ? 'active' : ''}`;
@@ -3937,11 +3954,12 @@ function showCustomHotspotPopupDirect(event, monitorData) {
 
     popup.innerHTML = `
         <button class="custom-hotspot-popup-close" onclick="hideCustomHotspotPopup()">&times;</button>
-        <div class="custom-hotspot-popup-header" style="border-color: ${monitorData.color}">
-            <span class="custom-hotspot-popup-title" style="color: ${monitorData.color}">${escapeHtml(monitorData.name)}</span>
-            <span class="custom-hotspot-popup-count">${monitorData.matchCount || 0} matches</span>
+        <div class="custom-hotspot-popup-header">
+            <div class="custom-hotspot-popup-dot" style="background: ${monitorData.color};"></div>
+            <div class="custom-hotspot-popup-name" style="color: ${monitorData.color};">${escapeHtml(monitorData.name)}</div>
+            <div class="custom-hotspot-popup-count">${monitorData.matchCount || 0} matches</div>
         </div>
-        <div class="custom-hotspot-popup-keywords">Keywords: ${(monitorData.keywords || []).join(', ')}</div>
+        <div class="custom-hotspot-popup-keywords">Keywords: ${(monitorData.keywords || []).map(k => escapeHtml(k)).join(', ')}</div>
         <div class="custom-hotspot-popup-matches">${matchesHTML}</div>
     `;
 
@@ -3983,14 +4001,19 @@ function showQuakePopupDirect(event, quakeData) {
     if (!popup) return;
 
     const timeStr = quakeData.time ? new Date(quakeData.time).toLocaleString() : 'Unknown';
+    const mag = quakeData.mag || 0;
+    const isMajor = mag >= 6.0;
+    const isModerate = mag >= 5.0;
+    const severity = isMajor ? 'major' : (isModerate ? 'moderate' : 'minor');
+    const severityLabel = isMajor ? 'Major' : (isModerate ? 'Moderate' : 'Minor');
 
     popup.innerHTML = `
         <button class="quake-popup-close" onclick="hideQuakePopup()">&times;</button>
         <div class="quake-popup-header">
-            <span class="quake-popup-title">M${(quakeData.mag || 0).toFixed(1)} Earthquake</span>
-            <span class="quake-popup-mag ${quakeData.mag >= 6 ? 'major' : ''}">${quakeData.mag >= 6 ? 'MAJOR' : 'MODERATE'}</span>
+            <span class="quake-popup-mag">M${mag.toFixed(1)}</span>
+            <span class="quake-popup-severity ${severity}">${severityLabel}</span>
         </div>
-        <div class="quake-popup-place">${escapeHtml(quakeData.place || 'Unknown location')}</div>
+        <div class="quake-popup-location">${escapeHtml(quakeData.place || 'Unknown location')}</div>
         <div class="quake-popup-info">
             <div class="quake-popup-stat">
                 <span class="quake-popup-stat-label">Time</span>
@@ -4007,7 +4030,7 @@ function showQuakePopupDirect(event, quakeData) {
         </div>
     `;
 
-    popup.className = `quake-popup visible ${quakeData.mag >= 6 ? 'major' : ''}`;
+    popup.className = `quake-popup visible ${isMajor ? 'major' : ''}`;
     positionPopupAtEvent(popup, event);
 }
 

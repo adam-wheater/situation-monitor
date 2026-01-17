@@ -1650,7 +1650,7 @@
         }
 
         .hotspot-popup-header {
-            padding: 0.85rem 1.05rem;
+            padding: 0.85rem 2.2rem 0.85rem 1.05rem;
             border-bottom: 1px solid #0f5040;
             display: flex;
             justify-content: space-between;
@@ -2024,6 +2024,14 @@
             color: #e8e8e8;
         }
 
+        .chokepoint-popup-source {
+            display: block;
+            margin-top: 0.15rem;
+            font-size: 0.55rem;
+            color: #0a8090;
+            text-transform: uppercase;
+        }
+
         .chokepoint-popup-headline:last-child {
             border-bottom: none;
         }
@@ -2170,7 +2178,7 @@
         }
 
         .quake-popup-header {
-            padding: 0.85rem 1.05rem;
+            padding: 0.85rem 2.2rem 0.85rem 1.05rem;
             border-bottom: 1px solid #401010;
             display: flex;
             justify-content: space-between;
@@ -2368,7 +2376,7 @@
         }
 
         .cyber-popup-header {
-            padding: 0.85rem 1.05rem;
+            padding: 0.85rem 2.2rem 0.85rem 1.05rem;
             border-bottom: 1px solid #301030;
             display: flex;
             justify-content: space-between;
@@ -3200,6 +3208,28 @@
             color: #ccaaaa;
             line-height: 1.5;
             border-bottom: 1px solid rgba(255, 50, 50, 0.2);
+        }
+
+        /* Globe "direct" conflict popups use a simple stats list; keep it consistent with meta styling */
+        .conflict-popup-stats {
+            padding: 0.75rem 1.05rem;
+            border-bottom: 1px solid rgba(255, 50, 50, 0.2);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .conflict-popup-stat {
+            font-size: 0.65rem;
+            color: #ff8888;
+        }
+
+        .conflict-popup-stat strong {
+            color: #884444;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: block;
+            margin-bottom: 0.15rem;
         }
 
         .conflict-popup-parties {
@@ -4233,6 +4263,7 @@
             min-width: 280px;
             max-width: 350px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
         }
 
         .custom-hotspot-popup.visible {
@@ -4240,7 +4271,7 @@
         }
 
         .custom-hotspot-popup-header {
-            padding: 0.85rem 1.05rem;
+            padding: 0.85rem 2.2rem 0.85rem 1.05rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
