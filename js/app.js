@@ -1,3 +1,5 @@
+// Main application entry point
+// All modules are loaded via script tags in index.html
 // Panel configuration with display names
 // Load panel visibility from localStorage
 function getPanelSettings() {
@@ -3809,301 +3811,134 @@ function toggleLayer(layerName) {
     refreshAll();
 }
 
-// Update flashback time display
-function updateFlashback(hoursAgo) {
-    const flashbackTime = document.getElementById('flashbackTime');
-    const flashbackIndicator = document.getElementById('flashbackIndicator');
+// Update status display
+function setStatus(text, loading = false) {
+    const status = document.getElementById('status');
+    if (status) {
+        status.textContent = text;
+        status.className = loading ? 'status loading' : 'status';
+    }
+}
 
-    if (parseInt(hoursAgo) === 0) {
-        flashbackTime.textContent = 'LIVE';
-        if (flashbackIndicator) flashbackIndicator.classList.remove('active');
-    } else {
+// Staged refresh - loads critical data first for faster perceived startup
+async function refreshAll() {
+    const btn = document.getElementById('refreshBtn');
+    if (btn) btn.disabled = true;
+    setStatus('Loading critical...', true);
+
+    let allNews = [];
+
+    try {
+        // STAGE 1: Critical data (news + markets) - loads first
+        const stage1Promise = Promise.all([
+            isPanelEnabled('politics') ? fetchCategory(FEEDS.politics) : Promise.resolve([]),
+            isPanelEnabled('tech') ? fetchCategory(FEEDS.tech) : Promise.resolve([]),
+            isPanelEnabled('finance') ? fetchCategory(FEEDS.finance) : Promise.resolve([]),
+            isPanelEnabled('markets') ? fetchMarkets() : Promise.resolve([]),
+            isPanelEnabled('heatmap') ? fetchSectors() : Promise.resolve([])
+        ]);
+
+        const [politics, tech, finance, markets, sectors] = await stage1Promise;
+
+        // Render Stage 1 immediately
+        if (isPanelEnabled('politics')) renderNews('politicsPanel', 'politicsCount', politics);
+        if (isPanelEnabled('tech')) renderNews('techPanel', 'techCount', tech);
+        if (isPanelEnabled('finance')) renderNews('financePanel', 'financeCount', finance);
+        if (isPanelEnabled('markets')) renderMarkets(markets);
+        if (isPanelEnabled('heatmap')) renderHeatmap(sectors);
+
+        allNews = [...politics, ...tech, ...finance];
+        setStatus('Loading more...', true);
+
+        // STAGE 2: Secondary data (gov, commodities, polymarket, printer, earthquakes)
+        const stage2Promise = Promise.all([
+            isPanelEnabled('gov') ? fetchCategory(FEEDS.gov) : Promise.resolve([]),
+            isPanelEnabled('commodities') ? fetchCommodities() : Promise.resolve([]),
+            isPanelEnabled('polymarket') ? fetchPolymarket() : Promise.resolve([]),
+            isPanelEnabled('printer') ? fetchFedBalance() : Promise.resolve({ value: 0, change: 0, changePercent: 0, percentOfMax: 0 }),
+            isPanelEnabled('map') ? fetchEarthquakes() : Promise.resolve([])
+        ]);
+
+        const [gov, commodities, polymarket, fedBalance, earthquakes] = await stage2Promise;
+
+        if (isPanelEnabled('gov')) {
+            renderNews('govPanel', 'govCount', gov);
+            allNews = [...allNews, ...gov];
+        }
+        if (isPanelEnabled('commodities')) renderCommodities(commodities);
+        if (isPanelEnabled('polymarket')) renderPolymarket(polymarket);
+        if (isPanelEnabled('printer')) renderMoneyPrinter(fedBalance);
+
+        // Render map with earthquakes and shipping alert data
+        if (isPanelEnabled('map')) {
+            const activityData = analyzeHotspotActivity(allNews);
+            await renderGlobalMap(activityData, earthquakes, allNews);
+        }
+
+        if (isPanelEnabled('mainchar')) {
+            const mainCharRankings = calculateMainCharacter(allNews);
+            renderMainCharacter(mainCharRankings);
+        }
+
+        setStatus('Loading extras...', true);
+
+        // STAGE 3: Extra data - lowest priority
+        const stage3Promise = Promise.all([
+            isPanelEnabled('congress') ? fetchCongressTrades() : Promise.resolve([]),
+            isPanelEnabled('whales') ? fetchWhaleTransactions() : Promise.resolve([]),
+            isPanelEnabled('contracts') ? fetchGovContracts() : Promise.resolve([]),
+            isPanelEnabled('ai') ? fetchAINews() : Promise.resolve([]),
+            isPanelEnabled('layoffs') ? fetchLayoffs() : Promise.resolve([]),
+            isPanelEnabled('pentagon') ? fetchPentagonTracker() : Promise.resolve({ locations: [], error: null }),
+            isPanelEnabled('venezuela') ? fetchSituationNews('venezuela maduro caracas crisis') : Promise.resolve([]),
+            isPanelEnabled('greenland') ? fetchSituationNews('greenland denmark trump arctic') : Promise.resolve([]),
+            isPanelEnabled('intel') ? fetchIntelFeed() : Promise.resolve([])
+        ]);
+
+        const [congressTrades, whales, contracts, aiNews, layoffs, pentagonData, venezuelaNews, greenlandNews, intelFeed] = await stage3Promise;
+
+        if (isPanelEnabled('congress')) renderCongressTrades(congressTrades);
+        if (isPanelEnabled('whales')) renderWhaleWatch(whales);
+        if (isPanelEnabled('contracts')) renderGovContracts(contracts);
+        if (isPanelEnabled('ai')) renderAINews(aiNews);
+        if (isPanelEnabled('layoffs')) renderLayoffs(layoffs);
+        if (isPanelEnabled('pentagon')) renderPentagonTracker(pentagonData);
+        if (isPanelEnabled('intel')) renderIntelFeed(intelFeed);
+
+        if (isPanelEnabled('venezuela')) {
+            renderSituation('venezuelaPanel', 'venezuelaStatus', venezuelaNews, {
+                title: 'Venezuela Crisis',
+                subtitle: 'Political instability & humanitarian situation',
+                criticalKeywords: ['invasion', 'military', 'coup', 'violence', 'sanctions', 'arrested']
+            });
+        }
+
+        if (isPanelEnabled('greenland')) {
+            renderSituation('greenlandPanel', 'greenlandStatus', greenlandNews, {
+                title: 'Greenland Dispute',
+                subtitle: 'US-Denmark tensions over Arctic territory',
+                criticalKeywords: ['purchase', 'trump', 'military', 'takeover', 'independence', 'referendum']
+            });
+        }
+
+        // Render My Monitors panel with all news
+        if (isPanelEnabled('monitors')) {
+            renderMonitorsPanel(allNews);
+        }
+
         const now = new Date();
-        now.setHours(now.getHours() - parseInt(hoursAgo));
-        flashbackTime.textContent = `-${hoursAgo}h`;
-        if (flashbackIndicator) flashbackIndicator.classList.add('active');
-    }
-    // Note: In a real implementation, this would fetch historical data
-    // For now, it just updates the display as a UI demonstration
-}
-
-// ========== CUSTOM MONITORS ==========
-
-
-
-
-
-
-// Load monitors from localStorage
-function loadMonitors() {
-    try {
-        const data = localStorage.getItem('customMonitors');
-        return data ? JSON.parse(data) : [];
-    } catch (e) {
-        console.error('Failed to load monitors:', e);
-        return [];
-    }
-}
-
-// Save monitors to localStorage
-function saveMonitors(monitors) {
-    try {
-        localStorage.setItem('customMonitors', JSON.stringify(monitors));
-    } catch (e) {
-        console.error('Failed to save monitors:', e);
-    }
-}
-
-// Render monitors list in settings
-function renderMonitorsList() {
-    const monitors = loadMonitors();
-    const container = document.getElementById('monitorsList');
-    if (!container) return;
-
-    if (monitors.length === 0) {
-        container.innerHTML = '<div style="font-size: 0.6rem; color: var(--text-dim); padding: 0.5rem 0;">No monitors yet</div>';
-        return;
+        setStatus(`Updated ${now.toLocaleTimeString()}`);
+    } catch (error) {
+        console.error('Refresh error:', error);
+        setStatus('Error updating');
     }
 
-    container.innerHTML = monitors.map(m => `
-                <div class="monitor-item">
-                    <div class="monitor-item-info">
-                        <div class="monitor-item-name">
-                            <div class="monitor-item-color" style="background: ${m.color};"></div>
-                            ${m.name}
-                        </div>
-                        <div class="monitor-item-keywords">${m.keywords.join(', ')}</div>
-                        ${m.lat && m.lon ? `<div class="monitor-item-location">📍 ${m.lat.toFixed(2)}, ${m.lon.toFixed(2)}</div>` : ''}
-                    </div>
-                    <div class="monitor-item-actions">
-                        <button class="monitor-item-btn" onclick="editMonitor('${m.id}')" title="Edit">✎</button>
-                        <button class="monitor-item-btn delete" onclick="deleteMonitor('${m.id}')" title="Delete">✕</button>
-                    </div>
-                </div>
-            `).join('');
+    if (btn) btn.disabled = false;
 }
 
-// Open monitor form (for add or edit)
-function openMonitorForm(monitorId = null) {
-    const overlay = document.getElementById('monitorFormOverlay');
-    const titleEl = document.getElementById('monitorFormTitle');
-    const editIdEl = document.getElementById('monitorEditId');
-    const nameEl = document.getElementById('monitorName');
-    const keywordsEl = document.getElementById('monitorKeywords');
-    const latEl = document.getElementById('monitorLat');
-    const lonEl = document.getElementById('monitorLon');
-    const colorsContainer = document.getElementById('monitorColors');
-
-    // Render color options
-    colorsContainer.innerHTML = MONITOR_COLORS.map((c, i) =>
-        `<div class="monitor-color-option" style="background: ${c};" data-color="${c}" onclick="selectMonitorColor('${c}')"></div>`
-    ).join('');
-
-    if (monitorId) {
-        // Edit mode
-        const monitors = loadMonitors();
-        const monitor = monitors.find(m => m.id === monitorId);
-        if (monitor) {
-            titleEl.textContent = 'Edit Monitor';
-            editIdEl.value = monitorId;
-            nameEl.value = monitor.name;
-            keywordsEl.value = monitor.keywords.join(', ');
-            latEl.value = monitor.lat || '';
-            lonEl.value = monitor.lon || '';
-            selectMonitorColor(monitor.color);
-        }
-    } else {
-        // Add mode
-        titleEl.textContent = 'Add Monitor';
-        editIdEl.value = '';
-        nameEl.value = '';
-        keywordsEl.value = '';
-        latEl.value = '';
-        lonEl.value = '';
-        selectMonitorColor(MONITOR_COLORS[0]);
-    }
-
-    overlay.classList.add('open');
-}
-
-// Close monitor form
-function closeMonitorForm() {
-    document.getElementById('monitorFormOverlay').classList.remove('open');
-}
-
-// Select a monitor color
-function selectMonitorColor(color) {
-    document.querySelectorAll('.monitor-color-option').forEach(el => {
-        el.classList.toggle('selected', el.dataset.color === color);
-    });
-}
-
-// Get currently selected color
-function getSelectedMonitorColor() {
-    const selected = document.querySelector('.monitor-color-option.selected');
-    return selected ? selected.dataset.color : MONITOR_COLORS[0];
-}
-
-// Save monitor (add or update)
-function saveMonitor() {
-    const editId = document.getElementById('monitorEditId').value;
-    const name = document.getElementById('monitorName').value.trim();
-    const keywordsRaw = document.getElementById('monitorKeywords').value.trim();
-    const lat = parseFloat(document.getElementById('monitorLat').value);
-    const lon = parseFloat(document.getElementById('monitorLon').value);
-    const color = getSelectedMonitorColor();
-
-    if (!name) {
-        alert('Please enter a name');
-        return;
-    }
-    if (!keywordsRaw) {
-        alert('Please enter at least one keyword');
-        return;
-    }
-
-    const keywords = keywordsRaw.split(',').map(k => k.trim().toLowerCase()).filter(k => k);
-
-    const monitor = {
-        id: editId || `monitor_${Date.now()}`,
-        name,
-        keywords,
-        color,
-        lat: isNaN(lat) ? null : lat,
-        lon: isNaN(lon) ? null : lon,
-        createdAt: editId ? undefined : new Date().toISOString()
-    };
-
-    const monitors = loadMonitors();
-    if (editId) {
-        // Update existing
-        const idx = monitors.findIndex(m => m.id === editId);
-        if (idx !== -1) {
-            monitor.createdAt = monitors[idx].createdAt;
-            monitors[idx] = monitor;
-        }
-    } else {
-        // Add new
-        monitors.push(monitor);
-    }
-
-    saveMonitors(monitors);
-    closeMonitorForm();
-    renderMonitorsList();
-    refreshAll(); // Refresh to show on map and in panel
-}
-
-// Edit a monitor
-function editMonitor(id) {
-    openMonitorForm(id);
-}
-
-// Delete a monitor
-function deleteMonitor(id) {
-    if (!confirm('Delete this monitor?')) return;
-    const monitors = loadMonitors().filter(m => m.id !== id);
-    saveMonitors(monitors);
-    renderMonitorsList();
-    refreshAll();
-}
-
-// Scan news for monitor matches
-function scanMonitorsForMatches(allNews) {
-    const monitors = loadMonitors();
-    const results = {};
-
-    monitors.forEach(monitor => {
-        const matches = [];
-        allNews.forEach(item => {
-            const title = (item.title || '').toLowerCase();
-            const matched = monitor.keywords.some(kw => title.includes(kw));
-            if (matched) {
-                matches.push({
-                    title: item.title,
-                    link: item.link,
-                    source: item.source,
-                    monitorId: monitor.id,
-                    monitorName: monitor.name,
-                    monitorColor: monitor.color
-                });
-            }
-        });
-        results[monitor.id] = {
-            monitor,
-            matches: matches.slice(0, 10), // Limit per monitor
-            count: matches.length
-        };
-    });
-
-    return results;
-}
-
-// Render the My Monitors panel
-function renderMonitorsPanel(allNews) {
-    const panel = document.getElementById('monitorsPanel');
-    const countEl = document.getElementById('monitorsCount');
-    if (!panel) return;
-
-    const monitors = loadMonitors();
-    if (monitors.length === 0) {
-        panel.innerHTML = `
-                    <div class="monitors-empty">
-                        No monitors configured
-                        <div class="monitors-empty-hint">Click Settings → Add Monitor to get started</div>
-                    </div>
-                `;
-        countEl.textContent = '-';
-        return;
-    }
-
-    const results = scanMonitorsForMatches(allNews);
-    let allMatches = [];
-
-    Object.values(results).forEach(r => {
-        allMatches = allMatches.concat(r.matches);
-    });
-
-    if (allMatches.length === 0) {
-        panel.innerHTML = `
-                    <div class="monitors-empty">
-                        No matches found
-                        <div class="monitors-empty-hint">Your ${monitors.length} monitor(s) found no matching headlines</div>
-                    </div>
-                `;
-        countEl.textContent = '0';
-        return;
-    }
-
-    // Sort by most recent (based on order in allNews)
-    countEl.textContent = allMatches.length;
-    panel.innerHTML = allMatches.slice(0, 20).map(match => `
-                <div class="monitor-match">
-                    <div class="monitor-match-header">
-                        <div class="monitor-match-dot" style="background: ${match.monitorColor};"></div>
-                        <span class="monitor-match-name">${match.monitorName}</span>
-                    </div>
-                    <a href="${match.link}" target="_blank" class="monitor-match-title">${match.title}</a>
-                    <div class="monitor-match-source">${match.source || 'News'}</div>
-                </div>
-            `).join('');
-}
-
-// Get monitor data for map hotspots
-function getMonitorHotspots(allNews) {
-    const monitors = loadMonitors().filter(m => m.lat && m.lon);
-    const results = scanMonitorsForMatches(allNews);
-
-    return monitors.map(m => ({
-        ...m,
-        matchCount: results[m.id]?.count || 0,
-        matches: results[m.id]?.matches || []
-    }));
-}
-
-// Fetch Congressional trades - uses news RSS since APIs are locked down
+// Fetch congress trades via news search
 async function fetchCongressTrades() {
     try {
-        // Try Google News RSS for congress stock trading news
         const searchTerms = encodeURIComponent('congress stock trading pelosi tuberville');
         const rssUrl = `https://news.google.com/rss/search?q=${searchTerms}&hl=en-US&gl=US&ceid=US:en`;
 
@@ -4122,86 +3957,16 @@ async function fetchCongressTrades() {
         // Fallback on failure
     }
 
-    // Fallback: Recent trades with dynamic dates
     return getRecentNotableTrades();
-}
-
-// Extract trade info from news headlines
-function extractTradesFromNews(items) {
-    const trades = [];
-    const members = {
-        'pelosi': { name: 'Nancy Pelosi', party: 'D', district: 'CA-11' },
-        'tuberville': { name: 'Tommy Tuberville', party: 'R', district: 'Senate' },
-        'crenshaw': { name: 'Dan Crenshaw', party: 'R', district: 'TX-02' },
-        'greene': { name: 'Marjorie Taylor Greene', party: 'R', district: 'GA-14' },
-        'khanna': { name: 'Ro Khanna', party: 'D', district: 'CA-17' },
-        'gottheimer': { name: 'Josh Gottheimer', party: 'D', district: 'NJ-05' },
-        'mccaul': { name: 'Michael McCaul', party: 'R', district: 'TX-10' },
-        'ossoff': { name: 'Jon Ossoff', party: 'D', district: 'Senate' },
-        'cruz': { name: 'Ted Cruz', party: 'R', district: 'Senate' }
-    };
-    const tickers = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'META', 'TSLA', 'AMZN', 'AMD', 'AVGO', 'CRM', 'PLTR'];
-
-    items.forEach(item => {
-        const title = (item.querySelector('title')?.textContent || '').toLowerCase();
-        const pubDate = item.querySelector('pubDate')?.textContent || new Date().toISOString();
-
-        for (const [key, member] of Object.entries(members)) {
-            if (title.includes(key)) {
-                const isBuy = title.includes('buy') || title.includes('purchase') || title.includes('bought');
-                const isSell = title.includes('sell') || title.includes('sold') || title.includes('sale');
-
-                let ticker = tickers.find(t => title.includes(t.toLowerCase())) || 'STOCK';
-
-                if (isBuy || isSell || title.includes('trade') || title.includes('stock')) {
-                    trades.push({
-                        ...member,
-                        ticker,
-                        type: isSell ? 'sell' : 'buy',
-                        amount: 'Disclosed',
-                        date: pubDate
-                    });
-                }
-            }
-        }
-    });
-
-    return trades.slice(0, 10);
-}
-
-// Fallback - recent trades with dynamically calculated dates
-function getRecentNotableTrades() {
-    const today = new Date();
-    const daysAgo = (n) => {
-        const d = new Date(today);
-        d.setDate(d.getDate() - n);
-        return d.toISOString().split('T')[0];
-    };
-
-    // Real congressional traders known for active trading
-    return [
-        { name: 'Nancy Pelosi', party: 'D', ticker: 'NVDA', type: 'buy', amount: '$1M - $5M', date: daysAgo(2), district: 'CA-11' },
-        { name: 'Tommy Tuberville', party: 'R', ticker: 'PLTR', type: 'buy', amount: '$250K - $500K', date: daysAgo(4), district: 'Senate' },
-        { name: 'Dan Crenshaw', party: 'R', ticker: 'MSFT', type: 'buy', amount: '$100K - $250K', date: daysAgo(6), district: 'TX-02' },
-        { name: 'Ro Khanna', party: 'D', ticker: 'GOOGL', type: 'buy', amount: '$50K - $100K', date: daysAgo(8), district: 'CA-17' },
-        { name: 'Josh Gottheimer', party: 'D', ticker: 'META', type: 'buy', amount: '$100K - $250K', date: daysAgo(10), district: 'NJ-05' },
-        { name: 'Marjorie Taylor Greene', party: 'R', ticker: 'TSLA', type: 'buy', amount: '$15K - $50K', date: daysAgo(12), district: 'GA-14' },
-        { name: 'Michael McCaul', party: 'R', ticker: 'RTX', type: 'buy', amount: '$500K - $1M', date: daysAgo(14), district: 'TX-10' },
-        { name: 'Nancy Pelosi', party: 'D', ticker: 'AAPL', type: 'sell', amount: '$500K - $1M', date: daysAgo(18), district: 'CA-11' },
-        { name: 'Mark Green', party: 'R', ticker: 'LMT', type: 'buy', amount: '$50K - $100K', date: daysAgo(21), district: 'TN-07' },
-        { name: 'Tommy Tuberville', party: 'R', ticker: 'XOM', type: 'buy', amount: '$100K - $250K', date: daysAgo(25), district: 'Senate' }
-    ];
 }
 
 // Fetch whale transactions
 async function fetchWhaleTransactions() {
     try {
-        // Use Blockchain.com API for recent large BTC transactions
         const text = await fetchWithProxy('https://blockchain.info/unconfirmed-transactions?format=json');
         const data = JSON.parse(text);
 
-        // Filter for large transactions (> 10 BTC)
-        const btcPrice = 100000; // Approximate, will be updated
+        const btcPrice = 100000;
         const whales = data.txs
             .map(tx => {
                 const totalOut = tx.out.reduce((sum, o) => sum + o.value, 0) / 100000000;
@@ -4220,65 +3985,26 @@ async function fetchWhaleTransactions() {
         return whales;
     } catch (error) {
         console.error('Error fetching whale transactions:', error);
-        // Fallback: simulate with placeholder data showing the feature
         return [];
     }
 }
 
-// Calculate "Main Character" from news headlines
-function calculateMainCharacter(allNews) {
-    // Common names and figures to track
-    const namePatterns = [
-        { pattern: /\btrump\b/gi, name: 'Trump' },
-        { pattern: /\bbiden\b/gi, name: 'Biden' },
-        { pattern: /\belon\b|\bmusk\b/gi, name: 'Elon Musk' },
-        { pattern: /\bputin\b/gi, name: 'Putin' },
-        { pattern: /\bzelensky\b/gi, name: 'Zelensky' },
-        { pattern: /\bxi\s*jinping\b|\bxi\b/gi, name: 'Xi Jinping' },
-        { pattern: /\bnetanyahu\b/gi, name: 'Netanyahu' },
-        { pattern: /\bsam\s*altman\b/gi, name: 'Sam Altman' },
-        { pattern: /\bmark\s*zuckerberg\b|\bzuckerberg\b/gi, name: 'Zuckerberg' },
-        { pattern: /\bjeff\s*bezos\b|\bbezos\b/gi, name: 'Bezos' },
-        { pattern: /\btim\s*cook\b/gi, name: 'Tim Cook' },
-        { pattern: /\bsatya\s*nadella\b|\bnadella\b/gi, name: 'Satya Nadella' },
-        { pattern: /\bsundar\s*pichai\b|\bpichai\b/gi, name: 'Sundar Pichai' },
-        { pattern: /\bwarren\s*buffett\b|\bbuffett\b/gi, name: 'Warren Buffett' },
-        { pattern: /\bjanet\s*yellen\b|\byellen\b/gi, name: 'Janet Yellen' },
-        { pattern: /\bjerome\s*powell\b|\bpowell\b/gi, name: 'Jerome Powell' },
-        { pattern: /\bkamala\s*harris\b|\bharris\b/gi, name: 'Kamala Harris' },
-        { pattern: /\bnancy\s*pelosi\b|\bpelosi\b/gi, name: 'Nancy Pelosi' },
-        { pattern: /\bjensen\s*huang\b|\bhuang\b/gi, name: 'Jensen Huang' },
-        { pattern: /\bdario\s*amodei\b|\bamodei\b/gi, name: 'Dario Amodei' }
-    ];
-
-    const counts = {};
-
-    allNews.forEach(item => {
-        const text = item.title.toLowerCase();
-        namePatterns.forEach(({ pattern, name }) => {
-            const matches = text.match(pattern);
-            if (matches) {
-                counts[name] = (counts[name] || 0) + matches.length;
-            }
-        });
-    });
-
-    // Sort by mentions
-    const sorted = Object.entries(counts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
-
-    return sorted;
-}
-
-// Fetch government contracts from USAspending
+// Fetch government contracts
 async function fetchGovContracts() {
     try {
-        try { window.lastGovContractsError = ''; } catch { }
+        window.lastGovContractsError = '';
+
+        const today = new Date();
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+
         const payload = {
             filters: {
-                time_period: [{ start_date: getDateDaysAgo(7), end_date: getToday() }],
-                award_type_codes: ['A', 'B', 'C', 'D'] // Contracts only
+                time_period: [{
+                    start_date: weekAgo.toISOString().split('T')[0],
+                    end_date: today.toISOString().split('T')[0]
+                }],
+                award_type_codes: ['A', 'B', 'C', 'D']
             },
             fields: ['Award ID', 'Recipient Name', 'Award Amount', 'Awarding Agency', 'Description', 'Start Date'],
             limit: 15,
@@ -4326,15 +4052,6 @@ function getToday() {
 }
 
 // AI RSS feeds for arms race tracking
-
-
-
-
-
-
-
-
-
 async function fetchAINews() {
     const results = await Promise.all(AI_FEEDS.map(async (source) => {
         try {
@@ -4366,10 +4083,9 @@ async function fetchAINews() {
     return results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 15);
 }
 
-// Fetch Fed balance sheet from FRED
+// Fetch Fed balance
 async function fetchFedBalance() {
     try {
-        // FRED API - Fed total assets (WALCL)
         const text = await fetchWithProxy('https://api.stlouisfed.org/fred/series/observations?series_id=WALCL&sort_order=desc&limit=10&file_type=json&api_key=DEMO');
         const data = JSON.parse(text);
 
@@ -4379,13 +4095,11 @@ async function fetchFedBalance() {
             const change = latest - previous;
             const changePercent = (change / previous) * 100;
 
-            // WALCL is in millions
             return {
-                value: latest / 1000000, // Convert to trillions
+                value: latest / 1000000,
                 change: change / 1000000,
                 changePercent,
                 date: data.observations[0].date,
-                // Historical high was ~9T in 2022
                 percentOfMax: (latest / 9000000) * 100
             };
         }
@@ -4393,7 +4107,6 @@ async function fetchFedBalance() {
         console.error('Error fetching Fed balance:', error);
     }
 
-    // Fallback with approximate current value
     return {
         value: 6.8,
         change: 0,
@@ -4403,202 +4116,21 @@ async function fetchFedBalance() {
     };
 }
 
-// Render functions for new panels
-function renderCongressTrades(trades) {
-    const panel = document.getElementById('congressPanel');
-    const count = document.getElementById('congressCount');
-
-    if (trades.length === 0) {
-        panel.innerHTML = '<div class="error-msg">Unable to load congressional trades</div>';
-        count.textContent = '0';
-        return;
-    }
-
-    panel.innerHTML = trades.map(t => `
-                <div class="congress-item">
-                    <div class="congress-info">
-                        <div>
-                            <span class="congress-name">${t.name}</span>
-                            <span class="congress-party ${t.party}">${t.party}</span>
-                        </div>
-                        <div class="congress-ticker">${t.ticker}</div>
-                        <div class="congress-meta">${timeAgo(t.date)} · ${t.district}</div>
-                    </div>
-                    <div class="congress-type">
-                        <span class="congress-action ${t.type}">${t.type.toUpperCase()}</span>
-                        <div class="congress-amount">${t.amount}</div>
-                    </div>
-                </div>
-            `).join('');
-
-    count.textContent = trades.length;
-}
-
-function renderWhaleWatch(whales) {
-    const panel = document.getElementById('whalePanel');
-    const count = document.getElementById('whaleCount');
-
-    if (whales.length === 0) {
-        panel.innerHTML = '<div class="error-msg">No whale transactions detected</div>';
-        count.textContent = '0';
-        return;
-    }
-
-    const formatAmount = (amt) => amt >= 1000 ? (amt / 1000).toFixed(1) + 'K' : amt.toFixed(2);
-    const formatUSD = (usd) => {
-        if (usd >= 1000000000) return '$' + (usd / 1000000000).toFixed(1) + 'B';
-        if (usd >= 1000000) return '$' + (usd / 1000000).toFixed(1) + 'M';
-        return '$' + (usd / 1000).toFixed(0) + 'K';
-    };
-
-    panel.innerHTML = whales.map(w => `
-                <div class="whale-item">
-                    <div class="whale-header">
-                        <span class="whale-coin">${w.coin}</span>
-                        <span class="whale-amount">${formatAmount(w.amount)} ${w.coin}</span>
-                    </div>
-                    <div class="whale-flow">
-                        <span class="whale-usd">${formatUSD(w.usd)}</span>
-                        <span class="arrow">→</span>
-                        <span>${w.hash}</span>
-                    </div>
-                </div>
-            `).join('');
-
-    count.textContent = whales.length;
-}
-
-function renderMainCharacter(rankings) {
-    const panel = document.getElementById('mainCharPanel');
-
-    if (rankings.length === 0) {
-        panel.innerHTML = '<div class="error-msg">No main character detected</div>';
-        return;
-    }
-
-    const [topName, topCount] = rankings[0];
-
-    panel.innerHTML = `
-                <div class="main-char-display">
-                    <div class="main-char-label">Today's Main Character</div>
-                    <div class="main-char-name">${topName}</div>
-                    <div class="main-char-count">${topCount} mentions in headlines</div>
-
-                    <div class="main-char-list">
-                        ${rankings.slice(1, 8).map((r, i) => `
-                            <div class="char-row">
-                                <span class="rank">${i + 2}.</span>
-                                <span class="name">${r[0]}</span>
-                                <span class="mentions">${r[1]}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-}
-
-function renderGovContracts(contracts) {
-    const panel = document.getElementById('contractsPanel');
-    const count = document.getElementById('contractsCount');
-
-    if (contracts.length === 0) {
-        const detail = (window.lastGovContractsError && String(window.lastGovContractsError).trim())
-            ? `<div class="loading-msg" style="padding: 0.3rem 0; opacity: 0.9;">${escapeHtml(String(window.lastGovContractsError))}</div>`
-            : '';
-        const hint = `<div class="loading-msg" style="padding: 0.3rem 0; opacity: 0.9;">Tip: contracts require the local proxy for POST (run ${escapeHtml('python3 proxy_server.py')} and open http://localhost:8001/)</div>`;
-        panel.innerHTML = `<div class="error-msg">Unable to load contracts</div>${detail}${hint}`;
-        count.textContent = '0';
-        return;
-    }
-
-    const formatValue = (v) => {
-        if (v >= 1000000000) return '$' + (v / 1000000000).toFixed(1) + 'B';
-        if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
-        if (v >= 1000) return '$' + (v / 1000).toFixed(0) + 'K';
-        return '$' + v.toFixed(0);
-    };
-
-    panel.innerHTML = contracts.map(c => `
-                <div class="contract-item">
-                    <div class="contract-agency">${c.agency}</div>
-                    <div class="contract-desc">${c.description.substring(0, 100)}${c.description.length > 100 ? '...' : ''}</div>
-                    <div class="contract-meta">
-                        <span class="contract-vendor">${c.vendor}</span>
-                        <span class="contract-value">${formatValue(c.amount)}</span>
-                    </div>
-                </div>
-            `).join('');
-
-    count.textContent = contracts.length;
-}
-
-function renderAINews(items) {
-    const panel = document.getElementById('aiPanel');
-    const count = document.getElementById('aiCount');
-
-    if (items.length === 0) {
-        panel.innerHTML = '<div class="error-msg">Unable to load AI news</div>';
-        count.textContent = '0';
-        return;
-    }
-
-    panel.innerHTML = items.map(item => `
-                <div class="ai-item">
-                    <div class="ai-source">${item.source}</div>
-                    <a class="ai-title item-title" href="${item.link}" target="_blank">${item.title}</a>
-                    <div class="ai-date">${timeAgo(item.date)}</div>
-                </div>
-            `).join('');
-
-    count.textContent = items.length;
-}
-
-function renderMoneyPrinter(data) {
-    const panel = document.getElementById('printerPanel');
-
-    const isExpanding = data.change > 0;
-    const status = isExpanding ? 'PRINTER ON' : 'PRINTER OFF';
-
-    panel.innerHTML = `
-                <div class="printer-gauge">
-                    <div class="printer-label">Federal Reserve Balance Sheet</div>
-                    <div class="printer-value">
-                        ${data.value.toFixed(2)}<span class="printer-unit">T USD</span>
-                    </div>
-                    <div class="printer-change ${isExpanding ? 'up' : 'down'}">
-                        ${data.change >= 0 ? '+' : ''}${(data.change * 1000).toFixed(0)}B (${data.changePercent >= 0 ? '+' : ''}${data.changePercent.toFixed(2)}%) WoW
-                    </div>
-                    <div class="printer-bar">
-                        <div class="printer-fill" style="width: ${Math.min(data.percentOfMax, 100)}%"></div>
-                    </div>
-                    <div class="printer-status">
-                        <span class="printer-indicator ${isExpanding ? 'on' : 'off'}"></span>
-                        ${status}
-                    </div>
-                </div>
-            `;
-}
-
-// Fetch Polymarket predictions
+// Fetch Polymarket
 async function fetchPolymarket() {
     try {
         const text = await fetchWithProxy('https://gamma-api.polymarket.com/markets?closed=false&order=volume&ascending=false&limit=25');
         const data = JSON.parse(text);
 
-        if (!Array.isArray(data)) {
-            console.error('Polymarket response is not an array');
-            return [];
-        }
+        if (!Array.isArray(data)) return [];
 
-        // Parse markets with flexible field handling
-        const markets = data
+        return data
             .filter(m => {
                 const vol = parseFloat(m.volume || m.volumeNum || 0);
                 return m.question && vol > 1000;
             })
             .slice(0, 15)
             .map(m => {
-                // Handle different price formats
                 let yesPrice = 0;
                 if (m.outcomePrices && Array.isArray(m.outcomePrices)) {
                     yesPrice = parseFloat(m.outcomePrices[0]) || 0;
@@ -4608,7 +4140,6 @@ async function fetchPolymarket() {
                     yesPrice = parseFloat(m.lastTradePrice) || 0;
                 }
 
-                // Ensure price is in 0-1 range, convert to percentage
                 if (yesPrice > 1) yesPrice = yesPrice / 100;
                 const yesPct = Math.round(yesPrice * 100);
 
@@ -4619,18 +4150,15 @@ async function fetchPolymarket() {
                     slug: m.slug || m.id
                 };
             });
-
-        return markets;
     } catch (error) {
         console.error('Error fetching Polymarket:', error);
         return [];
     }
 }
 
-// Fetch earthquakes from USGS
+// Fetch earthquakes
 async function fetchEarthquakes() {
     try {
-        // USGS API - significant earthquakes in last 7 days
         const url = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson';
         const text = await fetchWithProxy(url);
         const data = JSON.parse(text);
@@ -4638,7 +4166,7 @@ async function fetchEarthquakes() {
         if (!data.features) return [];
 
         return data.features
-            .filter(f => f.properties.mag >= 4.0) // Only M4.0+
+            .filter(f => f.properties.mag >= 4.0)
             .slice(0, 15)
             .map(f => ({
                 mag: f.properties.mag,
@@ -4675,11 +4203,9 @@ async function fetchLayoffs() {
             const pubDate = item.querySelector('pubDate')?.textContent;
             const link = item.querySelector('link')?.textContent || '';
 
-            // Extract company name and layoff count
             const titleLower = title.toLowerCase();
             const company = companies.find(c => titleLower.includes(c));
 
-            // Look for numbers in title
             const countMatch = title.match(/(\d{1,3}(?:,\d{3})*|\d+)\s*(?:employees?|workers?|jobs?|staff|people|positions?)/i) ||
                 title.match(/(?:cuts?|lays?\s*off|eliminat\w*|slash\w*)\s*(\d{1,3}(?:,\d{3})*|\d+)/i);
 
@@ -4697,27 +4223,14 @@ async function fetchLayoffs() {
         return layoffs.slice(0, 8);
     } catch (error) {
         console.error('Error fetching layoffs:', error);
-        return getRecentLayoffs();
+        return [
+            { company: 'Meta', title: 'Meta cuts workforce in Reality Labs division', count: '700', date: new Date().toISOString() },
+            { company: 'Google', title: 'Google restructures cloud division, reduces staff', count: '200', date: new Date().toISOString() }
+        ];
     }
 }
 
-// Fallback layoffs data
-function getRecentLayoffs() {
-    const today = new Date();
-    const daysAgo = (n) => {
-        const d = new Date(today);
-        d.setDate(d.getDate() - n);
-        return d.toISOString();
-    };
-    return [
-        { company: 'Meta', title: 'Meta cuts workforce in Reality Labs division', count: '700', date: daysAgo(1) },
-        { company: 'Google', title: 'Google restructures cloud division, reduces staff', count: '200', date: daysAgo(2) },
-        { company: 'Microsoft', title: 'Microsoft gaming division sees job cuts', count: '650', date: daysAgo(3) },
-        { company: 'Amazon', title: 'Amazon reduces Alexa team headcount', count: '400', date: daysAgo(4) }
-    ];
-}
-
-// Fetch situation news (Venezuela/Greenland)
+// Fetch situation news
 async function fetchSituationNews(keywords, limit = 5) {
     try {
         const searchTerms = encodeURIComponent(keywords);
@@ -4739,6 +4252,12 @@ async function fetchSituationNews(keywords, limit = 5) {
     }
 }
 
+// Initialize application
+function initApp() {
+    // Apply panel settings
+    applyPanelSettings();
+    updateSettingsUI();
+  
 // Detect regions from text
 function detectRegions(text) {
     const lower = text.toLowerCase();
@@ -5031,230 +4550,49 @@ function renderMarkets(markets) {
 function renderHeatmap(sectors) {
     const panel = document.getElementById('heatmapPanel');
 
-    if (sectors.length === 0) {
-        panel.innerHTML = '<div class="error-msg">Failed to load</div>';
-        return;
+    // Restore panel order and sizes
+    restorePanelOrder();
+    restorePanelSizes();
+
+    // Initialize drag and drop
+    initDragAndDrop();
+
+    // Initialize panel resize
+    initPanelResize();
+
+    // Initialize monitors list in settings
+    renderMonitorsList();
+
+    // Initialize pentagon tracker UI
+    initPentagonTrackerUI();
+
+    // Initialize livestream
+    updateLivestreamEmbed();
+
+    // Initial data load
+    refreshAll();
+
+    // Auto-refresh every 5 minutes
+    setInterval(refreshAll, 5 * 60 * 1000);
+}
+
+// Settings modal
+function openSettings() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) modal.classList.add('visible');
+}
+
+function closeSettings() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) modal.classList.remove('visible');
+}
+
+function toggleSettings() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) {
+        modal.classList.toggle('visible');
     }
-
-    panel.innerHTML = '<div class="heatmap">' + sectors.map(s => {
-        const c = s.change;
-        if (!Number.isFinite(c)) {
-            return `
-                <div class="heatmap-cell na">
-                    <div class="sector-name">${s.name}</div>
-                    <div class="sector-change">N/A</div>
-                </div>
-            `;
-        }
-
-        let colorClass = 'up-0';
-        if (c >= 2) colorClass = 'up-3';
-        else if (c >= 1) colorClass = 'up-2';
-        else if (c >= 0.5) colorClass = 'up-1';
-        else if (c >= 0) colorClass = 'up-0';
-        else if (c >= -0.5) colorClass = 'down-0';
-        else if (c >= -1) colorClass = 'down-1';
-        else if (c >= -2) colorClass = 'down-2';
-        else colorClass = 'down-3';
-
-        return `
-            <div class="heatmap-cell ${colorClass}">
-                <div class="sector-name">${s.name}</div>
-                <div class="sector-change">${c >= 0 ? '+' : ''}${c.toFixed(2)}%</div>
-            </div>
-        `;
-    }).join('') + '</div>';
 }
 
-// Render commodities
-function renderCommodities(commodities) {
-    const panel = document.getElementById('commoditiesPanel');
-
-    if (commodities.length === 0) {
-        panel.innerHTML = '<div class="error-msg">Failed to load</div>';
-        return;
-    }
-
-    panel.innerHTML = commodities.map(m => {
-        const changeClass = m.change > 0 ? 'up' : m.change < 0 ? 'down' : '';
-        const changeText = `${m.change > 0 ? '+' : ''}${m.change.toFixed(2)}%`;
-        const priceDisplay = m.price?.toFixed(2);
-
-        return `
-                    <div class="market-item">
-                        <div>
-                            <div class="market-name">${m.name}</div>
-                            <div class="market-symbol">${m.symbol}</div>
-                        </div>
-                        <div class="market-data">
-                            <div class="market-price">${m.symbol === 'VIX' ? '' : '$'}${priceDisplay}</div>
-                            <div class="market-change ${changeClass}">${changeText}</div>
-                        </div>
-                    </div>
-                `;
-    }).join('');
-}
-
-// Render Polymarket predictions
-function renderPolymarket(markets) {
-    const panel = document.getElementById('polymarketPanel');
-    const count = document.getElementById('polymarketCount');
-
-    if (markets.length === 0) {
-        panel.innerHTML = '<div class="error-msg">Failed to load predictions</div>';
-        count.textContent = '0';
-        return;
-    }
-
-    const formatVolume = (v) => {
-        if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
-        if (v >= 1000) return '$' + (v / 1000).toFixed(0) + 'K';
-        return '$' + v.toFixed(0);
-    };
-
-    panel.innerHTML = markets.map(m => `
-                <div class="prediction-item">
-                    <div>
-                        <div class="prediction-question">${m.question}</div>
-                        <div class="prediction-volume">Vol: ${formatVolume(m.volume)}</div>
-                    </div>
-                    <div class="prediction-odds">
-                        <span class="prediction-yes">${m.yes}%</span>
-                    </div>
-                </div>
-            `).join('');
-
-    count.textContent = markets.length;
-}
-
-// Update status
-function setStatus(text, loading = false) {
-    const status = document.getElementById('status');
-    status.textContent = text;
-    status.className = loading ? 'status loading' : 'status';
-}
-
-// Staged refresh - loads critical data first for faster perceived startup
-async function refreshAll() {
-    const btn = document.getElementById('refreshBtn');
-    btn.disabled = true;
-    setStatus('Loading critical...', true);
-
-    let allNews = [];
-
-    try {
-        // STAGE 1: Critical data (news + markets) - loads first
-        const stage1Promise = Promise.all([
-            isPanelEnabled('politics') ? fetchCategory(FEEDS.politics) : Promise.resolve([]),
-            isPanelEnabled('tech') ? fetchCategory(FEEDS.tech) : Promise.resolve([]),
-            isPanelEnabled('finance') ? fetchCategory(FEEDS.finance) : Promise.resolve([]),
-            isPanelEnabled('markets') ? fetchMarkets() : Promise.resolve([]),
-            isPanelEnabled('heatmap') ? fetchSectors() : Promise.resolve([])
-        ]);
-
-        const [politics, tech, finance, markets, sectors] = await stage1Promise;
-
-        // Render Stage 1 immediately
-        if (isPanelEnabled('politics')) renderNews(politics, 'politicsPanel', 'politicsCount');
-        if (isPanelEnabled('tech')) renderNews(tech, 'techPanel', 'techCount');
-        if (isPanelEnabled('finance')) renderNews(finance, 'financePanel', 'financeCount');
-        if (isPanelEnabled('markets')) renderMarkets(markets);
-        if (isPanelEnabled('heatmap')) renderHeatmap(sectors);
-
-        allNews = [...politics, ...tech, ...finance];
-        setStatus('Loading more...', true);
-
-        // STAGE 2: Secondary data (gov, commodities, polymarket, printer, earthquakes)
-        const stage2Promise = Promise.all([
-            isPanelEnabled('gov') ? fetchCategory(FEEDS.gov) : Promise.resolve([]),
-            isPanelEnabled('commodities') ? fetchCommodities() : Promise.resolve([]),
-            isPanelEnabled('polymarket') ? fetchPolymarket() : Promise.resolve([]),
-            isPanelEnabled('printer') ? fetchFedBalance() : Promise.resolve({ value: 0, change: 0, changePercent: 0, percentOfMax: 0 }),
-            isPanelEnabled('map') ? fetchEarthquakes() : Promise.resolve([])
-        ]);
-
-        const [gov, commodities, polymarket, fedBalance, earthquakes] = await stage2Promise;
-
-        if (isPanelEnabled('gov')) {
-            renderNews(gov, 'govPanel', 'govCount');
-            allNews = [...allNews, ...gov];
-        }
-        if (isPanelEnabled('commodities')) renderCommodities(commodities);
-        if (isPanelEnabled('polymarket')) renderPolymarket(polymarket);
-        if (isPanelEnabled('printer')) renderMoneyPrinter(fedBalance);
-
-        // Render map with earthquakes and shipping alert data
-        if (isPanelEnabled('map')) {
-            const activityData = analyzeHotspotActivity(allNews);
-            await renderGlobalMap(activityData, earthquakes, allNews);
-        }
-        if (isPanelEnabled('mainchar')) {
-            const mainCharRankings = calculateMainCharacter(allNews);
-            renderMainCharacter(mainCharRankings);
-        }
-
-        setStatus('Loading extras...', true);
-
-        // STAGE 3: Extra data (congress, whales, contracts, AI, layoffs, situations, intel) - lowest priority
-        const stage3Promise = Promise.all([
-            isPanelEnabled('congress') ? fetchCongressTrades() : Promise.resolve([]),
-            isPanelEnabled('whales') ? fetchWhaleTransactions() : Promise.resolve([]),
-            isPanelEnabled('contracts') ? fetchGovContracts() : Promise.resolve([]),
-            isPanelEnabled('ai') ? fetchAINews() : Promise.resolve([]),
-            isPanelEnabled('layoffs') ? fetchLayoffs() : Promise.resolve([]),
-            isPanelEnabled('pentagon') ? fetchPentagonTracker() : Promise.resolve(null),
-            isPanelEnabled('venezuela') ? fetchSituationNews('venezuela maduro caracas crisis') : Promise.resolve([]),
-            isPanelEnabled('greenland') ? fetchSituationNews('greenland denmark trump arctic') : Promise.resolve([]),
-            isPanelEnabled('intel') ? fetchIntelFeed() : Promise.resolve([])
-        ]);
-
-        const [congressTrades, whales, contracts, aiNews, layoffs, pentagonTracker, venezuelaNews, greenlandNews, intelFeed] = await stage3Promise;
-
-        if (isPanelEnabled('congress')) renderCongressTrades(congressTrades);
-        if (isPanelEnabled('whales')) renderWhaleWatch(whales);
-        if (isPanelEnabled('contracts')) renderGovContracts(contracts);
-        if (isPanelEnabled('ai')) renderAINews(aiNews);
-        if (isPanelEnabled('layoffs')) renderLayoffs(layoffs);
-        if (isPanelEnabled('pentagon')) {
-            if (!pentagonTracker || pentagonTracker?.error === 'missing_key') {
-                renderPentagonTracker(null);
-            } else {
-                renderPentagonTracker(pentagonTracker.locations);
-            }
-        }
-        if (isPanelEnabled('intel')) renderIntelFeed(intelFeed);
-        if (isPanelEnabled('venezuela')) {
-            renderSituation('venezuelaPanel', 'venezuelaStatus', venezuelaNews, {
-                title: 'Venezuela Crisis',
-                subtitle: 'Political instability & humanitarian situation',
-                criticalKeywords: ['invasion', 'military', 'coup', 'violence', 'sanctions', 'arrested']
-            });
-        }
-        if (isPanelEnabled('greenland')) {
-            renderSituation('greenlandPanel', 'greenlandStatus', greenlandNews, {
-                title: 'Greenland Dispute',
-                subtitle: 'US-Denmark tensions over Arctic territory',
-                criticalKeywords: ['purchase', 'trump', 'military', 'takeover', 'independence', 'referendum']
-            });
-        }
-
-        // Render My Monitors panel with all news
-        if (isPanelEnabled('monitors')) {
-            renderMonitorsPanel(allNews);
-        }
-
-        const now = new Date();
-        setStatus(`Updated ${now.toLocaleTimeString()}`);
-    } catch (error) {
-        console.error('Refresh error:', error);
-        setStatus('Error updating');
-    }
-
-    btn.disabled = false;
-}
-
-// Initial load
-refreshAll();
-
-// Auto-refresh every 5 minutes
-setInterval(refreshAll, 5 * 60 * 1000);
+// Start app when DOM is ready
+document.addEventListener('DOMContentLoaded', initApp);
