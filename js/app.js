@@ -112,13 +112,6 @@ function updateLivestreamEmbed() {
     }
 }
 
-// Get current livestream embed URL
-function getLivestreamEmbedUrl() {
-    const url = localStorage.getItem('livestreamUrl') || 'https://www.youtube.com/watch?v=jWEZa9WEnIo';
-    const videoId = extractYouTubeId(url);
-    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=0&mute=1` : '';
-}
-
 // Drag and Drop Panel Reordering
 let draggedPanel = null;
 const NON_DRAGGABLE_PANELS = ['map', 'tbpn']; // Map stays at top, livestream has iframe
@@ -1660,7 +1653,7 @@ async function fetchWithProxy(url, options = {}) {
             }
             lastNonOk = { status: response.status, statusText: response.statusText, proxy };
         } catch {
-            console.log(`Proxy ${i} failed, trying next...`);
+            // Proxy failed, try next
         }
     }
     const suffix = lastNonOk ? ` (last: ${lastNonOk.status} ${lastNonOk.statusText} via ${lastNonOk.proxy})` : '';
@@ -5139,12 +5132,11 @@ async function fetchCongressTrades() {
         if (items.length > 0) {
             const trades = extractTradesFromNews(Array.from(items).slice(0, 15));
             if (trades.length >= 3) {
-                console.log('Congress trades extracted from news');
                 return trades;
             }
         }
     } catch (e) {
-        console.log('News fetch failed:', e.message);
+        // Fallback on failure
     }
 
     // Fallback: Recent trades with dynamic dates
@@ -5384,7 +5376,6 @@ async function fetchAINews() {
                 };
             });
         } catch (e) {
-            console.log(`Failed to fetch ${source.name}`);
             return [];
         }
     }));
@@ -5828,7 +5819,6 @@ async function fetchIntelFeed() {
                 };
             });
         } catch (e) {
-            console.log(`Failed to fetch intel from ${source.name}`);
             return [];
         }
     }));
