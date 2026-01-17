@@ -28,6 +28,14 @@
 - [ ] Add rate-limit handling for OpenSky API (currently no backoff)
 - [ ] Add authentication to proxy server endpoint (currently open)
 - [ ] Consider consolidating `styles.css` (4828 lines) and `index.css` (4369 lines)
+- [ ] change world map to a globe in next.js. 
+- [ ] popups should be clickable not hoverable.
+- [ ] when zoomed in hard to click events next to each other.
+- [ ] random red squares over countries? 
+- [ ] aircraft nearby is useful, but actually want to be able to toggle flights on to see in the air planes.
+- [ ] submarine cables are not showing?
+- [ ] we want weather events worldwide
+- [ ] we want global military bases
 
 ## Constraints / Notes
 
