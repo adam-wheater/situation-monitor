@@ -10,6 +10,9 @@ function hideAllPopups() {
     hideUSCityPopup();
     hideUSHotspotPopup();
     hideCablePopup();
+    hideWeatherPopup();
+    hideNavalPopup();
+    hideFlightPopup();
 }
 
 function positionPopupAtEvent(popup, event) {
@@ -409,5 +412,155 @@ function hideUSCityPopup() {
 // US Hotspot popup
 function hideUSHotspotPopup() {
     const popup = document.getElementById('usHotspotPopup');
+    if (popup) popup.classList.remove('visible');
+}
+
+// Weather popup
+function showWeatherPopupDirect(event, weatherData) {
+    if (event?.stopPropagation) event.stopPropagation();
+    hideAllPopups();
+
+    const popup = document.getElementById('weatherPopup');
+    if (!popup) return;
+
+    const onsetTime = weatherData.onset ? new Date(weatherData.onset).toLocaleString() : 'N/A';
+    const expiresTime = weatherData.expires ? new Date(weatherData.expires).toLocaleString() : 'N/A';
+    const levelClass = weatherData.level || 'elevated';
+
+    popup.innerHTML = `
+        <button class="weather-popup-close" onclick="hideWeatherPopup()">&times;</button>
+        <div class="weather-popup-header">
+            <span class="weather-popup-title">${escapeHtml(weatherData.name)}</span>
+            <span class="weather-popup-level ${levelClass}">${(weatherData.severity || 'Unknown').toUpperCase()}</span>
+        </div>
+        <div class="weather-popup-headline">${escapeHtml(weatherData.headline || '')}</div>
+        <div class="weather-popup-area">${escapeHtml(weatherData.areaDesc || '')}</div>
+        <div class="weather-popup-info">
+            <div class="weather-popup-stat">
+                <span class="weather-popup-stat-label">Onset</span>
+                <span class="weather-popup-stat-value">${onsetTime}</span>
+            </div>
+            <div class="weather-popup-stat">
+                <span class="weather-popup-stat-label">Expires</span>
+                <span class="weather-popup-stat-value">${expiresTime}</span>
+            </div>
+            <div class="weather-popup-stat">
+                <span class="weather-popup-stat-label">Certainty</span>
+                <span class="weather-popup-stat-value">${escapeHtml(weatherData.certainty || 'Unknown')}</span>
+            </div>
+            <div class="weather-popup-stat">
+                <span class="weather-popup-stat-label">Urgency</span>
+                <span class="weather-popup-stat-value">${escapeHtml(weatherData.urgency || 'Unknown')}</span>
+            </div>
+        </div>
+        <div class="weather-popup-sender">Source: ${escapeHtml(weatherData.senderName || 'NWS')}</div>
+    `;
+
+    popup.className = `weather-popup visible ${levelClass}`;
+    positionPopupAtEvent(popup, event);
+}
+
+function hideWeatherPopup() {
+    const popup = document.getElementById('weatherPopup');
+    if (popup) popup.classList.remove('visible');
+}
+
+// Naval popup
+function showNavalPopupDirect(event, navalData) {
+    if (event?.stopPropagation) event.stopPropagation();
+    hideAllPopups();
+
+    const popup = document.getElementById('navalPopup');
+    if (!popup) return;
+
+    popup.innerHTML = `
+        <button class="naval-popup-close" onclick="hideNavalPopup()">&times;</button>
+        <div class="naval-popup-header">
+            <span class="naval-popup-icon">⚓</span>
+            <span class="naval-popup-title">${escapeHtml(navalData.name)}</span>
+        </div>
+        <div class="naval-popup-info">
+            <div class="naval-popup-stat">
+                <span class="naval-popup-stat-label">Type</span>
+                <span class="naval-popup-stat-value">${escapeHtml(navalData.type || 'Naval Facility')}</span>
+            </div>
+            ${navalData.operator ? `
+            <div class="naval-popup-stat">
+                <span class="naval-popup-stat-label">Operator</span>
+                <span class="naval-popup-stat-value">${escapeHtml(navalData.operator)}</span>
+            </div>
+            ` : ''}
+            <div class="naval-popup-stat">
+                <span class="naval-popup-stat-label">Coordinates</span>
+                <span class="naval-popup-stat-value">${navalData.lat?.toFixed(3) || 0}°, ${navalData.lon?.toFixed(3) || 0}°</span>
+            </div>
+        </div>
+        <div class="naval-popup-source">Source: OpenStreetMap</div>
+    `;
+
+    popup.className = 'naval-popup visible';
+    positionPopupAtEvent(popup, event);
+}
+
+function hideNavalPopup() {
+    const popup = document.getElementById('navalPopup');
+    if (popup) popup.classList.remove('visible');
+}
+
+// Flight popup
+function showFlightPopupDirect(event, flightData) {
+    if (event?.stopPropagation) event.stopPropagation();
+    hideAllPopups();
+
+    const popup = document.getElementById('flightPopup');
+    if (!popup) return;
+
+    const altitudeFt = flightData.altitude ? Math.round(flightData.altitude * 3.281) : 0;
+    const velocityKnots = flightData.velocity ? Math.round(flightData.velocity * 1.944) : 0;
+    const verticalFpm = flightData.verticalRate ? Math.round(flightData.verticalRate * 196.85) : 0;
+    const lastUpdate = flightData.lastUpdate ? new Date(flightData.lastUpdate * 1000).toLocaleTimeString() : 'N/A';
+
+    popup.innerHTML = `
+        <button class="flight-popup-close" onclick="hideFlightPopup()">&times;</button>
+        <div class="flight-popup-header">
+            <span class="flight-popup-icon">✈</span>
+            <span class="flight-popup-callsign">${escapeHtml(flightData.callsign)}</span>
+            <span class="flight-popup-country">${escapeHtml(flightData.originCountry)}</span>
+        </div>
+        <div class="flight-popup-info">
+            <div class="flight-popup-stat">
+                <span class="flight-popup-stat-label">Altitude</span>
+                <span class="flight-popup-stat-value">${altitudeFt.toLocaleString()} ft</span>
+            </div>
+            <div class="flight-popup-stat">
+                <span class="flight-popup-stat-label">Speed</span>
+                <span class="flight-popup-stat-value">${velocityKnots} kts</span>
+            </div>
+            <div class="flight-popup-stat">
+                <span class="flight-popup-stat-label">Heading</span>
+                <span class="flight-popup-stat-value">${Math.round(flightData.heading || 0)}°</span>
+            </div>
+            <div class="flight-popup-stat">
+                <span class="flight-popup-stat-label">Vertical</span>
+                <span class="flight-popup-stat-value">${verticalFpm > 0 ? '+' : ''}${verticalFpm} fpm</span>
+            </div>
+            <div class="flight-popup-stat">
+                <span class="flight-popup-stat-label">ICAO24</span>
+                <span class="flight-popup-stat-value">${escapeHtml(flightData.icao24 || 'N/A')}</span>
+            </div>
+            <div class="flight-popup-stat">
+                <span class="flight-popup-stat-label">Last Update</span>
+                <span class="flight-popup-stat-value">${lastUpdate}</span>
+            </div>
+        </div>
+        <div class="flight-popup-source">Source: OpenSky Network</div>
+    `;
+
+    popup.className = 'flight-popup visible';
+    positionPopupAtEvent(popup, event);
+}
+
+function hideFlightPopup() {
+    const popup = document.getElementById('flightPopup');
     if (popup) popup.classList.remove('visible');
 }

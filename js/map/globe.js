@@ -12,8 +12,16 @@ let mapLayers = {
     nuclear: true,
     cables: true,
     sanctions: true,
-    density: true
+    density: true,
+    weather: true,
+    naval: true,
+    flights: true
 };
+
+// Cached layer data
+let cachedWeatherWarnings = [];
+let cachedNavalHubs = [];
+let cachedMilitaryFlights = [];
 
 function toggleLayer(layerName) {
     mapLayers[layerName] = !mapLayers[layerName];
@@ -61,6 +69,9 @@ async function renderGlobalMap(activityData, earthquakes = [], allNews = []) {
             <div class="custom-hotspot-popup" id="customHotspotPopup"></div>
             <div class="us-hotspot-popup" id="usHotspotPopup"></div>
             <div class="chokepoint-popup" id="cablePopup"></div>
+            <div class="weather-popup" id="weatherPopup"></div>
+            <div class="naval-popup" id="navalPopup"></div>
+            <div class="flight-popup" id="flightPopup"></div>
             <div class="map-corner-label tl">${mapTitle}</div>
             <div class="map-corner-label tr">CLASSIFICATION: OPEN SOURCE</div>
             <div class="map-corner-label bl">${mapLegend}</div>
@@ -192,7 +203,15 @@ async function renderGlobalMap(activityData, earthquakes = [], allNews = []) {
         .pointLng(d => d.lng)
         .pointColor(d => d.color)
         .pointAltitude(0.01)
-        .pointRadius(d => d.size)
+        .pointRadius(d => {
+            // Scale point size based on altitude so countries remain visible when zoomed in
+            const pov = globeInstance.pointOfView();
+            const altitude = pov?.altitude || 2.0;
+            // At altitude 2.0 (global), use full size
+            // At altitude 0.3 (zoomed in), use ~40% size
+            const scaleFactor = Math.max(0.3, Math.min(1.0, altitude / 2.0));
+            return d.size * scaleFactor;
+        })
         .pointsMerge(false)
         .onPointClick((point, event) => {
             if (point.type === 'earthquake') {
@@ -219,13 +238,39 @@ async function renderGlobalMap(activityData, earthquakes = [], allNews = []) {
         globeInstance.pointOfView({ lat: 20, lng: 0, altitude: 2.0 }, 1000);
     }
 
-    // Update zoom display
+    // Update zoom display, trigger point size recalculation, and Overpass fetch when zoomed in
     const zoomLevelEl = document.getElementById('mapZoomLevel');
+    let overpassFetchTimeout = null;
+    let lastAltitudeForPoints = null;
     if (zoomLevelEl) {
         const updateZoomDisplay = () => {
             const pov = globeInstance.pointOfView();
             const zoomLevel = (2.5 / pov.altitude).toFixed(1);
             zoomLevelEl.textContent = `${zoomLevel}x`;
+
+            // Refresh point markers to recalculate sizes when altitude changes significantly
+            const altitudeChanged = lastAltitudeForPoints === null ||
+                Math.abs(pov.altitude - lastAltitudeForPoints) > 0.1;
+            if (altitudeChanged && globeInstance.pointsData) {
+                const currentPoints = globeInstance.pointsData();
+                if (currentPoints && currentPoints.length > 0) {
+                    // Trigger re-render of points to apply new radii
+                    globeInstance.pointsData([...currentPoints]);
+                    lastAltitudeForPoints = pov.altitude;
+                }
+            }
+
+            // Debounced Overpass fetch when zoomed in (altitude < 0.5)
+            if (typeof updateOverpassDataForPOV === 'function' && pov.altitude < 0.5) {
+                if (overpassFetchTimeout) clearTimeout(overpassFetchTimeout);
+                overpassFetchTimeout = setTimeout(async () => {
+                    const result = await updateOverpassDataForPOV(pov);
+                    // Re-render map if new data was fetched
+                    if ((result.militaryBases?.length > 0 || result.nuclearFacilities?.length > 0) && window.cachedAllNews) {
+                        renderGlobalMap({}, [], window.cachedAllNews);
+                    }
+                }, 500); // Debounce 500ms
+            }
         };
         updateZoomDisplay();
         globeInstance.onZoom(updateZoomDisplay);
@@ -241,6 +286,9 @@ async function renderGlobalMap(activityData, earthquakes = [], allNews = []) {
             <button class="layer-btn ${mapLayers.cables ? 'active' : ''}" onclick="toggleLayer('cables')">Cables</button>
             <button class="layer-btn ${mapLayers.sanctions ? 'active' : ''}" onclick="toggleLayer('sanctions')">Sanctions</button>
             <button class="layer-btn ${mapLayers.density ? 'active' : ''}" onclick="toggleLayer('density')">Density</button>
+            <button class="layer-btn ${mapLayers.weather ? 'active' : ''}" onclick="toggleLayer('weather')">Weather</button>
+            <button class="layer-btn ${mapLayers.naval ? 'active' : ''}" onclick="toggleLayer('naval')">Naval</button>
+            <button class="layer-btn ${mapLayers.flights ? 'active' : ''}" onclick="toggleLayer('flights')">Flights</button>
         `;
     }
 
@@ -253,29 +301,39 @@ async function renderGlobalMap(activityData, earthquakes = [], allNews = []) {
 function buildPointMarkers(earthquakes) {
     const pointMarkers = [];
 
-    // Military bases
+    // Military bases (constants + Overpass if available)
     if (mapLayers.bases) {
-        MILITARY_BASES.forEach(base => {
+        const allBases = typeof getAllMilitaryBases === 'function'
+            ? getAllMilitaryBases()
+            : MILITARY_BASES;
+        allBases.forEach(base => {
+            const isOverpass = base.source === 'overpass';
             pointMarkers.push({
                 lat: base.lat,
-                lng: base.lon,
-                size: 0.3,
+                lng: base.lon || base.lng,
+                size: isOverpass ? 0.25 : 0.3,
                 color: base.type === 'us-nato' ? '#ff00ff' :
-                       base.type === 'china' ? '#ff6600' : '#ff3333',
+                       base.type === 'china' ? '#ff6600' :
+                       base.type === 'russia' ? '#ff3333' :
+                       isOverpass ? '#cc66ff' : '#ff00ff',
                 type: 'base',
                 data: base
             });
         });
     }
 
-    // Nuclear facilities
+    // Nuclear facilities (constants + Overpass if available)
     if (mapLayers.nuclear) {
-        NUCLEAR_FACILITIES.forEach(facility => {
+        const allNuclear = typeof getAllNuclearFacilities === 'function'
+            ? getAllNuclearFacilities()
+            : NUCLEAR_FACILITIES;
+        allNuclear.forEach(facility => {
             const isWeapons = facility.type === 'weapons' || facility.type === 'enrichment';
+            const isOverpass = facility.source === 'overpass';
             pointMarkers.push({
                 lat: facility.lat,
-                lng: facility.lon,
-                size: 0.4,
+                lng: facility.lon || facility.lng,
+                size: isOverpass ? 0.35 : 0.4,
                 color: isWeapons ? '#ffaa00' : '#ffff00',
                 type: 'nuclear',
                 data: facility
@@ -360,6 +418,42 @@ function buildHtmlMarkers(activityData, allNews) {
             data: monitor
         });
     });
+
+    // Weather warnings
+    if (mapLayers.weather && cachedWeatherWarnings.length > 0) {
+        cachedWeatherWarnings.forEach(warning => {
+            htmlMarkers.push({
+                lat: warning.lat,
+                lng: warning.lon,
+                type: 'weather',
+                data: warning
+            });
+        });
+    }
+
+    // Naval hubs
+    if (mapLayers.naval && cachedNavalHubs.length > 0) {
+        cachedNavalHubs.forEach(hub => {
+            htmlMarkers.push({
+                lat: hub.lat,
+                lng: hub.lon,
+                type: 'naval',
+                data: hub
+            });
+        });
+    }
+
+    // Military flights
+    if (mapLayers.flights && cachedMilitaryFlights.length > 0) {
+        cachedMilitaryFlights.forEach(flight => {
+            htmlMarkers.push({
+                lat: flight.lat,
+                lng: flight.lon,
+                type: 'flight',
+                data: flight
+            });
+        });
+    }
 
     return htmlMarkers;
 }
@@ -449,6 +543,47 @@ function createHtmlMarkerElement(d) {
         el.querySelector('.custom-hotspot').onclick = (e) => {
             e.stopPropagation();
             showCustomHotspotPopupDirect(e, popupData);
+        };
+    } else if (d.type === 'weather') {
+        const levelClass = d.data.level || 'elevated';
+        const icon = d.data.name.includes('Tornado') ? '🌪' :
+                     d.data.name.includes('Hurricane') ? '🌀' :
+                     d.data.name.includes('Flood') ? '🌊' :
+                     d.data.name.includes('Winter') || d.data.name.includes('Blizzard') || d.data.name.includes('Ice') ? '❄' :
+                     d.data.name.includes('Fire') || d.data.name.includes('Red Flag') ? '🔥' :
+                     d.data.name.includes('Heat') ? '🌡' : '⚠';
+        el.innerHTML = `
+            <div class="weather-marker ${levelClass}">
+                <div class="weather-icon">${icon}</div>
+                <div class="weather-label">${d.data.name}</div>
+            </div>
+        `;
+        el.querySelector('.weather-marker').onclick = (e) => {
+            e.stopPropagation();
+            showWeatherPopupDirect(e, d.data);
+        };
+    } else if (d.type === 'naval') {
+        el.innerHTML = `
+            <div class="naval-marker">
+                <div class="naval-icon">⚓</div>
+                <div class="naval-label">${d.data.name}</div>
+            </div>
+        `;
+        el.querySelector('.naval-marker').onclick = (e) => {
+            e.stopPropagation();
+            showNavalPopupDirect(e, d.data);
+        };
+    } else if (d.type === 'flight') {
+        const heading = d.data.heading || 0;
+        el.innerHTML = `
+            <div class="flight-marker">
+                <div class="flight-icon" style="transform: rotate(${heading}deg);">✈</div>
+                <div class="flight-label">${d.data.callsign}</div>
+            </div>
+        `;
+        el.querySelector('.flight-marker').onclick = (e) => {
+            e.stopPropagation();
+            showFlightPopupDirect(e, d.data);
         };
     }
 
