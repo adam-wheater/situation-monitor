@@ -1341,19 +1341,28 @@ function getBestTimeVenueAboveHourlyAvgText(v, date = new Date()) {
     return `+${pct}% vs hourly avg (${Math.round(avg)}%)`;
 }
 
-function renderPentagonTracker(resultByLocation) {
+function renderPentagonTracker(data) {
     const panel = document.getElementById('pentagonPanel');
     const count = document.getElementById('pentagonCount');
     if (!panel || !count) return;
 
-    if (!resultByLocation) {
+    if (!data) {
         panel.innerHTML = '<div class="loading-msg">Open Config to set BestTime key and locations</div>';
         count.textContent = '-';
         return;
     }
 
+    // Handle both old format (array) and new format ({ locations, noApiKey })
+    const resultByLocation = Array.isArray(data) ? data : (data.locations || []);
+    const noApiKey = !Array.isArray(data) && data.noApiKey;
+
     const blocks = [];
     let totalMatches = 0;
+
+    // Show notice if using curated venues only
+    if (noApiKey) {
+        blocks.push('<div class="loading-msg" style="padding: 0.6rem 1rem; background: #1a1a2e;">Showing curated venues only. Add BestTime API key in Settings for live busyness data.</div>');
+    }
 
     for (const loc of resultByLocation) {
         const pizza = loc?.pizza || [];
@@ -1388,6 +1397,11 @@ function renderPentagonTracker(resultByLocation) {
 
         if (loc?.error) {
             blocks.push(`<div class="error-msg" style="padding: 0.6rem 1rem;">BestTime error: ${escapeHtml(loc.error)}</div>`);
+        } else if (loc?.noApiKey) {
+            const curatedNote = (typeof loc?.curatedCount === 'number' && loc.curatedCount > 0)
+                ? `Curated venues: ${loc.curatedCount}`
+                : 'No curated venues for this location';
+            blocks.push(`<div class="loading-msg" style="padding: 0.6rem 1rem;">${curatedNote}</div>`);
         } else if (typeof loc?.venuesCount === 'number') {
             const vCount = loc.venuesCount;
             const curatedNote = (typeof loc?.curatedCount === 'number' && loc.curatedCount > 0)
@@ -1440,21 +1454,24 @@ async function fetchPentagonTracker() {
         }
     }
 
-    if (!apiKeyPrivate) return { error: 'missing_key' };
-
     const locations = settings.locations || [];
     const out = [];
+    const hasApiKey = !!apiKeyPrivate;
 
     const curated = await loadPentagonCuratedVenues();
 
     for (const loc of locations) {
         try {
-            const venues = await fetchBestTimeVenuesForLocationAll({
-                apiKeyPrivate,
-                lat: loc.lat,
-                lng: loc.lng,
-                radiusM: loc.radiusM
-            });
+            // Fetch BestTime venues only if API key is available
+            let venues = [];
+            if (hasApiKey) {
+                venues = await fetchBestTimeVenuesForLocationAll({
+                    apiKeyPrivate,
+                    lat: loc.lat,
+                    lng: loc.lng,
+                    radiusM: loc.radiusM
+                });
+            }
 
             // Merge curated venues (minimum baseline), filtered by radius when coordinates exist.
             const curatedForLoc = (curated || []).filter((it) => {
@@ -1488,23 +1505,47 @@ async function fetchPentagonTracker() {
                 venuesCount: Array.isArray(venues) ? venues.length : 0,
                 curatedCount: curatedForLoc.length,
                 pizza,
-                gayBars
+                gayBars,
+                noApiKey: !hasApiKey
             });
         } catch (e) {
+            // On error, still show curated venues as fallback
+            const curatedForLoc = (curated || []).filter((it) => {
+                const lat = Number(it?.lat);
+                const lng = Number(it?.lng);
+                if (Number.isFinite(lat) && Number.isFinite(lng) && Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+                    return haversineMeters(loc.lat, loc.lng, lat, lng) <= Math.max(500, Number(loc.radiusM) || 0);
+                }
+                const locName = String(loc?.name || '').toLowerCase();
+                return locName.includes('pentagon');
+            }).map((it) => {
+                const kind = String(it?.kind || '').toLowerCase();
+                return {
+                    venue_name: String(it?.name || 'Curated Venue'),
+                    venue_address: '',
+                    venue_lat: Number(it?.lat),
+                    venue_lng: Number(it?.lng),
+                    venue_type: kind,
+                    mapsUrl: it?.mapsUrl,
+                    __curated: true
+                };
+            });
+
+            const { pizza, gayBars } = classifyBestTimeVenues(curatedForLoc);
             out.push({
                 id: loc.id,
                 name: loc.name,
                 meta: `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)} · ${Math.round(loc.radiusM)}m`,
                 venuesCount: 0,
-                curatedCount: 0,
-                pizza: [],
-                gayBars: [],
+                curatedCount: curatedForLoc.length,
+                pizza,
+                gayBars,
                 error: e?.message ? String(e.message) : 'Request failed'
             });
         }
     }
 
-    return { locations: out };
+    return { locations: out, noApiKey: !hasApiKey };
 }
 
 // Current map view mode
@@ -3850,16 +3891,24 @@ async function refreshAll() {
         allNews = [...politics, ...tech, ...finance];
         setStatus('Loading more...', true);
 
-        // STAGE 2: Secondary data (gov, commodities, polymarket, printer, earthquakes)
+        // STAGE 2: Secondary data (gov, commodities, polymarket, printer, earthquakes, map layers)
         const stage2Promise = Promise.all([
             isPanelEnabled('gov') ? fetchCategory(FEEDS.gov) : Promise.resolve([]),
             isPanelEnabled('commodities') ? fetchCommodities() : Promise.resolve([]),
             isPanelEnabled('polymarket') ? fetchPolymarket() : Promise.resolve([]),
             isPanelEnabled('printer') ? fetchFedBalance() : Promise.resolve({ value: 0, change: 0, changePercent: 0, percentOfMax: 0 }),
-            isPanelEnabled('map') ? fetchEarthquakes() : Promise.resolve([])
+            isPanelEnabled('map') ? fetchEarthquakes() : Promise.resolve([]),
+            isPanelEnabled('map') && mapLayers.weather ? fetchWeatherWarnings() : Promise.resolve([]),
+            isPanelEnabled('map') && mapLayers.naval ? fetchNavalHubs() : Promise.resolve([]),
+            isPanelEnabled('map') && mapLayers.flights ? fetchMilitaryFlights() : Promise.resolve([])
         ]);
 
-        const [gov, commodities, polymarket, fedBalance, earthquakes] = await stage2Promise;
+        const [gov, commodities, polymarket, fedBalance, earthquakes, weatherWarnings, navalHubs, militaryFlights] = await stage2Promise;
+
+        // Update cached layer data for the globe
+        cachedWeatherWarnings = weatherWarnings || [];
+        cachedNavalHubs = navalHubs || [];
+        cachedMilitaryFlights = militaryFlights || [];
 
         if (isPanelEnabled('gov')) {
             renderNews('govPanel', 'govCount', gov);

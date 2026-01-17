@@ -4826,3 +4826,384 @@
         .custom-hotspot-popup-close:hover {
             color: var(--text);
         }
+
+        /* Weather markers and popup */
+        .weather-marker {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .weather-marker.high {
+            background: rgba(255, 0, 0, 0.3);
+        }
+
+        .weather-marker.elevated {
+            background: rgba(255, 170, 0, 0.3);
+        }
+
+        .weather-marker.low {
+            background: rgba(0, 170, 255, 0.3);
+        }
+
+        .weather-icon {
+            font-size: 14px;
+        }
+
+        .weather-marker.high .weather-icon {
+            filter: drop-shadow(0 0 4px #ff0000);
+        }
+
+        .weather-marker.elevated .weather-icon {
+            filter: drop-shadow(0 0 4px #ffaa00);
+        }
+
+        .weather-label {
+            font-size: 9px;
+            color: #fff;
+            white-space: nowrap;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .weather-popup {
+            position: absolute;
+            background: rgba(0, 20, 15, 0.95);
+            border: 1px solid #ffaa00;
+            padding: 12px;
+            border-radius: 4px;
+            max-width: 320px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .weather-popup.visible {
+            display: block;
+        }
+
+        .weather-popup.high {
+            border-color: #ff4444;
+        }
+
+        .weather-popup.elevated {
+            border-color: #ffaa00;
+        }
+
+        .weather-popup.low {
+            border-color: #00aaff;
+        }
+
+        .weather-popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .weather-popup-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #ffaa00;
+        }
+
+        .weather-popup.high .weather-popup-title {
+            color: #ff4444;
+        }
+
+        .weather-popup-level {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 2px;
+            background: #ffaa00;
+            color: #000;
+        }
+
+        .weather-popup-level.high {
+            background: #ff4444;
+            color: #fff;
+            animation: pulse-level 1s infinite;
+        }
+
+        .weather-popup-headline {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .weather-popup-area {
+            font-size: 0.65rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .weather-popup-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .weather-popup-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .weather-popup-stat-label {
+            font-size: 0.55rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .weather-popup-stat-value {
+            font-size: 0.7rem;
+            color: #ccc;
+        }
+
+        .weather-popup-sender {
+            font-size: 0.55rem;
+            color: #666;
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px solid #333;
+        }
+
+        .weather-popup-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .weather-popup-close:hover {
+            color: var(--text);
+        }
+
+        /* Naval markers and popup */
+        .naval-marker {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            background: rgba(0, 50, 80, 0.6);
+        }
+
+        .naval-icon {
+            font-size: 12px;
+            color: #00aaff;
+            filter: drop-shadow(0 0 4px #00aaff);
+        }
+
+        .naval-label {
+            font-size: 9px;
+            color: #00aaff;
+            white-space: nowrap;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .naval-popup {
+            position: absolute;
+            background: rgba(0, 20, 30, 0.95);
+            border: 1px solid #00aaff;
+            padding: 12px;
+            border-radius: 4px;
+            max-width: 280px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .naval-popup.visible {
+            display: block;
+        }
+
+        .naval-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .naval-popup-icon {
+            font-size: 1.2rem;
+            color: #00aaff;
+        }
+
+        .naval-popup-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #00aaff;
+        }
+
+        .naval-popup-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .naval-popup-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .naval-popup-stat-label {
+            font-size: 0.55rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .naval-popup-stat-value {
+            font-size: 0.7rem;
+            color: #ccc;
+        }
+
+        .naval-popup-source {
+            font-size: 0.55rem;
+            color: #666;
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px solid #333;
+        }
+
+        .naval-popup-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .naval-popup-close:hover {
+            color: var(--text);
+        }
+
+        /* Flight markers and popup */
+        .flight-marker {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            background: rgba(80, 40, 0, 0.6);
+        }
+
+        .flight-icon {
+            font-size: 12px;
+            color: #ff6600;
+            filter: drop-shadow(0 0 4px #ff6600);
+        }
+
+        .flight-label {
+            font-size: 9px;
+            color: #ff6600;
+            white-space: nowrap;
+            font-family: monospace;
+        }
+
+        .flight-popup {
+            position: absolute;
+            background: rgba(20, 15, 0, 0.95);
+            border: 1px solid #ff6600;
+            padding: 12px;
+            border-radius: 4px;
+            max-width: 280px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .flight-popup.visible {
+            display: block;
+        }
+
+        .flight-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .flight-popup-icon {
+            font-size: 1.2rem;
+            color: #ff6600;
+        }
+
+        .flight-popup-callsign {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #ff6600;
+            font-family: monospace;
+        }
+
+        .flight-popup-country {
+            font-size: 0.65rem;
+            color: #888;
+            margin-left: auto;
+        }
+
+        .flight-popup-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .flight-popup-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flight-popup-stat-label {
+            font-size: 0.55rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .flight-popup-stat-value {
+            font-size: 0.7rem;
+            color: #ccc;
+            font-family: monospace;
+        }
+
+        .flight-popup-source {
+            font-size: 0.55rem;
+            color: #666;
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px solid #333;
+        }
+
+        .flight-popup-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .flight-popup-close:hover {
+            color: var(--text);
+        }
