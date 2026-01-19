@@ -430,6 +430,7 @@ const MapModule = (function() {
 
     function drawConflictZones() {
         conflictZones.forEach(zone => {
+            // Draw the conflict zone polygon
             g.append('path')
                 .datum({type: 'Polygon', coordinates: [zone.coords]})
                 .attr('d', path)
@@ -437,7 +438,22 @@ const MapModule = (function() {
                 .attr('fill-opacity', 0.15)
                 .attr('stroke', zone.color)
                 .attr('stroke-width', 0.5)
-                .attr('stroke-opacity', 0.4);
+                .attr('stroke-opacity', 0.4)
+                .attr('class', 'conflict-zone')
+                .style('cursor', 'pointer')
+                .on('click', function(event) {
+                    event.stopPropagation();
+                    showClickableTooltip(event, `<strong style="color:${zone.color}">⚠ ${escapeHtml(zone.name)} Conflict Zone</strong>`);
+                })
+                .on('mouseenter', function(event) {
+                    d3.select(this).attr('fill-opacity', 0.25);
+                    showHoverTooltip(event, `<strong style="color:${zone.color}">⚠ ${escapeHtml(zone.name)} Conflict Zone</strong>`);
+                })
+                .on('mousemove', moveTooltip)
+                .on('mouseleave', function() {
+                    d3.select(this).attr('fill-opacity', 0.15);
+                    hideTooltip();
+                });
         });
     }
 
@@ -512,6 +528,95 @@ const MapModule = (function() {
                     .on('mouseleave', hideTooltip);
             }
         });
+    }
+
+    // Submarine cable lines layer
+    let cableLayer = null;
+
+    async function drawSubmarineCables() {
+        try {
+            // Check if running from file:// protocol
+            if (location && location.protocol === 'file:') {
+                console.warn('Cannot load cables-geo.json when opened via file://');
+                return;
+            }
+
+            const response = await fetch('data/cables-geo.json', { cache: 'no-store' });
+            if (!response.ok) {
+                console.warn('Failed to load cables-geo.json');
+                return;
+            }
+            const cableData = await response.json();
+
+            if (!cableData || cableData.type !== 'FeatureCollection' || !cableData.features) {
+                return;
+            }
+
+            // Create cable layer if not exists
+            if (!cableLayer) {
+                cableLayer = g.insert('g', ':first-child').attr('class', 'cable-layer');
+            }
+            cableLayer.selectAll('*').remove();
+
+            // Draw each cable
+            cableData.features.forEach(feature => {
+                if (!feature || !feature.geometry) return;
+                const geom = feature.geometry;
+                const props = feature.properties || {};
+                const cableName = props.name || 'Undersea Cable';
+                const cableColor = props.color ? `#${props.color}` : '#9966ff';
+
+                // Handle LineString and MultiLineString
+                const lineArrays = geom.type === 'LineString'
+                    ? [geom.coordinates]
+                    : (geom.type === 'MultiLineString' ? geom.coordinates : []);
+
+                lineArrays.forEach(coords => {
+                    if (!Array.isArray(coords) || coords.length < 2) return;
+
+                    // Parse coordinates (they may be strings)
+                    const parsedCoords = coords.map(p => [
+                        parseFloat(p[0]),
+                        parseFloat(p[1])
+                    ]).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
+
+                    if (parsedCoords.length < 2) return;
+
+                    // Create GeoJSON LineString
+                    const lineGeoJson = {
+                        type: 'LineString',
+                        coordinates: parsedCoords
+                    };
+
+                    // Draw the cable path
+                    cableLayer.append('path')
+                        .datum(lineGeoJson)
+                        .attr('d', path)
+                        .attr('fill', 'none')
+                        .attr('stroke', cableColor)
+                        .attr('stroke-width', 0.8)
+                        .attr('stroke-opacity', 0.5)
+                        .attr('class', 'cable-path')
+                        .on('click', function(event) {
+                            event.stopPropagation();
+                            showClickableTooltip(event, `<strong style="color:${cableColor}">◎ ${escapeHtml(cableName)}</strong>`);
+                        })
+                        .on('mouseenter', function(event) {
+                            d3.select(this).attr('stroke-opacity', 0.9).attr('stroke-width', 1.5);
+                            showHoverTooltip(event, `<strong style="color:${cableColor}">◎ ${escapeHtml(cableName)}</strong>`);
+                        })
+                        .on('mousemove', moveTooltip)
+                        .on('mouseleave', function() {
+                            d3.select(this).attr('stroke-opacity', 0.5).attr('stroke-width', 0.8);
+                            hideTooltip();
+                        });
+                });
+            });
+
+            console.log(`Loaded ${cableData.features.length} submarine cable segments`);
+        } catch (e) {
+            console.warn('Failed to load submarine cables:', e.message);
+        }
     }
 
     function drawNuclearSites() {
@@ -1366,6 +1471,9 @@ out center;
             drawNuclearSites();
             drawMilitaryBases();
             drawHotspots();
+
+            // Load submarine cable lines (async, non-blocking)
+            drawSubmarineCables();
 
             await loadWeatherAlerts();
             await loadGlobalWeatherEvents();

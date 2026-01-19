@@ -8,12 +8,12 @@
 | File | Contents |
 |------|----------|
 | [TODO_A.md](./TODO_A.md) | Completed features (7 items) |
-| [TODO_B.md](./TODO_B.md) | Pending tasks (16 items) |
+| [TODO_B.md](./TODO_B.md) | Pending tasks (4 items remaining) |
 | [AUDIT.md](./AUDIT.md) | Security & code quality audit |
 
 ## Quick Summary
 
-### Completed (7)
+### Completed (19)
 - Weather warnings (US NWS)
 - Flight radar (OpenSky)
 - Naval hubs (Overpass)
@@ -21,11 +21,18 @@
 - Military bases (Overpass)
 - Nuclear plants (Overpass)
 - Zoom-based icon scaling
+- Proxy authentication (Bearer token)
+- OpenSky rate limiting
+- Clickable popups (pin on click)
+- Submarine cables display
+- Conflict zone tooltips
+- Global weather events
+- Global military bases
 
 ### Pending by Priority
-- **High (Security):** 3 items
-- **Medium (Tech Debt):** 5 items
-- **Low (Features/Bugs):** 8 items
+- **High (Security):** 1 item (BestTime key rotation - user responsibility)
+- **Medium (Tech Debt):** 2 items (CSS consolidation, build step)
+- **Low (Features):** 1 item (Next.js globe)
 
 ## Constraints / Notes
 
