@@ -1,8 +1,19 @@
 {
-  "model": "claude-sonnet",
-  "sandbox": false,
-  "autoApplyEdits": true,
+  "sandbox": {
+    "enabled": false
+  },
   "permissions": {
-    "allow": ["Bash(*)", "Read(**)", "Edit(**)"]
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "WebFetch",
+      "WebSearch",
+      "Task",
+      "Skill"
+    ],
+    "deny": []
   }
 }
