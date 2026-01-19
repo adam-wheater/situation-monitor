@@ -13,6 +13,11 @@ Endpoints:
       Proxies the request server-side and returns the upstream response body.
       Only allows hosts in ALLOWED_HOSTS.
 
+Authentication:
+  - Set PROXY_AUTH_TOKEN environment variable to require Bearer token auth
+  - If not set, proxy accepts all requests (local dev mode)
+  - Example: PROXY_AUTH_TOKEN=my-secret-token python3 proxy_server.py 8001
+
 Notes:
   - Intended for local development only.
   - Adds Access-Control-Allow-Origin: * on proxy responses.
@@ -27,6 +32,11 @@ import sys
 import urllib.parse
 import urllib.request
 import urllib.error
+import secrets
+import hashlib
+
+# Authentication token (optional - set via environment variable)
+AUTH_TOKEN = os.environ.get('PROXY_AUTH_TOKEN', '')
 
 
 ALLOWED_HOSTS = {
@@ -106,7 +116,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def _send_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept, Accept-Language")
 
     def do_OPTIONS(self):
         self.send_response(204)
@@ -150,7 +160,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return super().do_HEAD()
         return self._send_text(405, "Method not allowed")
 
+    def _check_auth(self) -> bool:
+        """Check Bearer token authentication if AUTH_TOKEN is set."""
+        if not AUTH_TOKEN:
+            return True  # No auth required in local dev mode
+
+        auth_header = self.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return False
+
+        provided_token = auth_header[7:]  # Strip "Bearer " prefix
+        # Use constant-time comparison to prevent timing attacks
+        return secrets.compare_digest(provided_token, AUTH_TOKEN)
+
     def _handle_proxy(self, parsed: urllib.parse.ParseResult):
+        # Check authentication if enabled
+        if not self._check_auth():
+            return self._send_text(401, "Unauthorized: Invalid or missing Bearer token")
+
         qs = urllib.parse.parse_qs(parsed.query)
         raw_url = (qs.get("url") or [""])[0]
         if not raw_url:
