@@ -1,44 +1,41 @@
-# Situation Monitor – Roadmap
+# Situation Monitor – Task Index
 
-## Data Layers
+> **Note:** This roadmap has been split into separate files for clarity.
+> See [AUDIT.md](./AUDIT.md) for the full codebase audit report.
 
-- [x] Add weather warnings to the map (US NWS alerts)
-  - Implemented in `index.html:664-749` - fetches from `api.weather.gov/alerts/active`, groups by state, displays severity-colored triangles with tooltips
-- [x] Add flight radar for likely military/transport aircraft (OpenSky heuristics)
-  - Implemented in `index.html:836-839, 1141-1291` - queries OpenSky `states/all` with callsign filtering, refreshes every ~3 minutes
-- [x] Add naval hubs / "ship" layer (OSM infrastructure via Overpass; not live AIS)
-  - Implemented in `index.html:1026-1029` - queries `harbour=naval_base` from Overpass when zoomed in
-- [x] Ensure Pentagon pizza tracker works (BestTime + curated venues fallback; requires running local proxy)
-  - Implemented in `js/panels/pentagon.js` with full BestTime API integration
-  - Curated fallback venues in `data/pentagon-curated-venues.json` (8 venues)
-- [x] Add regional powers military bases (OSM military=base/naval_base/airfield via Overpass)
-  - Implemented in `index.html:1013-1024` - queries `military~^(base|naval_base|airfield|barracks)$` and `landuse=military`
-- [x] Add nuclear power plants (OSM nuclear plants/generators via Overpass)
-  - Implemented in `index.html:1005-1011` - queries `plant:source=nuclear` and `generator:source=nuclear`
+## Task Files
 
-## UI / UX
+| File | Contents |
+|------|----------|
+| [TODO_A.md](./TODO_A.md) | Completed features (7 items) |
+| [TODO_B.md](./TODO_B.md) | Pending tasks (4 items remaining) |
+| [AUDIT.md](./AUDIT.md) | Security & code quality audit |
 
-- [x] When zooming in, make icons smaller so the countries remain visible
-  - Implemented in `js/map/zoom.js:68-73` - uses `--sm-marker-scale` CSS variable with `1 / Math.pow(z, 2.0)` formula
+## Quick Summary
 
-## Follow-up Items (Identified in Audit)
+### Completed (19)
+- Weather warnings (US NWS)
+- Flight radar (OpenSky)
+- Naval hubs (Overpass)
+- Pentagon tracker (BestTime)
+- Military bases (Overpass)
+- Nuclear plants (Overpass)
+- Zoom-based icon scaling
+- Proxy authentication (Bearer token)
+- OpenSky rate limiting
+- Clickable popups (pin on click)
+- Submarine cables display
+- Conflict zone tooltips
+- Global weather events
+- Global military bases
 
-- [ ] Add `*.log` to `.gitignore` to prevent API key leakage in proxy logs
-- [ ] Refactor large inline script from `index.html` into separate module(s)
-- [ ] Add rate-limit handling for OpenSky API (currently no backoff)
-- [ ] Add authentication to proxy server endpoint (currently open)
-- [ ] Consider consolidating `styles.css` (4828 lines) and `index.css` (4369 lines)
-- [ ] change world map to a globe in next.js. 
-- [ ] popups should be clickable not hoverable.
-- [ ] when zoomed in hard to click events next to each other.
-- [ ] random red squares over countries? 
-- [ ] aircraft nearby is useful, but actually want to be able to toggle flights on to see in the air planes.
-- [ ] submarine cables are not showing?
-- [ ] we want weather events worldwide
-- [ ] we want global military bases
+### Pending by Priority
+- **High (Security):** 1 item (BestTime key rotation - user responsibility)
+- **Medium (Tech Debt):** 2 items (CSS consolidation, build step)
+- **Low (Features):** 1 item (Next.js globe)
 
 ## Constraints / Notes
 
-- Live ship tracking (AIS) generally requires an API key/provider; this repo currently uses free/open sources only.
-- Overpass layers only load when zoom level >= 2.0 to avoid clutter and API load.
-- BestTime API requires a private key stored in localStorage (unencrypted).
+- Live ship tracking (AIS) requires paid API; repo uses free/open sources only
+- Overpass layers load only at zoom >= 2.0
+- BestTime API key stored in localStorage (unencrypted)

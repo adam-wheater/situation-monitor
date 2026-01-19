@@ -12,7 +12,7 @@ All original TODO items have been **completed**. The application is a real-time 
 
 Tasks have been reorganized into two files:
 - `TODO_A.md` - Completed features (7 items)
-- `TODO_B.md` - Pending tasks (16 items)
+- `TODO_B.md` - Pending tasks (15 items)
 
 ---
 
@@ -32,21 +32,20 @@ Tasks have been reorganized into two files:
 
 ## 2. Security Findings
 
-### 2.1 CRITICAL: API Key Exposed in Logs
+### 2.1 RESOLVED: Log Files in .gitignore
 
-**Finding:** BestTime API private key appears in `.proxy_server_8001.log` in plaintext URL parameters.
+**Finding:** BestTime API private key may appear in `.proxy_server_8001.log` in plaintext URL parameters.
 
 **Evidence:**
 ```
 GET /proxy?url=https://besttime.app/api/v1/venues/filter?api_key_private=pri_...
 ```
 
-**Risk:** If log files are committed or shared, API keys will be exposed.
+**Status:** `*.log` is already in `.gitignore` - log files will not be committed.
 
-**Recommendation:**
-1. Add `*.log` to `.gitignore` immediately
-2. Rotate the exposed BestTime API key
-3. Consider redacting query parameters in proxy logs
+**Remaining Recommendations:**
+1. Rotate the exposed BestTime API key (if previously committed)
+2. Consider redacting query parameters in proxy logs for defense in depth
 
 ### 2.2 HIGH: Proxy Server Has No Authentication
 
@@ -152,11 +151,11 @@ Backend (Python)
 ## 6. Pending Items Summary
 
 ### High Priority (Security)
-| Item | Risk |
-|------|------|
-| Add `*.log` to `.gitignore` | HIGH |
-| Add proxy authentication | HIGH |
-| Rotate BestTime API key | HIGH |
+| Item | Risk | Status |
+|------|------|--------|
+| Add `*.log` to `.gitignore` | HIGH | DONE |
+| Add proxy authentication | HIGH | PENDING |
+| Rotate BestTime API key | HIGH | PENDING |
 
 ### Medium Priority (Technical Debt)
 - Refactor inline scripts to modules
@@ -184,7 +183,7 @@ Backend (Python)
 ## 7. Recommendations
 
 ### Immediate (Security)
-1. Add `*.log` to `.gitignore`
+1. ~~Add `*.log` to `.gitignore`~~ (Already done)
 2. Rotate exposed BestTime API key
 
 ### Short-term (Stability)
@@ -229,7 +228,7 @@ Functional for development/demo. Address security findings before production.
 
 **Task Files:**
 - `TODO_A.md` - 7 completed features
-- `TODO_B.md` - 16 pending tasks
+- `TODO_B.md` - 15 pending tasks
 
 ---
 

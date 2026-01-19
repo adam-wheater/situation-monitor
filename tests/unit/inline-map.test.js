@@ -389,7 +389,11 @@ describe('Inline Map Module', () => {
   describe('Conflict Zone Data', () => {
     const conflictZones = [
       { name: 'Ukraine', coords: [[30,52],[40,52],[40,45],[30,45],[30,52]], color: '#ff4444' },
-      { name: 'Gaza', coords: [[34,32],[35,32],[35,31],[34,31],[34,32]], color: '#ff4444' }
+      { name: 'Gaza', coords: [[34,32],[35,32],[35,31],[34,31],[34,32]], color: '#ff4444' },
+      { name: 'Taiwan Strait', coords: [[117,28],[122,28],[122,22],[117,22],[117,28]], color: '#ffaa00' },
+      { name: 'Yemen', coords: [[42,19],[54,19],[54,12],[42,12],[42,19]], color: '#ff6644' },
+      { name: 'Sudan', coords: [[22,23],[38,23],[38,8],[22,8],[22,23]], color: '#ff6644' },
+      { name: 'Myanmar', coords: [[92,28],[101,28],[101,10],[92,10],[92,28]], color: '#ff8844' }
     ];
 
     it('should have closed polygon coordinates', () => {
@@ -405,6 +409,118 @@ describe('Inline Map Module', () => {
       conflictZones.forEach(zone => {
         expect(zone.color).toMatch(/^#[0-9a-fA-F]{6}$/);
       });
+    });
+
+    it('should have unique names', () => {
+      const names = conflictZones.map(z => z.name);
+      const uniqueNames = [...new Set(names)];
+      expect(uniqueNames.length).toBe(names.length);
+    });
+
+    it('should have at least 4 coordinates per zone (rectangle)', () => {
+      conflictZones.forEach(zone => {
+        expect(zone.coords.length).toBeGreaterThanOrEqual(4);
+      });
+    });
+  });
+
+  describe('Submarine Cable GeoJSON Parsing', () => {
+    // Test cable coordinate parsing (strings to numbers)
+    function parseCableCoordinates(coords) {
+      return coords.map(p => [
+        parseFloat(p[0]),
+        parseFloat(p[1])
+      ]).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
+    }
+
+    it('should parse string coordinates to numbers', () => {
+      const stringCoords = [
+        ["-151.291628638766", "60.6899127443232"],
+        ["-151.721345180045", "60.4611493731028"]
+      ];
+      const parsed = parseCableCoordinates(stringCoords);
+      expect(parsed[0][0]).toBeCloseTo(-151.29, 1);
+      expect(parsed[0][1]).toBeCloseTo(60.69, 1);
+    });
+
+    it('should filter out invalid coordinates', () => {
+      const mixedCoords = [
+        ["10", "20"],
+        ["invalid", "30"],
+        ["40", "50"]
+      ];
+      const parsed = parseCableCoordinates(mixedCoords);
+      expect(parsed.length).toBe(2);
+    });
+
+    it('should handle empty arrays', () => {
+      const parsed = parseCableCoordinates([]);
+      expect(parsed.length).toBe(0);
+    });
+
+    // Test cable color parsing
+    function parseCableColor(color) {
+      return color ? `#${color}` : '#9966ff';
+    }
+
+    it('should prepend # to cable colors', () => {
+      expect(parseCableColor('91a34c')).toBe('#91a34c');
+      expect(parseCableColor('f37280')).toBe('#f37280');
+    });
+
+    it('should use default color when none provided', () => {
+      expect(parseCableColor(null)).toBe('#9966ff');
+      expect(parseCableColor(undefined)).toBe('#9966ff');
+      expect(parseCableColor('')).toBe('#9966ff');
+    });
+  });
+
+  describe('Cable Feature Extraction', () => {
+    // Test extraction of line arrays from geometry
+    function extractLineArrays(geometry) {
+      if (!geometry) return [];
+      if (geometry.type === 'LineString') {
+        return [geometry.coordinates];
+      }
+      if (geometry.type === 'MultiLineString') {
+        return geometry.coordinates;
+      }
+      return [];
+    }
+
+    it('should extract single array from LineString', () => {
+      const geom = {
+        type: 'LineString',
+        coordinates: [[0, 0], [1, 1], [2, 2]]
+      };
+      const lines = extractLineArrays(geom);
+      expect(lines.length).toBe(1);
+      expect(lines[0].length).toBe(3);
+    });
+
+    it('should extract multiple arrays from MultiLineString', () => {
+      const geom = {
+        type: 'MultiLineString',
+        coordinates: [
+          [[0, 0], [1, 1]],
+          [[2, 2], [3, 3], [4, 4]]
+        ]
+      };
+      const lines = extractLineArrays(geom);
+      expect(lines.length).toBe(2);
+      expect(lines[0].length).toBe(2);
+      expect(lines[1].length).toBe(3);
+    });
+
+    it('should return empty array for unsupported geometry types', () => {
+      const geom = { type: 'Point', coordinates: [0, 0] };
+      const lines = extractLineArrays(geom);
+      expect(lines.length).toBe(0);
+    });
+
+    it('should handle null geometry', () => {
+      const lines = extractLineArrays(null);
+      expect(lines.length).toBe(0);
     });
   });
 });
