@@ -152,7 +152,6 @@ mkdir -p .claude
 
 cat > .claude/settings.json <<'EOF'
 {
-  "model": "claude-sonnet",
   "sandbox": { "enabled": false },
   "permissions": { "allow": ["Bash*","Read**","Edit**","Write**"], "defaultMode": "acceptEdits" }
 }
