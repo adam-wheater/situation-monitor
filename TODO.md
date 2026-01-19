@@ -39,3 +39,7 @@
 - Live ship tracking (AIS) requires paid API; repo uses free/open sources only
 - Overpass layers load only at zoom >= 2.0
 - BestTime API key stored in localStorage (unencrypted)
+
+## Test Status
+
+All 278 tests passing (9 test files).

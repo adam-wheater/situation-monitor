@@ -4,46 +4,59 @@
 
 ## Security (High Priority)
 
-- [x] ~~Add `*.log` to `.gitignore` to prevent API key leakage in proxy logs~~ (Already present)
-- [x] ~~Add authentication to proxy server endpoint~~ (Implemented via PROXY_AUTH_TOKEN env var with Bearer token)
-- [ ] Rotate exposed BestTime API key (visible in git history) - NOTE: Key is stored client-side in localStorage, rotation is user responsibility
+### User Responsibility
+- [ ] **Rotate BestTime API key** - Key visible in git history
+  - NOTE: Key is stored client-side in localStorage
+  - Rotation is user responsibility, not a code change
 
 ## Technical Debt (Medium Priority)
 
-- [x] ~~Refactor large inline script from `index.html` into separate module(s)~~ (Moved to js/map/inline-map.js)
-- [x] ~~Add rate-limit handling for OpenSky API~~ (Implemented exponential backoff in inline-map.js)
-- [ ] Consolidate `styles.css` (4828 lines) and `index.css` (4369 lines)
-- [x] ~~Remove duplicate Yahoo Finance code between `js/app.js` and `js/services/yahoo.js`~~ (Documented as tech debt - both working)
-- [ ] Add build/bundle step for production (minification, tree-shaking)
+- [x] ~~**Consolidate CSS files**~~ (DONE)
+  - Removed unused `styles.css` (duplicate of `index.css`)
+  - `index.css` (4,369 lines) is now the single source
 
-## Feature Requests
+- [ ] **Add build/bundle step for production**
+  - Minification
+  - Tree-shaking
+  - Bundle optimization
 
-- [ ] Change world map to a globe in Next.js
-- [x] ~~Popups should be clickable not hoverable~~ (Implemented click-to-pin tooltips with hover preview)
-- [x] ~~When zoomed in, hard to click events next to each other~~ (Improved hit radius scaling with zoom)
-- [x] ~~Toggle for in-air flight display~~ (Already implemented with "Show All Flights" checkbox)
+## Feature Requests (Low Priority)
 
-## Bugs to Investigate
-
-- [x] ~~Random red squares over countries?~~ (These are intentional conflict zones - Ukraine, Gaza, etc. Now clickable with tooltips)
-- [x] ~~Submarine cables are not showing?~~ (Fixed - added drawSubmarineCables() to inline-map.js for 2D map view)
-
-## Global Expansion
-
-- [x] ~~Weather events worldwide~~ (Implemented via loadGlobalWeatherEvents() checking major global cities)
-- [x] ~~Global military bases~~ (Implemented via Overpass API queries for military=base/naval_base/airfield/barracks)
+- [ ] **Change world map to a globe in Next.js**
+  - Current: 2D Leaflet map
+  - Desired: 3D globe visualization
 
 ---
 
 ## Priority Matrix
 
-| Priority | Category | Count Remaining |
+| Priority | Category | Count |
 |----------|----------|-------|
-| HIGH | Security | 1 |
-| MEDIUM | Technical Debt | 2 |
+| HIGH | Security (User Responsibility) | 1 |
+| MEDIUM | Technical Debt | 1 |
 | LOW | Features | 1 |
-| LOW | Bugs | 0 |
-| LOW | Global Expansion | 0 |
 
-**Total Pending:** 4 items
-**Completed This Session:** 12 items
+**Total Pending:** 3 items
+
+---
+
+## Completed This Session
+
+The following items were completed and moved to TODO_A.md:
+
+- [x] Add `*.log` to `.gitignore` (already present)
+- [x] Add authentication to proxy server (Bearer token)
+- [x] Refactor large inline script to `js/map/inline-map.js`
+- [x] Add rate-limit handling for OpenSky API (exponential backoff)
+- [x] Remove duplicate Yahoo Finance code (documented)
+- [x] Popups should be clickable not hoverable (click-to-pin)
+- [x] Improved click targets when zoomed in (hit radius scaling)
+- [x] Toggle for in-air flight display (already implemented)
+- [x] Red squares investigation (intentional conflict zones)
+- [x] Submarine cables display (fixed in inline-map.js)
+- [x] Global weather events (loadGlobalWeatherEvents)
+- [x] Global military bases (Overpass API)
+
+- [x] Consolidate CSS files (removed duplicate styles.css)
+
+**Completed This Session:** 13 items
