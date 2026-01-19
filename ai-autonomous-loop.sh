@@ -8,9 +8,15 @@ set -euo pipefail
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$PATH"
 
+# ----------------------------
+# Locate Claude
+# ----------------------------
 CLAUDE_CMD="$(command -v claude || true)"
 [ -z "$CLAUDE_CMD" ] && { echo "ERROR: claude not found"; exit 1; }
 
+# ----------------------------
+# Basic config
+# ----------------------------
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MAIN_BRANCH="main"
 WORK_BRANCH="ai-work"
@@ -21,30 +27,79 @@ STABILITY_EVERY=7
 MUTATION_EVERY=5
 
 TMUX_TIME_LIMIT=1800
-COPILOT_TIME_LIMIT=1800
+COPILOT_TIME_LIMIT=900
 
 MAX_STAGNANT_ITERS=5
 MIN_MUTATION_SCORE=60
 MAX_WALL_HOURS=48
 
+# ----------------------------
+# State
+# ----------------------------
 STATE_DIR=".ai-metrics"
 mkdir -p "$STATE_DIR"
 LAST_HASH_FILE="$STATE_DIR/last_hash.txt"
 STAGNANT_COUNT_FILE="$STATE_DIR/stagnant_count.txt"
 START_TIME_FILE="$STATE_DIR/start_time.txt"
-
 [ -f "$START_TIME_FILE" ] || date +%s > "$START_TIME_FILE"
 
+# ----------------------------
+# Helpers
+# ----------------------------
 hash_tree() {
   ( find src tests TODO.md 2>/dev/null | sort | xargs shasum -a 1 2>/dev/null || true ) | shasum -a 1 | cut -d' ' -f1
 }
 
+# ----------------------------
+# Sanity checks
+# ----------------------------
 cd "$PROJECT_DIR"
-
 command -v tmux >/dev/null || { echo "Install tmux"; exit 1; }
 command -v node >/dev/null || { echo "Install node"; exit 1; }
 command -v npm >/dev/null || { echo "Install npm"; exit 1; }
 command -v copilot >/dev/null || { echo "Install copilot CLI"; exit 1; }
+
+# ----------------------------
+# 🔐 FORCE CLAUDE CONFIG (NO PROMPTS EVER)
+# ----------------------------
+mkdir -p .claude
+
+cat > .claude/settings.json <<'EOF'
+{
+  "sandbox": {
+    "enabled": false
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "WebFetch",
+      "WebSearch",
+      "Task",
+      "Skill"
+    ],
+    "deny": []
+  }
+}
+EOF
+
+cat > CLAUDE.md <<'EOF'
+# AUTONOMOUS MODE
+
+- DO NOT ASK QUESTIONS
+- DO NOT ASK FOR CONFIRMATION
+- APPLY CHANGES DIRECTLY
+- USE TOOLS IMMEDIATELY
+- FOLLOW AI_MODE.txt STRICTLY
+
+TODO.md is the source of truth.
+EOF
+
+git add .claude/settings.json CLAUDE.md || true
+git commit -m "Enforce autonomous Claude permissions" || true
 
 # ----------------------------
 # JS toolchain bootstrap
@@ -225,10 +280,8 @@ $(cat "$STATE_DIR/last.diff")" || true
     git commit -m "Auto-resolve conflict" || true
   fi
 
-  # ---------------- Tests ----------------
   npm run test:all || echo "Test failures" >> TODO.md
 
-  # ---------------- Mutation gate ----------------
   if (( ITER % MUTATION_EVERY == 0 )); then
     npm run mutate || true
   fi
