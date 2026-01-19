@@ -1,0 +1,8 @@
+{
+  "model": "claude-sonnet",
+  "sandbox": false,
+  "autoApplyEdits": true,
+  "permissions": {
+    "allow": ["Bash(*)", "Read(**)", "Edit(**)"]
+  }
+}
