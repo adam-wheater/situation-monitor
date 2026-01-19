@@ -4306,7 +4306,33 @@ function initApp() {
     // Apply panel settings
     applyPanelSettings();
     updateSettingsUI();
-  
+
+    // Restore panel order and sizes
+    restorePanelOrder();
+    restorePanelSizes();
+
+    // Initialize drag and drop
+    initDragAndDrop();
+
+    // Initialize panel resize
+    initPanelResize();
+
+    // Initialize monitors list in settings
+    renderMonitorsList();
+
+    // Initialize pentagon tracker UI
+    initPentagonTrackerUI();
+
+    // Initialize livestream
+    updateLivestreamEmbed();
+
+    // Initial data load
+    refreshAll();
+
+    // Auto-refresh every 5 minutes
+    setInterval(refreshAll, 5 * 60 * 1000);
+}
+
 // Detect regions from text
 function detectRegions(text) {
     const lower = text.toLowerCase();
@@ -4593,54 +4619,6 @@ function renderMarkets(markets) {
     }).join('');
 
     count.textContent = markets.length;
-}
-
-// Render sector heatmap
-function renderHeatmap(sectors) {
-    const panel = document.getElementById('heatmapPanel');
-
-    // Restore panel order and sizes
-    restorePanelOrder();
-    restorePanelSizes();
-
-    // Initialize drag and drop
-    initDragAndDrop();
-
-    // Initialize panel resize
-    initPanelResize();
-
-    // Initialize monitors list in settings
-    renderMonitorsList();
-
-    // Initialize pentagon tracker UI
-    initPentagonTrackerUI();
-
-    // Initialize livestream
-    updateLivestreamEmbed();
-
-    // Initial data load
-    refreshAll();
-
-    // Auto-refresh every 5 minutes
-    setInterval(refreshAll, 5 * 60 * 1000);
-}
-
-// Settings modal
-function openSettings() {
-    const modal = document.getElementById('settingsModal');
-    if (modal) modal.classList.add('visible');
-}
-
-function closeSettings() {
-    const modal = document.getElementById('settingsModal');
-    if (modal) modal.classList.remove('visible');
-}
-
-function toggleSettings() {
-    const modal = document.getElementById('settingsModal');
-    if (modal) {
-        modal.classList.toggle('visible');
-    }
 }
 
 // Start app when DOM is ready
