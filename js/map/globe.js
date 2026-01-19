@@ -175,11 +175,11 @@ async function renderGlobalMap(activityData, earthquakes = [], allNews = []) {
             .pathPoints(d => d.coords)
             .pathPointLat(p => p[1])
             .pathPointLng(p => p[0])
+            .pathPointAlt(0.001)
             .pathColor(() => '#9966ff')
-            .pathStroke(3)
-            .pathDashLength(0.01)
-            .pathDashGap(0.004)
-            .pathDashAnimateTime(100000)
+            .pathStroke(2)
+            .pathDashLength(0)
+            .pathDashGap(0)
             .pathTransitionDuration(300)
             .onPathClick((path, event) => {
                 showCablePopup(event, {
