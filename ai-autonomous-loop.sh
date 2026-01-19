@@ -2,17 +2,20 @@
 set -euo pipefail
 
 # ============================================================
-# AUTONOMOUS SOFTWARE FACTORY — macOS FULL LAB EDITION
-# STABLE, VERSION-AGNOSTIC, TMUX-SAFE
+# AUTONOMOUS SOFTWARE FACTORY — macOS FULL LAB EDITION (FIXED)
+# CLAUDE = BUILDER, COPILOT = REVIEWER (PROGRAMMATIC MODE)
 # ============================================================
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$PATH"
 
 # ----------------------------
-# Locate Claude
+# Locate tools
 # ----------------------------
 CLAUDE_CMD="$(command -v claude || true)"
+COPILOT_CMD="$(command -v copilot || true)"
+
 [ -z "$CLAUDE_CMD" ] && { echo "ERROR: claude not found"; exit 1; }
+[ -z "$COPILOT_CMD" ] && { echo "ERROR: copilot not found"; exit 1; }
 
 # ----------------------------
 # Basic config
@@ -38,9 +41,12 @@ MAX_WALL_HOURS=48
 # ----------------------------
 STATE_DIR=".ai-metrics"
 mkdir -p "$STATE_DIR"
+
 LAST_HASH_FILE="$STATE_DIR/last_hash.txt"
 STAGNANT_COUNT_FILE="$STATE_DIR/stagnant_count.txt"
 START_TIME_FILE="$STATE_DIR/start_time.txt"
+FORCED_MODE_FILE="$STATE_DIR/forced_mode.txt"
+
 [ -f "$START_TIME_FILE" ] || date +%s > "$START_TIME_FILE"
 
 # ----------------------------
@@ -50,64 +56,51 @@ hash_tree() {
   ( find src tests TODO.md 2>/dev/null | sort | xargs shasum -a 1 2>/dev/null || true ) | shasum -a 1 | cut -d' ' -f1
 }
 
+fail() { echo "ERROR: $*" 1>&2; exit 1; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# ----------------------------
+# Wall clock limit
+# ----------------------------
+START_TIME="$(cat "$START_TIME_FILE")"
+NOW="$(date +%s)"
+ELAPSED_HOURS="$(( (NOW - START_TIME) / 3600 ))"
+if [ "$ELAPSED_HOURS" -ge "$MAX_WALL_HOURS" ]; then
+  echo "Max wall-clock time reached. Stopping."
+  exit 0
+fi
+
 # ----------------------------
 # Sanity checks
 # ----------------------------
 cd "$PROJECT_DIR"
-command -v tmux >/dev/null || { echo "Install tmux"; exit 1; }
-command -v node >/dev/null || { echo "Install node"; exit 1; }
-command -v npm >/dev/null || { echo "Install npm"; exit 1; }
-command -v copilot >/dev/null || { echo "Install copilot CLI"; exit 1; }
+have git || fail "git missing"
+have tmux || fail "tmux missing"
+have node || fail "node missing"
+have npm || fail "npm missing"
+have "$CLAUDE_CMD" || fail "claude missing"
+have "$COPILOT_CMD" || fail "copilot missing"
 
 # ----------------------------
-# 🔐 FORCE CLAUDE CONFIG (NO PROMPTS EVER)
+# Trust this directory for Copilot
 # ----------------------------
-mkdir -p .claude
-
-cat > .claude/settings.json <<'EOF'
+mkdir -p "$HOME/.copilot"
+cat > "$HOME/.copilot/config.json" <<EOF
 {
-  "sandbox": {
-    "enabled": false
-  },
-  "permissions": {
-    "defaultMode": "acceptEdits",
-    "allow": [
-      "Bash",
-      "Read",
-      "Edit",
-      "Write",
-      "WebFetch",
-      "WebSearch",
-      "Task",
-      "Skill"
-    ],
-    "deny": []
-  }
+  "trusted_folders": ["$PROJECT_DIR"]
 }
 EOF
 
-cat > CLAUDE.md <<'EOF'
-# AUTONOMOUS MODE
-
-- DO NOT ASK QUESTIONS
-- DO NOT ASK FOR CONFIRMATION
-- APPLY CHANGES DIRECTLY
-- USE TOOLS IMMEDIATELY
-- FOLLOW AI_MODE.txt STRICTLY
-
-TODO.md is the source of truth.
-EOF
-
-git add .claude/settings.json CLAUDE.md || true
-git commit -m "Enforce autonomous Claude permissions" || true
-
 # ----------------------------
-# JS toolchain bootstrap
+# Ensure project skeleton
 # ----------------------------
 [ -f package.json ] || npm init -y
 mkdir -p src tests/unit tests/e2e public
 [ -f TODO.md ] || echo "# TODO" > TODO.md
 
+# ----------------------------
+# Install deps (idempotent)
+# ----------------------------
 npm install --save-dev vitest playwright @playwright/test \
   @stryker-mutator/core @stryker-mutator/javascript-mutator @stryker-mutator/vitest-runner || true
 
@@ -153,29 +146,56 @@ fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
 EOF
 
 # ----------------------------
-# Copilot agents
+# Enforce at least one E2E test
 # ----------------------------
-mkdir -p .github/agents
+if [ ! -f tests/e2e/basic.spec.js ]; then
+  cat > tests/e2e/basic.spec.js <<'EOF'
+import { test, expect } from '@playwright/test';
 
-make_agent() {
-  local name="$1"
-  local extra="$2"
-  cat > ".github/agents/$name.agent.md" <<EOF
-# $name
-models: [copilot-coding]
-tools: { allow: [shell, read, write, search, git] }
-behavior: { non_interactive: true, auto_apply: true, no_confirmations: true }
-instructions: |
-  You are an autonomous specialist.
-  You may modify code, tests, and TODO.md.
-  $extra
+test('app loads', async ({ page }) => {
+  await page.goto('http://localhost:3000');
+  await expect(page).toHaveTitle(/./);
+});
 EOF
-}
+fi
 
-make_agent "autonomous-reviewer" "General code quality and bugs."
-make_agent "security-reviewer" "Security issues."
-make_agent "performance-reviewer" "Performance issues."
-make_agent "test-quality-reviewer" "Test quality and coverage."
+# ----------------------------
+# Claude config
+# ----------------------------
+mkdir -p .claude
+
+cat > .claude/settings.json <<'EOF'
+{
+  "sandbox": {
+    "enabled": false
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": ["Bash","Read","Edit","Write","WebFetch","WebSearch"]
+  }
+}
+EOF
+
+cat > CLAUDE.md <<'EOF'
+# AUTONOMOUS MODE
+
+- DO NOT ASK QUESTIONS
+- DO NOT ASK FOR CONFIRMATION
+- APPLY CHANGES DIRECTLY
+- USE TOOLS IMMEDIATELY
+- FOLLOW AI_MODE.txt STRICTLY
+
+QUALITY RULES:
+- The project MUST have Playwright E2E tests in tests/e2e
+- If fewer than 3 meaningful E2E tests exist, YOU MUST ADD MORE.
+- Every user-facing feature MUST have at least one E2E test.
+- If E2E tests fail or are missing, FIX OR CREATE THEM.
+
+TODO.md is the source of truth.
+EOF
+
+git add .claude/settings.json CLAUDE.md || true
+git commit -m "Enforce autonomous Claude permissions" || true
 
 # ----------------------------
 # Main loop
@@ -189,6 +209,12 @@ while true; do
   MODE="normal"
   (( ITER % BUG_HUNT_EVERY == 0 )) && MODE="bughunt"
   (( ITER % STABILITY_EVERY == 0 )) && MODE="stability"
+
+  if [ -f "$FORCED_MODE_FILE" ]; then
+    MODE="$(cat "$FORCED_MODE_FILE")"
+    echo "Forced mode: $MODE"
+  fi
+
   echo "$MODE" > AI_MODE.txt
 
   CURRENT_HASH="$(hash_tree)"
@@ -208,6 +234,7 @@ while true; do
   git branch -D "$WORK_BRANCH" >/dev/null 2>&1 || true
   git checkout -b "$WORK_BRANCH"
 
+  # ---------------- Claude tmux ----------------
   PROMPT_AUD="$(mktemp)"
   PROMPT_A="$(mktemp)"
   PROMPT_B="$(mktemp)"
@@ -219,12 +246,12 @@ EOF
 
   cat > "$PROMPT_A" <<EOF
 You are Builder A. Mode: $MODE.
-Implement TODO_A.md fully with tests.
+Implement TODO_A.md fully with tests (including Playwright if relevant).
 EOF
 
   cat > "$PROMPT_B" <<EOF
 You are Builder B. Mode: $MODE.
-Implement TODO_B.md fully with tests.
+Implement TODO_B.md fully with tests (including Playwright if relevant).
 EOF
 
   tmux kill-session -t "$TMUX_SESSION" >/dev/null 2>&1 || true
@@ -257,14 +284,25 @@ EOF
     git commit -m "Claude iteration $ITER ($MODE)"
   fi
 
-  # ---------------- Copilot reviewers ----------------
+  # ---------------- Copilot reviewers (PROGRAMMATIC MODE) ----------------
   git diff HEAD~1..HEAD > "$STATE_DIR/last.diff" || true
 
-  for AGENT in autonomous-reviewer security-reviewer performance-reviewer test-quality-reviewer; do
-    timeout "$COPILOT_TIME_LIMIT" copilot --agent "$AGENT" --non-interactive -i \
-"Mode: $MODE. Review repo and diff:
+  for ROLE in "autonomous reviewer" "security reviewer" "performance reviewer" "test quality reviewer"; do
+    timeout "$COPILOT_TIME_LIMIT" copilot -p "
+You are the $ROLE.
 
-$(cat "$STATE_DIR/last.diff")" || true
+Current mode: $MODE.
+
+Review the entire repository and this diff:
+
+$(cat "$STATE_DIR/last.diff")
+
+- Improve the code.
+- Fix bugs.
+- Improve tests, including Playwright E2E.
+- Apply changes directly.
+- Do not ask questions.
+" --allow-tool 'write' --allow-tool 'shell(git)' --allow-tool 'shell(npm)' --allow-tool 'shell(node)' || true
   done
 
   if ! git diff --quiet; then
@@ -280,10 +318,24 @@ $(cat "$STATE_DIR/last.diff")" || true
     git commit -m "Auto-resolve conflict" || true
   fi
 
-  npm run test:all || echo "Test failures" >> TODO.md
+  # ---------------- Tests ----------------
+  if ! npm run test:all; then
+    echo "Test failures" >> TODO.md
+    echo "stability" > "$FORCED_MODE_FILE"
+  else
+    rm -f "$FORCED_MODE_FILE"
+  fi
 
+  # ---------------- Mutation testing ----------------
   if (( ITER % MUTATION_EVERY == 0 )); then
     npm run mutate || true
+    if [ -f reports/mutation/mutation.json ]; then
+      SCORE="$(node -e "const r=require('./reports/mutation/mutation.json'); console.log(r.metrics?.mutationScore || r.metrics?.metrics?.mutationScore || 0)")"
+      if (( ${SCORE%.*} < MIN_MUTATION_SCORE )); then
+        echo "Mutation score below threshold" >> TODO.md
+        echo "stability" > "$FORCED_MODE_FILE"
+      fi
+    fi
   fi
 
   ITER=$((ITER + 1))
