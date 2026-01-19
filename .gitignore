@@ -1,0 +1,27 @@
+# Logs
+*.log
+.proxy_server_*.log
+
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# Process files
+.proxy_server_pid
+.proxy_server_port

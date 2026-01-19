@@ -1,14 +1,18 @@
-# Situation Monitor – Audit Report
+# Situation Monitor - Audit Report
 
-**Date:** 2026-01-17
-**Branch:** `ai-loop`
-**Auditor:** Claude Code (Opus 4.5)
+**Date:** 2026-01-19
+**Branch:** `ai-work`
+**Auditor:** Claude Code (Opus 4.5) - Autonomous Mode
 
 ---
 
 ## Executive Summary
 
-All original TODO items have been **completed**. The application is a real-time geopolitical intelligence dashboard with 24 panels, 90+ external API integrations, and a 3D globe map. The codebase is functional but has several security and maintainability concerns that should be addressed.
+All original TODO items have been **completed**. The application is a real-time geopolitical intelligence dashboard with 24 panels, 90+ external API integrations, and a 3D globe map. The codebase is functional but has security and maintainability concerns.
+
+Tasks have been reorganized into two files:
+- `TODO_A.md` - Completed features (7 items)
+- `TODO_B.md` - Pending tasks (16 items)
 
 ---
 
@@ -16,13 +20,13 @@ All original TODO items have been **completed**. The application is a real-time 
 
 | Feature | Status | Location |
 |---------|--------|----------|
-| Weather warnings (NWS) | **DONE** | `index.html:664-749` |
-| Flight radar (OpenSky) | **DONE** | `index.html:836-1291` |
-| Naval hubs (Overpass) | **DONE** | `index.html:1026-1029` |
-| Pentagon tracker (BestTime) | **DONE** | `js/panels/pentagon.js` |
-| Military bases (Overpass) | **DONE** | `index.html:1013-1024` |
-| Nuclear plants (Overpass) | **DONE** | `index.html:1005-1011` |
-| Zoom icon scaling | **DONE** | `js/map/zoom.js:68-73` |
+| Weather warnings (NWS) | DONE | `index.html:664-749` |
+| Flight radar (OpenSky) | DONE | `index.html:836-1291` |
+| Naval hubs (Overpass) | DONE | `index.html:1026-1029` |
+| Pentagon tracker (BestTime) | DONE | `js/panels/pentagon.js` |
+| Military bases (Overpass) | DONE | `index.html:1013-1024` |
+| Nuclear plants (Overpass) | DONE | `index.html:1005-1011` |
+| Zoom icon scaling | DONE | `js/map/zoom.js:68-73` |
 
 ---
 
@@ -34,7 +38,7 @@ All original TODO items have been **completed**. The application is a real-time 
 
 **Evidence:**
 ```
-GET /proxy?url=https://besttime.app/api/v1/venues/filter?api_key_private=pri_bbaecd7bd4c646bda48f56400bc9daa5...
+GET /proxy?url=https://besttime.app/api/v1/venues/filter?api_key_private=pri_...
 ```
 
 **Risk:** If log files are committed or shared, API keys will be exposed.
@@ -50,9 +54,9 @@ GET /proxy?url=https://besttime.app/api/v1/venues/filter?api_key_private=pri_bba
 
 **Location:** `proxy_server.py:1-262`
 
-**Risk:** Open proxy could be abused for SSRF attacks or to bypass rate limits on allowlisted APIs.
+**Risk:** Open proxy could be abused for SSRF attacks or to bypass rate limits.
 
-**Recommendation:** Add localhost-only binding or implement token-based authentication.
+**Recommendation:** Add localhost-only binding or token-based authentication.
 
 ### 2.3 MEDIUM: API Keys Stored in localStorage Unencrypted
 
@@ -62,15 +66,11 @@ GET /proxy?url=https://besttime.app/api/v1/venues/filter?api_key_private=pri_bba
 
 **Risk:** Any XSS vulnerability would expose stored API keys.
 
-**Recommendation:** Consider using httpOnly cookies or encrypted storage for sensitive keys.
-
 ### 2.4 LOW: Broad Proxy Allowlist
 
-**Finding:** 90+ domains in proxy allowlist, some of which may have overly broad access.
+**Finding:** 90+ domains in proxy allowlist.
 
 **Location:** `proxy_server.py:35-90`
-
-**Risk:** Wide attack surface if any allowlisted domain is compromised.
 
 ---
 
@@ -78,69 +78,53 @@ GET /proxy?url=https://besttime.app/api/v1/venues/filter?api_key_private=pri_bba
 
 ### 3.1 Large Inline Script Block
 
-**Finding:** `index.html` contains a ~1000+ line inline `<script>` block with all map rendering logic.
+**Finding:** `index.html` contains ~1000+ lines of inline map rendering logic.
 
-**Impact:**
-- Hard to maintain and test
-- No code reuse possible
-- All map logic tightly coupled
+**Impact:** Hard to maintain/test, no code reuse, tight coupling.
 
-**Recommendation:** Extract into `js/map/renderer.js` module.
+**Recommendation:** Extract to `js/map/renderer.js` module.
 
 ### 3.2 Duplicate Code
 
-**Finding:** `js/app.js` duplicates code from `js/services/yahoo.js` (yahooQuoteInflight pattern).
+**Finding:** `js/app.js` duplicates code from `js/services/yahoo.js`.
 
 **Locations:**
 - `js/app.js:1736-1794`
 - `js/services/yahoo.js:5-60`
 
-**Recommendation:** Remove duplicate and import from single source.
-
 ### 3.3 Large CSS Files
-
-**Finding:** Combined 9,197 lines of CSS across two files.
 
 | File | Lines |
 |------|-------|
 | `styles.css` | 4,828 |
 | `index.css` | 4,369 |
+| **Total** | 9,197 |
 
-**Recommendation:** Audit for dead CSS, consolidate, and consider CSS modules or utility classes.
+### 3.4 No Build Step
 
-### 3.4 No Minification or Bundling
-
-**Finding:** No build step visible. All assets served unminified.
-
-**Impact:** Larger payload, slower load times, no tree-shaking.
-
-**Recommendation:** Add build step (esbuild, Vite, or similar) for production.
+No minification, bundling, or tree-shaking visible.
 
 ---
 
 ## 4. API Integration Analysis
 
-### 4.1 Rate Limiting Concerns
+### Rate Limiting
 
 | API | Rate Limit Handling | Status |
 |-----|---------------------|--------|
 | Yahoo Finance | 15-min backoff on 429 | OK |
-| OpenSky | No backoff | **MISSING** |
+| OpenSky | No backoff | MISSING |
 | Overpass | 20s cache, inFlight guard | OK |
-| NWS | No explicit handling | OK (generous limits) |
+| NWS | No explicit handling | OK |
 
-**Recommendation:** Add exponential backoff for OpenSky API.
-
-### 4.2 Caching Strategy
+### Caching Strategy
 
 | Layer | Cache Duration |
 |-------|----------------|
 | Yahoo quotes | 2 min TTL |
 | Overpass | Session memory |
 | OpenSky flights | Session memory |
-| Congress trades | No cache |
-
-**Note:** Congress trades fetches 15MB+ S3 data on each load. Consider caching.
+| Congress trades | No cache (15MB+ per load) |
 
 ---
 
@@ -151,7 +135,7 @@ Frontend (Vanilla JS)
 ├── index.html (entry + inline map script)
 ├── js/
 │   ├── app.js (4,598 lines) - panel orchestration
-│   ├── constants.js - configuration data
+│   ├── constants.js - configuration
 │   ├── core/ - proxy, utils, storage
 │   ├── map/ - globe, zoom, popups, loaders
 │   ├── services/ - feeds, yahoo, api
@@ -165,11 +149,43 @@ Backend (Python)
 
 ---
 
-## 6. Recommendations Summary
+## 6. Pending Items Summary
+
+### High Priority (Security)
+| Item | Risk |
+|------|------|
+| Add `*.log` to `.gitignore` | HIGH |
+| Add proxy authentication | HIGH |
+| Rotate BestTime API key | HIGH |
+
+### Medium Priority (Technical Debt)
+- Refactor inline scripts to modules
+- Add OpenSky rate limiting
+- Consolidate CSS files
+- Remove duplicate Yahoo code
+- Add build step
+
+### Feature Backlog
+- Globe view in Next.js
+- Click-based popups
+- Improved click targets
+- Flight toggle display
+
+### Bugs
+- Red squares rendering issue
+- Submarine cables not displaying
+
+### Global Expansion
+- Worldwide weather events
+- Global military bases
+
+---
+
+## 7. Recommendations
 
 ### Immediate (Security)
-1. **Add `*.log` to `.gitignore`** - prevents API key leakage
-2. **Rotate exposed BestTime API key** - current key is in git history
+1. Add `*.log` to `.gitignore`
+2. Rotate exposed BestTime API key
 
 ### Short-term (Stability)
 3. Add rate-limit handling for OpenSky
@@ -184,7 +200,7 @@ Backend (Python)
 
 ---
 
-## 7. Files Reviewed
+## 8. Files Reviewed
 
 - `index.html` (1,567 lines)
 - `js/app.js` (4,598 lines)
@@ -201,15 +217,19 @@ Backend (Python)
 
 ---
 
-## 8. Conclusion
+## 9. Conclusion
 
-The Situation Monitor is a comprehensive geopolitical intelligence dashboard with all planned features implemented. The primary concerns are:
+The Situation Monitor is a comprehensive geopolitical intelligence dashboard with all planned features implemented. Primary concerns:
 
-1. **Security:** API key exposure in logs and unprotected proxy endpoint
-2. **Maintainability:** Large inline scripts and duplicated code
-3. **Performance:** No build optimization or asset minification
+1. **Security:** API key exposure in logs, unprotected proxy
+2. **Maintainability:** Large inline scripts, duplicated code
+3. **Performance:** No build optimization
 
-The application is functional for development/demo purposes. Before production deployment, address the security findings and implement proper build tooling.
+Functional for development/demo. Address security findings before production.
+
+**Task Files:**
+- `TODO_A.md` - 7 completed features
+- `TODO_B.md` - 16 pending tasks
 
 ---
 
