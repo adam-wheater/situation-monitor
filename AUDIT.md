@@ -91,13 +91,13 @@ GET /proxy?url=https://besttime.app/api/v1/venues/filter?api_key_private=pri_...
 - `js/app.js:1736-1794`
 - `js/services/yahoo.js:5-60`
 
-### 3.3 Large CSS Files
+### 3.3 Large CSS File
 
 | File | Lines |
 |------|-------|
-| `styles.css` | 4,828 |
 | `index.css` | 4,369 |
-| **Total** | 9,197 |
+
+**Note:** `styles.css` was removed as duplicate during consolidation.
 
 ### 3.4 No Build Step
 
@@ -139,7 +139,7 @@ Frontend (Vanilla JS)
 │   ├── map/ - globe, zoom, popups, loaders
 │   ├── services/ - feeds, yahoo, api
 │   └── panels/ - 11 panel modules
-├── styles.css + index.css
+├── index.css (consolidated)
 └── data/ - static GeoJSON, curated venues
 
 Backend (Python)
@@ -208,8 +208,7 @@ Backend (Python)
 - `js/constants.js`
 - `proxy_server.py` (262 lines)
 - `data/pentagon-curated-venues.json`
-- `styles.css` (4,828 lines)
-- `index.css` (4,369 lines)
+- `index.css` (4,369 lines) - consolidated from styles.css + index.css
 - `.gitignore`
 - `README.md`
 - `TODO.md`
