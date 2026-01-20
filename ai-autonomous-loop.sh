@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
 # ============================================================
-# AUTONOMOUS SOFTWARE FACTORY — macOS FULL LAB EDITION (FIXED)
-# CLAUDE = BUILDER, COPILOT = REVIEWER (PROGRAMMATIC MODE)
+# AUTONOMOUS SOFTWARE FACTORY — LINUX DOCKER EDITION
+# CLAUDE = BUILDER, COPILOT = REVIEWER
 # ============================================================
 
-export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$PATH"
+# ----------------------------
+# Trust workspace directory (Docker volume)
+# ----------------------------
+git config --global --add safe.directory /workspace
 
 # ----------------------------
 # Locate tools
@@ -20,7 +25,9 @@ COPILOT_CMD="$(command -v copilot || true)"
 # ----------------------------
 # Basic config
 # ----------------------------
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="/workspace"
+cd "$PROJECT_DIR"
+
 MAIN_BRANCH="main"
 WORK_BRANCH="ai-work"
 TMUX_SESSION="ai-loop"
@@ -35,6 +42,8 @@ COPILOT_TIME_LIMIT=900
 MAX_STAGNANT_ITERS=5
 MIN_MUTATION_SCORE=60
 MAX_WALL_HOURS=48
+
+REPO_URL="https://github.com/adam-wheater/situation-monitor"
 
 # ----------------------------
 # State
@@ -53,11 +62,8 @@ FORCED_MODE_FILE="$STATE_DIR/forced_mode.txt"
 # Helpers
 # ----------------------------
 hash_tree() {
-  ( find src tests TODO.md 2>/dev/null | sort | xargs shasum -a 1 2>/dev/null || true ) | shasum -a 1 | cut -d' ' -f1
+  ( find src tests TODO.md 2>/dev/null | sort | xargs sha1sum 2>/dev/null || true ) | sha1sum | cut -d' ' -f1
 }
-
-fail() { echo "ERROR: $*" 1>&2; exit 1; }
-have() { command -v "$1" >/dev/null 2>&1; }
 
 # ----------------------------
 # Wall clock limit
@@ -71,25 +77,20 @@ if [ "$ELAPSED_HOURS" -ge "$MAX_WALL_HOURS" ]; then
 fi
 
 # ----------------------------
-# Sanity checks
+# Ensure repo exists (robust)
 # ----------------------------
-cd "$PROJECT_DIR"
-have git || fail "git missing"
-have tmux || fail "tmux missing"
-have node || fail "node missing"
-have npm || fail "npm missing"
-have "$CLAUDE_CMD" || fail "claude missing"
-have "$COPILOT_CMD" || fail "copilot missing"
-
-# ----------------------------
-# Trust this directory for Copilot
-# ----------------------------
-mkdir -p "$HOME/.copilot"
-cat > "$HOME/.copilot/config.json" <<EOF
-{
-  "trusted_folders": ["$PROJECT_DIR"]
-}
-EOF
+if [ ! -d ".git" ]; then
+  if [ -z "$(ls -A .)" ]; then
+    echo "Empty directory, cloning repository..."
+    git clone "$REPO_URL" .
+  else
+    echo "Directory not empty but no .git — initialising git repo..."
+    git init
+    git remote add origin "$REPO_URL" || true
+    git fetch origin
+    git checkout -B main origin/main || git checkout -B main
+  fi
+fi
 
 # ----------------------------
 # Ensure project skeleton
@@ -203,6 +204,8 @@ git commit -m "Enforce autonomous Claude permissions" || true
 ITER=1
 echo 0 > "$STAGNANT_COUNT_FILE"
 
+git checkout "$MAIN_BRANCH" || git checkout -b "$MAIN_BRANCH"
+
 while true; do
   echo "================ ITERATION $ITER ================"
 
@@ -284,7 +287,7 @@ EOF
     git commit -m "Claude iteration $ITER ($MODE)"
   fi
 
-  # ---------------- Copilot reviewers (PROGRAMMATIC MODE) ----------------
+  # ---------------- Copilot reviewers ----------------
   git diff HEAD~1..HEAD > "$STATE_DIR/last.diff" || true
 
   for ROLE in "autonomous reviewer" "security reviewer" "performance reviewer" "test quality reviewer"; do
@@ -302,8 +305,8 @@ $(cat "$STATE_DIR/last.diff")
 - Improve tests, including Playwright E2E.
 - Apply changes directly.
 - Do not ask questions.
-" --allow-tool 'write' --allow-tool 'shell(git)' --allow-tool 'shell(npm)' --allow-tool 'shell(node)' || true
-  done
+"
+  done || true
 
   if ! git diff --quiet; then
     git add -A
