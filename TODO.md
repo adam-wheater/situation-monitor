@@ -84,3 +84,4 @@ npm run test
 | proxy-auth.test.js | 20 |
 | view-toggle.test.js | 19 |
 | build-config.test.js | 44 |
+**Status:** All passing (verified 2026-01-20)

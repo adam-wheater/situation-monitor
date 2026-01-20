@@ -743,3 +743,29 @@ const AI_FEEDS = [
             { name: 'Meta AI', url: 'https://ai.meta.com/blog/rss/' },
             { name: 'Hugging Face', url: 'https://huggingface.co/blog/feed.xml' }
         ];
+
+// Export constants to window for HTML and cross-module access
+if (typeof window !== 'undefined') {
+    window.PANELS = PANELS;
+    window.CORS_PROXIES = CORS_PROXIES;
+    window.ALERT_KEYWORDS = ALERT_KEYWORDS;
+    window.FEEDS = FEEDS;
+    window.INTEL_SOURCES = INTEL_SOURCES;
+    window.REGION_KEYWORDS = REGION_KEYWORDS;
+    window.TOPIC_KEYWORDS = TOPIC_KEYWORDS;
+    window.SECTORS = SECTORS;
+    window.COMMODITIES = COMMODITIES;
+    window.US_CITIES = US_CITIES;
+    window.US_HOTSPOTS = US_HOTSPOTS;
+    window.INTEL_HOTSPOTS = INTEL_HOTSPOTS;
+    window.SHIPPING_CHOKEPOINTS = SHIPPING_CHOKEPOINTS;
+    window.CYBER_REGIONS = CYBER_REGIONS;
+    window.CONFLICT_ZONES = CONFLICT_ZONES;
+    window.MILITARY_BASES = MILITARY_BASES;
+    window.NUCLEAR_FACILITIES = NUCLEAR_FACILITIES;
+    window.UNDERSEA_CABLES = UNDERSEA_CABLES;
+    window.SANCTIONED_COUNTRIES = SANCTIONED_COUNTRIES;
+    window.NEWS_REGIONS = NEWS_REGIONS;
+    window.MONITOR_COLORS = MONITOR_COLORS;
+    window.AI_FEEDS = AI_FEEDS;
+}

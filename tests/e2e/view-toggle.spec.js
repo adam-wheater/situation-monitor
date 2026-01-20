@@ -102,8 +102,8 @@ test.describe('2D/3D Map View Toggle', () => {
       await toggle.click();
 
       // Check localStorage
-      const pref = await page.evaluate(() => localStorage.getItem('mapViewPreference'));
-      expect(pref).toBe('3d');
+      const pref = await page.evaluate(() => localStorage.getItem('mapViewMode'));
+      expect(pref).toBe('3D');
     });
 
     test('should save preference to localStorage when switching to 2D', async ({ page }) => {
@@ -116,17 +116,17 @@ test.describe('2D/3D Map View Toggle', () => {
       await toggle.click();
 
       // Check localStorage
-      const pref = await page.evaluate(() => localStorage.getItem('mapViewPreference'));
-      expect(pref).toBe('2d');
+      const pref = await page.evaluate(() => localStorage.getItem('mapViewMode'));
+      expect(pref).toBe('2D');
     });
 
     test('should restore 3D preference on page reload', async ({ page }) => {
       // Set 3D preference in localStorage
-      await page.evaluate(() => localStorage.setItem('mapViewPreference', '3d'));
+      await page.evaluate(() => localStorage.setItem('mapViewMode', '3D'));
 
       // Reload page
       await page.reload();
-      await page.waitForFunction(() => typeof window.toggleMapViewMode === 'function', { timeout: 10000 });
+      await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
 
       // Should be in 3D mode
       const toggle = page.locator('#mapViewToggle');
@@ -135,11 +135,11 @@ test.describe('2D/3D Map View Toggle', () => {
 
     test('should restore 2D preference on page reload', async ({ page }) => {
       // Set 2D preference in localStorage
-      await page.evaluate(() => localStorage.setItem('mapViewPreference', '2d'));
+      await page.evaluate(() => localStorage.setItem('mapViewMode', '2D'));
 
       // Reload page
       await page.reload();
-      await page.waitForFunction(() => typeof window.toggleMapViewMode === 'function', { timeout: 10000 });
+      await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
 
       // Should be in 2D mode
       const toggle = page.locator('#mapViewToggle');
@@ -148,11 +148,11 @@ test.describe('2D/3D Map View Toggle', () => {
 
     test('should default to 2D when no preference in localStorage', async ({ page }) => {
       // Clear localStorage
-      await page.evaluate(() => localStorage.removeItem('mapViewPreference'));
+      await page.evaluate(() => localStorage.removeItem('mapViewMode'));
 
       // Reload page
       await page.reload();
-      await page.waitForFunction(() => typeof window.toggleMapViewMode === 'function', { timeout: 10000 });
+      await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
 
       // Should default to 2D
       const toggle = page.locator('#mapViewToggle');
@@ -186,7 +186,7 @@ test.describe('2D/3D Map View Toggle', () => {
 test.describe('Map Panel Container', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForFunction(() => typeof window.toggleMapViewMode === 'function', { timeout: 10000 });
+    await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
   });
 
   test('should have proper dimensions', async ({ page }) => {

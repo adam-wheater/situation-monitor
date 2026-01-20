@@ -44,28 +44,7 @@ import './panels/pentagon.js';
 // Main application
 import './app.js';
 
-// Expose globals for HTML onclick handlers
-// These functions are defined in the imported modules above
-if (typeof window !== 'undefined') {
-  // From monitors.js
-  window.openMonitorForm = typeof openMonitorForm !== 'undefined' ? openMonitorForm : undefined;
-  window.closeMonitorForm = typeof closeMonitorForm !== 'undefined' ? closeMonitorForm : undefined;
-  window.saveMonitor = typeof saveMonitor !== 'undefined' ? saveMonitor : undefined;
-
-  // From app.js
-  window.toggleSettings = typeof toggleSettings !== 'undefined' ? toggleSettings : undefined;
-  window.refreshAll = typeof refreshAll !== 'undefined' ? refreshAll : undefined;
-  window.resetPanelOrder = typeof resetPanelOrder !== 'undefined' ? resetPanelOrder : undefined;
-
-  // From pentagon.js
-  window.saveBestTimePrivateKey = typeof saveBestTimePrivateKey !== 'undefined' ? saveBestTimePrivateKey : undefined;
-  window.addPentagonLocationFromInputs = typeof addPentagonLocationFromInputs !== 'undefined' ? addPentagonLocationFromInputs : undefined;
-
-  // From inline-map.js
-  window.MapModule = typeof MapModule !== 'undefined' ? MapModule : undefined;
-
-  // From view-toggle.js
-  window.toggleMapViewMode = typeof toggleMapViewMode !== 'undefined' ? toggleMapViewMode : undefined;
-}
+// Note: Global functions for HTML onclick handlers are exported directly
+// by their respective modules (monitors.js, app.js, pentagon.js, view-toggle.js, inline-map.js)
 
 console.log('[Build] Situation Monitor loaded');

@@ -108,12 +108,17 @@ describe('Build Configuration', () => {
       expect(mainContent).toContain("import './panels/markets.js'");
     });
 
-    it('main.js exposes global functions for onclick handlers', () => {
-      const mainContent = readFileSync(join(ROOT_DIR, 'js', 'main.js'), 'utf8');
-      expect(mainContent).toContain('window.toggleSettings');
-      expect(mainContent).toContain('window.refreshAll');
-      expect(mainContent).toContain('window.MapModule');
-      expect(mainContent).toContain('window.toggleMapViewMode');
+    it('modules export global functions for onclick handlers', () => {
+      // Global functions are exported by their respective modules, not main.js
+      const appContent = readFileSync(join(ROOT_DIR, 'js', 'app.js'), 'utf8');
+      expect(appContent).toContain('window.toggleSettings');
+      expect(appContent).toContain('window.refreshAll');
+
+      const inlineMapContent = readFileSync(join(ROOT_DIR, 'js', 'map', 'inline-map.js'), 'utf8');
+      expect(inlineMapContent).toContain('window.MapModule');
+
+      const viewToggleContent = readFileSync(join(ROOT_DIR, 'js', 'map', 'view-toggle.js'), 'utf8');
+      expect(viewToggleContent).toContain('window.toggleMapViewMode');
     });
   });
 
