@@ -175,3 +175,8 @@ if (document.readyState === 'loading') {
     // Small delay to ensure other modules are loaded
     setTimeout(initMapViewToggle, 100);
 }
+
+// Export functions to window for HTML onclick handlers
+if (typeof window !== 'undefined') {
+    window.toggleMapViewMode = toggleMapViewMode;
+}

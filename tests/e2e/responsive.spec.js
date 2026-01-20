@@ -63,6 +63,8 @@ test.describe('Accessibility', () => {
 
   test('buttons should be focusable', async ({ page }) => {
     const refreshBtn = page.locator('#refreshBtn');
+    // Wait for button to be enabled (not disabled during initial load)
+    await expect(refreshBtn).toBeEnabled({ timeout: 10000 });
     await refreshBtn.focus();
     await expect(refreshBtn).toBeFocused();
   });

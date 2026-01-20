@@ -43,41 +43,83 @@ function renderMonitorsList() {
     `).join('');
 }
 
+// Color palette for monitors (duplicated from constants.js for module independence)
+const MONITOR_COLOR_PALETTE = [
+    '#00ff88', '#ff6600', '#00aaff', '#ff00ff', '#ffcc00',
+    '#ff3366', '#33ccff', '#99ff33', '#ff6699', '#00ffcc'
+];
+
+let selectedMonitorColor = MONITOR_COLOR_PALETTE[0];
+
+function initMonitorColorPicker() {
+    const container = document.getElementById('monitorColors');
+    if (!container) return;
+
+    container.innerHTML = MONITOR_COLOR_PALETTE.map(color => `
+        <div class="monitor-color-option ${color === selectedMonitorColor ? 'selected' : ''}"
+             data-color="${color}"
+             style="background: ${color};"
+             onclick="selectMonitorColor('${color}')"></div>
+    `).join('');
+}
+
+function selectMonitorColor(color) {
+    selectedMonitorColor = color;
+    const container = document.getElementById('monitorColors');
+    if (!container) return;
+
+    container.querySelectorAll('.monitor-color-option').forEach(swatch => {
+        swatch.classList.toggle('selected', swatch.dataset.color === color);
+    });
+}
+
 function openMonitorForm(editId = null) {
-    const modal = document.getElementById('monitorFormModal');
-    const form = document.getElementById('monitorForm');
+    const overlay = document.getElementById('monitorFormOverlay');
     const title = document.getElementById('monitorFormTitle');
 
-    if (!modal || !form) return;
+    if (!overlay) return;
 
-    form.reset();
-    document.getElementById('monitorEditId').value = '';
+    // Reset form fields
+    const nameInput = document.getElementById('monitorName');
+    const keywordsInput = document.getElementById('monitorKeywords');
+    const latInput = document.getElementById('monitorLat');
+    const lonInput = document.getElementById('monitorLon');
+    const editIdInput = document.getElementById('monitorEditId');
+
+    if (nameInput) nameInput.value = '';
+    if (keywordsInput) keywordsInput.value = '';
+    if (latInput) latInput.value = '';
+    if (lonInput) lonInput.value = '';
+    if (editIdInput) editIdInput.value = '';
+
+    // Initialize color picker
+    initMonitorColorPicker();
 
     if (editId) {
         const monitors = loadMonitors();
         const monitor = monitors.find(m => m.id === editId);
         if (monitor) {
-            title.textContent = 'Edit Monitor';
-            document.getElementById('monitorEditId').value = editId;
-            document.getElementById('monitorName').value = monitor.name;
-            document.getElementById('monitorKeywords').value = monitor.keywords.join(', ');
-            document.getElementById('monitorLat').value = monitor.lat || '';
-            document.getElementById('monitorLon').value = monitor.lon || '';
-            document.getElementById('monitorColor').value = monitor.color || MONITOR_COLORS[0];
+            if (title) title.textContent = 'Edit Monitor';
+            if (editIdInput) editIdInput.value = editId;
+            if (nameInput) nameInput.value = monitor.name;
+            if (keywordsInput) keywordsInput.value = monitor.keywords.join(', ');
+            if (latInput) latInput.value = monitor.lat || '';
+            if (lonInput) lonInput.value = monitor.lon || '';
+            selectMonitorColor(monitor.color || MONITOR_COLOR_PALETTE[0]);
         }
     } else {
-        title.textContent = 'Add Monitor';
+        if (title) title.textContent = 'Add Monitor';
         const usedColors = loadMonitors().map(m => m.color);
-        const nextColor = MONITOR_COLORS.find(c => !usedColors.includes(c)) || MONITOR_COLORS[0];
-        document.getElementById('monitorColor').value = nextColor;
+        const nextColor = MONITOR_COLOR_PALETTE.find(c => !usedColors.includes(c)) || MONITOR_COLOR_PALETTE[0];
+        selectMonitorColor(nextColor);
     }
 
-    modal.classList.add('visible');
+    overlay.classList.add('open');
 }
 
 function closeMonitorForm() {
-    const modal = document.getElementById('monitorFormModal');
-    if (modal) modal.classList.remove('visible');
+    const modal = document.getElementById('monitorFormOverlay');
+    if (modal) modal.classList.remove('open');
 }
 
 function saveMonitor() {
@@ -85,7 +127,7 @@ function saveMonitor() {
     const keywordsStr = document.getElementById('monitorKeywords').value.trim();
     const lat = parseFloat(document.getElementById('monitorLat').value) || null;
     const lon = parseFloat(document.getElementById('monitorLon').value) || null;
-    const color = document.getElementById('monitorColor').value;
+    const color = selectedMonitorColor;
     const editId = document.getElementById('monitorEditId').value;
 
     if (!name || !keywordsStr) {
@@ -236,5 +278,6 @@ if (typeof window !== 'undefined') {
   window.openMonitorForm = openMonitorForm;
   window.closeMonitorForm = closeMonitorForm;
   window.saveMonitor = saveMonitor;
+  window.selectMonitorColor = selectMonitorColor;
   window.renderMonitorsList = renderMonitorsList;
 }

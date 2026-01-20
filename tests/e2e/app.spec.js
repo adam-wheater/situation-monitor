@@ -223,6 +223,11 @@ test.describe('Situation Monitor Application', () => {
   });
 
   test.describe('Monitor Form Modal', () => {
+    test.beforeEach(async ({ page }) => {
+      // Wait for the module to load and window.openMonitorForm to be defined
+      await page.waitForFunction(() => typeof window.openMonitorForm === 'function', { timeout: 10000 });
+    });
+
     test('should open monitor form when clicking + Monitor button', async ({ page }) => {
       await page.click('.monitors-btn');
       const form = page.locator('#monitorFormOverlay');

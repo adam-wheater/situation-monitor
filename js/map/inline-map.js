@@ -1500,6 +1500,11 @@ out center;
     };
 })();
 
+// Export to window for HTML onclick handlers
+if (typeof window !== 'undefined') {
+    window.MapModule = MapModule;
+}
+
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', MapModule.init);
