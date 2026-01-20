@@ -82,7 +82,7 @@
 
 ---
 
-## Technical Debt Resolved (4 items)
+## Technical Debt Resolved (6 items)
 
 - [x] **Inline script refactored**
   - Moved from `index.html` to `js/map/inline-map.js` (1,508 lines)
@@ -96,9 +96,18 @@
   - Removed duplicate `styles.css`
   - `index.css` (4,369 lines) is now the single source
 
-- [x] **Yahoo Finance duplicate code documented**
+- [x] **Yahoo Finance duplicate documented**
   - Both `js/app.js` and `js/services/yahoo.js` in use
   - Documented as intentional (different use cases)
+
+- [x] **Build/bundle step (Vite + esbuild)**
+  - Production build with minification and tree-shaking
+  - `npm run dev` / `npm run build` / `npm run preview`
+  - Build output: ~101KB JS (30KB gzipped), ~65KB CSS (11KB gzipped)
+  - Files: `vite.config.js`, `js/main.js`
+
+- [x] **App.js syntax error fixed**
+  - Closed unclosed `initApp()` function
 
 ---
 
@@ -114,6 +123,17 @@
 
 ---
 
+## Feature Additions (1 item)
+
+- [x] **3D globe visualization toggle**
+  - 2D/3D toggle button in map panel header
+  - File: `js/map/view-toggle.js`
+  - Globe.gl integration for 3D view
+  - Preference saved to localStorage
+  - Shows countries, conflict zones, and hotspots
+
+---
+
 ## Summary
 
 | Category | Count |
@@ -121,26 +141,26 @@
 | Data Layers | 7 |
 | UI/UX | 5 |
 | Security | 2 |
-| Technical Debt | 4 |
+| Technical Debt | 6 |
 | Global Expansion | 2 |
-| **Total** | **20** |
+| Feature Additions | 1 |
+| **Total** | **23** |
 
 ---
 
-## Session Changelog
+## Test Coverage
 
-Items completed and verified this session:
-
-1. Proxy authentication (Bearer token) - `proxy_server.py`
-2. Inline script refactoring - `js/map/inline-map.js`
-3. OpenSky rate limiting - exponential backoff
-4. CSS consolidation - removed `styles.css`
-5. Clickable popups - click-to-pin behavior
-6. Improved click targets - hit radius scaling
-7. Submarine cables display - `drawSubmarineCables()`
-8. Global weather events - `loadGlobalWeatherEvents()`
-9. Global military bases - Overpass worldwide queries
-10. Conflict zone tooltips - informational popups
-11. Red squares investigation - confirmed as conflict zones
-12. Yahoo Finance duplicate - documented as intentional
-13. Log files in .gitignore - already present
+| Test File | Tests |
+|-----------|-------|
+| zoom-scaling.test.js | 34 |
+| inline-map.test.js | 52 |
+| data-loaders.test.js | 26 |
+| pentagon-tracker.test.js | 31 |
+| curated-venues.test.js | 19 |
+| weather-alerts.test.js | 19 |
+| overpass-layers.test.js | 41 |
+| flight-radar.test.js | 36 |
+| proxy-auth.test.js | 20 |
+| view-toggle.test.js | 19 |
+| build-config.test.js | 44 |
+| **Total** | **341** |

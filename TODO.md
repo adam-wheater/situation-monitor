@@ -7,13 +7,13 @@
 
 | File | Contents |
 |------|----------|
-| [TODO_A.md](./TODO_A.md) | Completed features (20 items) |
+| [TODO_A.md](./TODO_A.md) | Completed features (23 items) |
 | [TODO_B.md](./TODO_B.md) | Pending tasks (1 item) |
 | [AUDIT.md](./AUDIT.md) | Security & code quality audit |
 
 ## Quick Summary
 
-### Completed (22)
+### Completed (23)
 - Weather warnings (US NWS alerts)
 - Flight radar (OpenSky heuristics)
 - Naval hubs (Overpass)
@@ -34,8 +34,9 @@
 - Yahoo Finance duplicate documented
 - Red squares bug resolved (conflict zones)
 - Improved click targets (hit radius scaling)
-- **Build/bundle step (Vite + esbuild)**
-- **3D globe toggle (2D/3D view switching)**
+- Build/bundle step (Vite + esbuild)
+- 3D globe toggle (2D/3D view switching)
+- App.js syntax error fixed
 
 ### Pending (1)
 
