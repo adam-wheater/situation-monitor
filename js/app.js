@@ -4623,3 +4623,12 @@ function renderMarkets(markets) {
 
 // Start app when DOM is ready
 document.addEventListener('DOMContentLoaded', initApp);
+
+// Export functions to window for HTML onclick handlers
+// This is necessary when bundled with Vite/esbuild as ES modules
+if (typeof window !== 'undefined') {
+  window.toggleSettings = toggleSettings;
+  window.refreshAll = refreshAll;
+  window.resetPanelOrder = resetPanelOrder;
+  window.togglePanel = togglePanel;
+}

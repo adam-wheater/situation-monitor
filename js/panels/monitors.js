@@ -230,3 +230,11 @@ function getMonitorHotspots(allNews) {
         matches: results[m.id]?.matches || []
     }));
 }
+
+// Export functions to window for HTML onclick handlers
+if (typeof window !== 'undefined') {
+  window.openMonitorForm = openMonitorForm;
+  window.closeMonitorForm = closeMonitorForm;
+  window.saveMonitor = saveMonitor;
+  window.renderMonitorsList = renderMonitorsList;
+}
