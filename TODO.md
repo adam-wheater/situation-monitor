@@ -9,7 +9,7 @@
 |------|----------|
 | [TODO_A.md](./TODO_A.md) | Completed features (23 items) |
 | [TODO_B.md](./TODO_B.md) | Pending tasks (1 item) |
-| [AUDIT.md](./AUDIT.md) | Security & code quality audit |
+| [AUDIT.md](./AUDIT.md) | Stability audit report |
 
 ## Quick Summary
 
@@ -84,4 +84,17 @@ npm run test
 | proxy-auth.test.js | 20 |
 | view-toggle.test.js | 19 |
 | build-config.test.js | 44 |
+
 **Status:** All passing (verified 2026-01-20)
+
+## Build Status
+
+**Production build successful**
+
+| Output | Size | Gzipped |
+|--------|------|---------|
+| index.html | 17.54 KB | 3.21 KB |
+| CSS | 64.69 KB | 10.95 KB |
+| JavaScript | 134.44 KB | 41.75 KB |
+
+**Status:** Build completes in ~176ms (verified 2026-01-20)

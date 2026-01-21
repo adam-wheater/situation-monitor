@@ -1,22 +1,24 @@
-# Situation Monitor – Audit Report
+# Situation Monitor – Stability Audit Report
 
 **Date:** 2026-01-20
 **Branch:** `ai-work`
+**Mode:** Stability
 **Auditor:** Claude Code (Opus 4.5) – Autonomous Mode
 
 ---
 
 ## Executive Summary
 
-The Situation Monitor is a real-time geopolitical intelligence dashboard with **21 panels**, **90+ external API integrations**, and interactive map visualization. All original TODO items have been **completed**. The codebase is production-ready with security measures in place.
+The Situation Monitor is a real-time geopolitical intelligence dashboard with **21 panels**, **90+ external API integrations**, and interactive map visualization. All original TODO items have been **completed**. The codebase is **stable** with all tests passing and production build succeeding.
 
-| Metric | Value |
-|--------|-------|
-| Total JavaScript | ~14,500 lines |
-| Total CSS | 4,369 lines |
-| Test Coverage | 341 tests (11 files) |
-| Test Status | **All passing** |
-| Build System | Vite + esbuild |
+| Metric | Value | Status |
+|--------|-------|--------|
+| Tests | 341/341 | Pass |
+| Test Duration | 333ms | Fast |
+| Build | Successful | Pass |
+| Build Duration | 176ms | Fast |
+| Build Output JS | 134.44 KB (41.75 KB gzip) | OK |
+| Build Output CSS | 64.69 KB (10.95 KB gzip) | OK |
 
 **Task Files:**
 - `TODO_A.md` – 23 completed features
@@ -24,32 +26,71 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 
 ---
 
-## 1. Feature Completion Status
+## 1. Stability Verification
 
-| Feature | Status | Location |
-|---------|--------|----------|
-| Weather warnings (NWS) | ✓ | `index.html:664-749` |
-| Flight radar (OpenSky) | ✓ | `js/map/inline-map.js` |
-| Naval hubs (Overpass) | ✓ | `js/services/overpass.js` |
-| Pentagon tracker (BestTime) | ✓ | `js/panels/pentagon.js` |
-| Military bases (Overpass) | ✓ | `js/services/overpass.js` |
-| Nuclear plants (Overpass) | ✓ | `js/services/overpass.js` |
-| Zoom icon scaling | ✓ | `js/map/zoom.js:68-73` |
-| Proxy authentication | ✓ | `proxy_server.py:164-179` |
-| OpenSky rate limiting | ✓ | `js/map/inline-map.js` |
-| Click-to-pin popups | ✓ | `js/map/popups.js` |
-| Submarine cables | ✓ | `js/map/inline-map.js` |
-| Conflict zone tooltips | ✓ | `js/map/inline-map.js` |
-| Build/bundle step | ✓ | `vite.config.js` |
-| 3D globe toggle | ✓ | `js/map/view-toggle.js` |
+### 1.1 Test Suite
+
+**Result:** All 341 tests passing
+
+```
+ tests/unit/pentagon-tracker.test.js   31 tests  Pass
+ tests/unit/build-config.test.js       44 tests  Pass
+ tests/unit/overpass-layers.test.js    41 tests  Pass
+ tests/unit/curated-venues.test.js     19 tests  Pass
+ tests/unit/view-toggle.test.js        19 tests  Pass
+ tests/unit/weather-alerts.test.js     19 tests  Pass
+ tests/unit/inline-map.test.js         52 tests  Pass
+ tests/unit/flight-radar.test.js       36 tests  Pass
+ tests/unit/proxy-auth.test.js         20 tests  Pass
+ tests/unit/data-loaders.test.js       26 tests  Pass
+ tests/unit/zoom-scaling.test.js       34 tests  Pass
+```
+
+**Test Framework:** Vitest v4.0.17
+**Execution Time:** 333ms
+
+### 1.2 Production Build
+
+**Result:** Build successful
+
+| Output | Size | Gzipped |
+|--------|------|---------|
+| dist/index.html | 17.54 KB | 3.21 KB |
+| dist/assets/style-*.css | 64.69 KB | 10.95 KB |
+| dist/assets/main-*.js | 134.44 KB | 41.75 KB |
+
+**Build Tool:** Vite v7.3.1
+**Build Time:** 176ms
+**Modules Transformed:** 29
 
 ---
 
-## 2. Security Findings
+## 2. Feature Completion Status
 
-### 2.1 RESOLVED: Proxy Server Authentication
+| Feature | Status | Location |
+|---------|--------|----------|
+| Weather warnings (NWS) | Pass | `index.html:664-749` |
+| Flight radar (OpenSky) | Pass | `js/map/inline-map.js` |
+| Naval hubs (Overpass) | Pass | `js/services/overpass.js` |
+| Pentagon tracker (BestTime) | Pass | `js/panels/pentagon.js` |
+| Military bases (Overpass) | Pass | `js/services/overpass.js` |
+| Nuclear plants (Overpass) | Pass | `js/services/overpass.js` |
+| Zoom icon scaling | Pass | `js/map/zoom.js:68-73` |
+| Proxy authentication | Pass | `proxy_server.py:164-179` |
+| OpenSky rate limiting | Pass | `js/map/inline-map.js` |
+| Click-to-pin popups | Pass | `js/map/popups.js` |
+| Submarine cables | Pass | `js/map/inline-map.js` |
+| Conflict zone tooltips | Pass | `js/map/inline-map.js` |
+| Build/bundle step | Pass | `vite.config.js` |
+| 3D globe toggle | Pass | `js/map/view-toggle.js` |
 
-**Status:** ✓ Fixed
+---
+
+## 3. Security Status
+
+### 3.1 Proxy Server Authentication
+
+**Status:** Implemented
 
 **Implementation:** Bearer token authentication via `PROXY_AUTH_TOKEN` environment variable.
 
@@ -61,13 +102,13 @@ AUTH_TOKEN = os.environ.get('PROXY_AUTH_TOKEN', '')
 
 **Recommendation:** Always set `PROXY_AUTH_TOKEN` in production.
 
-### 2.2 RESOLVED: Log Files in .gitignore
+### 3.2 Log Files in .gitignore
 
-**Status:** ✓ Fixed
+**Status:** Implemented
 
 `*.log` is present in `.gitignore` – proxy server logs containing API keys in URLs will not be committed.
 
-### 2.3 USER ACTION: BestTime API Key Rotation
+### 3.3 BestTime API Key Rotation
 
 **Status:** Pending (user responsibility)
 
@@ -79,7 +120,9 @@ AUTH_TOKEN = os.environ.get('PROXY_AUTH_TOKEN', '')
 
 **Action Required:** User should rotate the BestTime API key if it was ever committed to git history.
 
-### 2.4 INFO: Broad Proxy Allowlist
+### 3.4 Proxy Allowlist
+
+**Status:** Acceptable
 
 **Finding:** 90+ domains in proxy allowlist.
 
@@ -89,69 +132,27 @@ AUTH_TOKEN = os.environ.get('PROXY_AUTH_TOKEN', '')
 
 ---
 
-## 3. Code Quality Findings
+## 4. Code Quality Status
 
-### 3.1 RESOLVED: Large Inline Script
+### 4.1 Module Structure
 
-**Status:** ✓ Fixed
+| Component | Status |
+|-----------|--------|
+| Inline script refactored | Done |
+| CSS consolidated | Done |
+| ES modules enabled | Done |
+| Build system configured | Done |
 
-**Before:** 1000+ lines of inline JS in `index.html`
+### 4.2 Rate Limiting
 
-**After:** Extracted to `js/map/inline-map.js` (1,508 lines)
-
-### 3.2 RESOLVED: CSS Consolidation
-
-**Status:** ✓ Fixed
-
-**Before:** Duplicate `styles.css` and `index.css`
-
-**After:** Single `index.css` (4,369 lines)
-
-### 3.3 DOCUMENTED: Yahoo Finance Duplicate
-
-**Status:** Documented
-
-Both `js/app.js` and `js/services/yahoo.js` contain Yahoo Finance code. This is intentional – different use cases.
-
-### 3.4 RESOLVED: Build/Bundle Step
-
-**Status:** ✓ Fixed
-
-**Implementation:** Vite with esbuild for production builds.
-
-**Files Added:**
-- `vite.config.js` – Build configuration
-- `js/main.js` – ES module entry point
-
-**Commands:**
-- `npm run dev` – Development server with hot reload
-- `npm run build` – Production build to `dist/`
-- `npm run preview` – Preview production build
-
-**Build Output:**
-- JavaScript: ~101KB (30KB gzipped)
-- CSS: ~65KB (11KB gzipped)
-
-### 3.5 RESOLVED: App.js Syntax Error
-
-**Status:** ✓ Fixed
-
-Closed unclosed `initApp()` function that was causing parse errors.
-
----
-
-## 4. API Integration Analysis
-
-### Rate Limiting Status
-
-| API | Rate Limit Handling | Status |
-|-----|---------------------|--------|
-| Yahoo Finance | 15-min backoff on 429 | ✓ OK |
-| OpenSky | Exponential backoff | ✓ OK |
-| Overpass | 20s cache, inFlight guard | ✓ OK |
+| API | Handling | Status |
+|-----|----------|--------|
+| Yahoo Finance | 15-min backoff on 429 | OK |
+| OpenSky | Exponential backoff | OK |
+| Overpass | 20s cache, inFlight guard | OK |
 | NWS | No explicit handling | OK (generous limits) |
 
-### Caching Strategy
+### 4.3 Caching
 
 | Layer | Cache Duration |
 |-------|----------------|
@@ -210,26 +211,7 @@ Build Output
 
 ---
 
-## 6. Test Coverage
-
-| Test File | Tests | Status |
-|-----------|-------|--------|
-| zoom-scaling.test.js | 34 | ✓ |
-| inline-map.test.js | 52 | ✓ |
-| data-loaders.test.js | 26 | ✓ |
-| pentagon-tracker.test.js | 31 | ✓ |
-| curated-venues.test.js | 19 | ✓ |
-| weather-alerts.test.js | 19 | ✓ |
-| overpass-layers.test.js | 41 | ✓ |
-| flight-radar.test.js | 36 | ✓ |
-| proxy-auth.test.js | 20 | ✓ |
-| view-toggle.test.js | 19 | ✓ |
-| build-config.test.js | 44 | ✓ |
-| **Total** | **341** | **All passing** |
-
----
-
-## 7. Pending Items
+## 6. Pending Items
 
 | Priority | Item | Type | Notes |
 |----------|------|------|-------|
@@ -239,62 +221,31 @@ See `TODO_B.md` for details.
 
 ---
 
-## 8. Recommendations
+## 7. Recommendations
 
 ### Immediate (Security)
-1. ✓ ~~Add `*.log` to `.gitignore`~~ Done
-2. ✓ ~~Add proxy authentication~~ Done
-3. **Rotate BestTime API key** (user action required)
-4. Set `PROXY_AUTH_TOKEN` in production
+1. **Rotate BestTime API key** (user action required)
+2. Set `PROXY_AUTH_TOKEN` in production
 
-### Production Readiness
-5. ✓ ~~Add OpenSky rate limiting~~ Done
-6. ✓ ~~Refactor inline scripts~~ Done
-7. ✓ ~~Consolidate CSS files~~ Done
-8. ✓ ~~Add build/bundle step~~ Done (Vite + esbuild)
-9. ✓ ~~Add 3D globe toggle~~ Done (Globe.gl)
+### Future Considerations
+3. Consider splitting `app.js` (4,647 lines) into smaller modules
+4. Add caching for Congress trades API
 
 ---
 
-## 9. Files Reviewed
+## 8. Conclusion
 
-| File | Lines |
-|------|-------|
-| `index.html` | 383 |
-| `js/app.js` | 4,647 |
-| `js/main.js` | Entry point |
-| `js/map/inline-map.js` | 1,508 |
-| `js/map/globe.js` | 613 |
-| `js/map/view-toggle.js` | ~100 |
-| `js/map/popups.js` | 566 |
-| `js/map/zoom.js` | 225 |
-| `js/services/overpass.js` | 348 |
-| `js/panels/pentagon.js` | 205 |
-| `proxy_server.py` | 289 |
-| `index.css` | 4,369 |
-| `vite.config.js` | Build config |
-| `.gitignore` | – |
+The Situation Monitor is **stable** with:
+
+- **All 341 tests passing**
+- **Production build successful**
+- **23 features completed**
+- **Security measures in place**
+
+**Stability Rating:** Production ready
+
+**Remaining User Action:** Rotate BestTime API key if exposed in git history.
 
 ---
 
-## 10. Conclusion
-
-The Situation Monitor is a comprehensive geopolitical intelligence dashboard with all planned features implemented.
-
-**Strengths:**
-- Full feature set delivered (23 items)
-- All 341 tests passing
-- Security measures in place (proxy auth, log exclusion)
-- Rate limiting for external APIs
-- Production build system (Vite + esbuild)
-- 2D/3D visualization toggle
-
-**Remaining Concerns:**
-1. BestTime API key in localStorage (XSS risk) – user action required
-2. Large monolithic `app.js` (4,647 lines) – potential future refactor
-
-**Status:** Production ready pending API key rotation.
-
----
-
-*End of Audit Report*
+*End of Stability Audit Report*

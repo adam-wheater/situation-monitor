@@ -103,7 +103,7 @@
 - [x] **Build/bundle step (Vite + esbuild)**
   - Production build with minification and tree-shaking
   - `npm run dev` / `npm run build` / `npm run preview`
-  - Build output: ~101KB JS (30KB gzipped), ~65KB CSS (11KB gzipped)
+  - Build output: ~134KB JS (42KB gzipped), ~65KB CSS (11KB gzipped)
   - Files: `vite.config.js`, `js/main.js`
 
 - [x] **App.js syntax error fixed**
@@ -150,17 +150,19 @@
 
 ## Test Coverage
 
-| Test File | Tests |
-|-----------|-------|
-| zoom-scaling.test.js | 34 |
-| inline-map.test.js | 52 |
-| data-loaders.test.js | 26 |
-| pentagon-tracker.test.js | 31 |
-| curated-venues.test.js | 19 |
-| weather-alerts.test.js | 19 |
-| overpass-layers.test.js | 41 |
-| flight-radar.test.js | 36 |
-| proxy-auth.test.js | 20 |
-| view-toggle.test.js | 19 |
-| build-config.test.js | 44 |
-| **Total** | **341** |
+| Test File | Tests | Status |
+|-----------|-------|--------|
+| zoom-scaling.test.js | 34 | Pass |
+| inline-map.test.js | 52 | Pass |
+| data-loaders.test.js | 26 | Pass |
+| pentagon-tracker.test.js | 31 | Pass |
+| curated-venues.test.js | 19 | Pass |
+| weather-alerts.test.js | 19 | Pass |
+| overpass-layers.test.js | 41 | Pass |
+| flight-radar.test.js | 36 | Pass |
+| proxy-auth.test.js | 20 | Pass |
+| view-toggle.test.js | 19 | Pass |
+| build-config.test.js | 44 | Pass |
+| **Total** | **341** | **All passing** |
+
+**Verified:** 2026-01-20
