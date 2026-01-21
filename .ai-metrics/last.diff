@@ -1,3794 +1,499 @@
-diff --git a/.ai-metrics/forced_mode.txt b/.ai-metrics/forced_mode.txt
-new file mode 100644
-index 0000000..2cad83d
---- /dev/null
-+++ b/.ai-metrics/forced_mode.txt
-@@ -0,0 +1 @@
-+stability
 diff --git a/.ai-metrics/last_hash.txt b/.ai-metrics/last_hash.txt
-index a3904ba..8713ade 100644
+index 8713ade..6d97a14 100644
 --- a/.ai-metrics/last_hash.txt
 +++ b/.ai-metrics/last_hash.txt
 @@ -1 +1 @@
--172279113f70497abc27d47d5c6b3a90ef4bde4f
-+aba8239c069f05053872799b0ca6189643eab435
-diff --git a/.ai-metrics/stagnant_count.txt b/.ai-metrics/stagnant_count.txt
-index d00491f..573541a 100644
---- a/.ai-metrics/stagnant_count.txt
-+++ b/.ai-metrics/stagnant_count.txt
-@@ -1 +1 @@
--1
-+0
-diff --git a/AI_MODE.txt b/AI_MODE.txt
-index 31dcc35..2cad83d 100644
---- a/AI_MODE.txt
-+++ b/AI_MODE.txt
-@@ -1 +1 @@
--normal
-+stability
+-aba8239c069f05053872799b0ca6189643eab435
++2cc5f791fe405f2ab1fe2dfe9726b0a27cb4de08
 diff --git a/AUDIT.md b/AUDIT.md
-index 21cb54e..55b0dab 100644
+index 55b0dab..6228564 100644
 --- a/AUDIT.md
 +++ b/AUDIT.md
-@@ -1,6 +1,6 @@
- # Situation Monitor – Audit Report
+@@ -1,22 +1,24 @@
+-# Situation Monitor – Audit Report
++# Situation Monitor – Stability Audit Report
  
--**Date:** 2026-01-19
-+**Date:** 2026-01-20
+ **Date:** 2026-01-20
  **Branch:** `ai-work`
++**Mode:** Stability
  **Auditor:** Claude Code (Opus 4.5) – Autonomous Mode
  
+ ---
+ 
+ ## Executive Summary
+ 
+-The Situation Monitor is a real-time geopolitical intelligence dashboard with **21 panels**, **90+ external API integrations**, and interactive map visualization. All original TODO items have been **completed**. The codebase is production-ready with security measures in place.
++The Situation Monitor is a real-time geopolitical intelligence dashboard with **21 panels**, **90+ external API integrations**, and interactive map visualization. All original TODO items have been **completed**. The codebase is **stable** with all tests passing and production build succeeding.
+ 
+-| Metric | Value |
+-|--------|-------|
+-| Total JavaScript | ~14,500 lines |
+-| Total CSS | 4,369 lines |
+-| Test Coverage | 341 tests (11 files) |
+-| Test Status | **All passing** |
+-| Build System | Vite + esbuild |
++| Metric | Value | Status |
++|--------|-------|--------|
++| Tests | 341/341 | Pass |
++| Test Duration | 333ms | Fast |
++| Build | Successful | Pass |
++| Build Duration | 176ms | Fast |
++| Build Output JS | 134.44 KB (41.75 KB gzip) | OK |
++| Build Output CSS | 64.69 KB (10.95 KB gzip) | OK |
+ 
+ **Task Files:**
+ - `TODO_A.md` – 23 completed features
+@@ -24,32 +26,71 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
+ 
+ ---
+ 
+-## 1. Feature Completion Status
++## 1. Stability Verification
++
++### 1.1 Test Suite
++
++**Result:** All 341 tests passing
++
++```
++ tests/unit/pentagon-tracker.test.js   31 tests  Pass
++ tests/unit/build-config.test.js       44 tests  Pass
++ tests/unit/overpass-layers.test.js    41 tests  Pass
++ tests/unit/curated-venues.test.js     19 tests  Pass
++ tests/unit/view-toggle.test.js        19 tests  Pass
++ tests/unit/weather-alerts.test.js     19 tests  Pass
++ tests/unit/inline-map.test.js         52 tests  Pass
++ tests/unit/flight-radar.test.js       36 tests  Pass
++ tests/unit/proxy-auth.test.js         20 tests  Pass
++ tests/unit/data-loaders.test.js       26 tests  Pass
++ tests/unit/zoom-scaling.test.js       34 tests  Pass
++```
++
++**Test Framework:** Vitest v4.0.17
++**Execution Time:** 333ms
++
++### 1.2 Production Build
++
++**Result:** Build successful
++
++| Output | Size | Gzipped |
++|--------|------|---------|
++| dist/index.html | 17.54 KB | 3.21 KB |
++| dist/assets/style-*.css | 64.69 KB | 10.95 KB |
++| dist/assets/main-*.js | 134.44 KB | 41.75 KB |
++
++**Build Tool:** Vite v7.3.1
++**Build Time:** 176ms
++**Modules Transformed:** 29
++
++---
++
++## 2. Feature Completion Status
+ 
+ | Feature | Status | Location |
+ |---------|--------|----------|
+-| Weather warnings (NWS) | ✓ | `index.html:664-749` |
+-| Flight radar (OpenSky) | ✓ | `js/map/inline-map.js` |
+-| Naval hubs (Overpass) | ✓ | `js/services/overpass.js` |
+-| Pentagon tracker (BestTime) | ✓ | `js/panels/pentagon.js` |
+-| Military bases (Overpass) | ✓ | `js/services/overpass.js` |
+-| Nuclear plants (Overpass) | ✓ | `js/services/overpass.js` |
+-| Zoom icon scaling | ✓ | `js/map/zoom.js:68-73` |
+-| Proxy authentication | ✓ | `proxy_server.py:164-179` |
+-| OpenSky rate limiting | ✓ | `js/map/inline-map.js` |
+-| Click-to-pin popups | ✓ | `js/map/popups.js` |
+-| Submarine cables | ✓ | `js/map/inline-map.js` |
+-| Conflict zone tooltips | ✓ | `js/map/inline-map.js` |
+-| Build/bundle step | ✓ | `vite.config.js` |
+-| 3D globe toggle | ✓ | `js/map/view-toggle.js` |
++| Weather warnings (NWS) | Pass | `index.html:664-749` |
++| Flight radar (OpenSky) | Pass | `js/map/inline-map.js` |
++| Naval hubs (Overpass) | Pass | `js/services/overpass.js` |
++| Pentagon tracker (BestTime) | Pass | `js/panels/pentagon.js` |
++| Military bases (Overpass) | Pass | `js/services/overpass.js` |
++| Nuclear plants (Overpass) | Pass | `js/services/overpass.js` |
++| Zoom icon scaling | Pass | `js/map/zoom.js:68-73` |
++| Proxy authentication | Pass | `proxy_server.py:164-179` |
++| OpenSky rate limiting | Pass | `js/map/inline-map.js` |
++| Click-to-pin popups | Pass | `js/map/popups.js` |
++| Submarine cables | Pass | `js/map/inline-map.js` |
++| Conflict zone tooltips | Pass | `js/map/inline-map.js` |
++| Build/bundle step | Pass | `vite.config.js` |
++| 3D globe toggle | Pass | `js/map/view-toggle.js` |
+ 
+ ---
+ 
+-## 2. Security Findings
++## 3. Security Status
+ 
+-### 2.1 RESOLVED: Proxy Server Authentication
++### 3.1 Proxy Server Authentication
+ 
+-**Status:** ✓ Fixed
++**Status:** Implemented
+ 
+ **Implementation:** Bearer token authentication via `PROXY_AUTH_TOKEN` environment variable.
+ 
+@@ -61,13 +102,13 @@ AUTH_TOKEN = os.environ.get('PROXY_AUTH_TOKEN', '')
+ 
+ **Recommendation:** Always set `PROXY_AUTH_TOKEN` in production.
+ 
+-### 2.2 RESOLVED: Log Files in .gitignore
++### 3.2 Log Files in .gitignore
+ 
+-**Status:** ✓ Fixed
++**Status:** Implemented
+ 
+ `*.log` is present in `.gitignore` – proxy server logs containing API keys in URLs will not be committed.
+ 
+-### 2.3 USER ACTION: BestTime API Key Rotation
++### 3.3 BestTime API Key Rotation
+ 
+ **Status:** Pending (user responsibility)
+ 
+@@ -79,7 +120,9 @@ AUTH_TOKEN = os.environ.get('PROXY_AUTH_TOKEN', '')
+ 
+ **Action Required:** User should rotate the BestTime API key if it was ever committed to git history.
+ 
+-### 2.4 INFO: Broad Proxy Allowlist
++### 3.4 Proxy Allowlist
++
++**Status:** Acceptable
+ 
+ **Finding:** 90+ domains in proxy allowlist.
+ 
+@@ -89,69 +132,27 @@ AUTH_TOKEN = os.environ.get('PROXY_AUTH_TOKEN', '')
+ 
+ ---
+ 
+-## 3. Code Quality Findings
+-
+-### 3.1 RESOLVED: Large Inline Script
+-
+-**Status:** ✓ Fixed
+-
+-**Before:** 1000+ lines of inline JS in `index.html`
+-
+-**After:** Extracted to `js/map/inline-map.js` (1,508 lines)
+-
+-### 3.2 RESOLVED: CSS Consolidation
+-
+-**Status:** ✓ Fixed
++## 4. Code Quality Status
+ 
+-**Before:** Duplicate `styles.css` and `index.css`
++### 4.1 Module Structure
+ 
+-**After:** Single `index.css` (4,369 lines)
++| Component | Status |
++|-----------|--------|
++| Inline script refactored | Done |
++| CSS consolidated | Done |
++| ES modules enabled | Done |
++| Build system configured | Done |
+ 
+-### 3.3 DOCUMENTED: Yahoo Finance Duplicate
++### 4.2 Rate Limiting
+ 
+-**Status:** Documented
+-
+-Both `js/app.js` and `js/services/yahoo.js` contain Yahoo Finance code. This is intentional – different use cases.
+-
+-### 3.4 RESOLVED: Build/Bundle Step
+-
+-**Status:** ✓ Fixed
+-
+-**Implementation:** Vite with esbuild for production builds.
+-
+-**Files Added:**
+-- `vite.config.js` – Build configuration
+-- `js/main.js` – ES module entry point
+-
+-**Commands:**
+-- `npm run dev` – Development server with hot reload
+-- `npm run build` – Production build to `dist/`
+-- `npm run preview` – Preview production build
+-
+-**Build Output:**
+-- JavaScript: ~101KB (30KB gzipped)
+-- CSS: ~65KB (11KB gzipped)
+-
+-### 3.5 RESOLVED: App.js Syntax Error
+-
+-**Status:** ✓ Fixed
+-
+-Closed unclosed `initApp()` function that was causing parse errors.
+-
+----
+-
+-## 4. API Integration Analysis
+-
+-### Rate Limiting Status
+-
+-| API | Rate Limit Handling | Status |
+-|-----|---------------------|--------|
+-| Yahoo Finance | 15-min backoff on 429 | ✓ OK |
+-| OpenSky | Exponential backoff | ✓ OK |
+-| Overpass | 20s cache, inFlight guard | ✓ OK |
++| API | Handling | Status |
++|-----|----------|--------|
++| Yahoo Finance | 15-min backoff on 429 | OK |
++| OpenSky | Exponential backoff | OK |
++| Overpass | 20s cache, inFlight guard | OK |
+ | NWS | No explicit handling | OK (generous limits) |
+ 
+-### Caching Strategy
++### 4.3 Caching
+ 
+ | Layer | Cache Duration |
+ |-------|----------------|
+@@ -210,26 +211,7 @@ Build Output
+ 
+ ---
+ 
+-## 6. Test Coverage
+-
+-| Test File | Tests | Status |
+-|-----------|-------|--------|
+-| zoom-scaling.test.js | 34 | ✓ |
+-| inline-map.test.js | 52 | ✓ |
+-| data-loaders.test.js | 26 | ✓ |
+-| pentagon-tracker.test.js | 31 | ✓ |
+-| curated-venues.test.js | 19 | ✓ |
+-| weather-alerts.test.js | 19 | ✓ |
+-| overpass-layers.test.js | 41 | ✓ |
+-| flight-radar.test.js | 36 | ✓ |
+-| proxy-auth.test.js | 20 | ✓ |
+-| view-toggle.test.js | 19 | ✓ |
+-| build-config.test.js | 44 | ✓ |
+-| **Total** | **341** | **All passing** |
+-
+----
+-
+-## 7. Pending Items
++## 6. Pending Items
+ 
+ | Priority | Item | Type | Notes |
+ |----------|------|------|-------|
+@@ -239,62 +221,31 @@ See `TODO_B.md` for details.
+ 
+ ---
+ 
+-## 8. Recommendations
++## 7. Recommendations
+ 
+ ### Immediate (Security)
+-1. ✓ ~~Add `*.log` to `.gitignore`~~ Done
+-2. ✓ ~~Add proxy authentication~~ Done
+-3. **Rotate BestTime API key** (user action required)
+-4. Set `PROXY_AUTH_TOKEN` in production
+-
+-### Production Readiness
+-5. ✓ ~~Add OpenSky rate limiting~~ Done
+-6. ✓ ~~Refactor inline scripts~~ Done
+-7. ✓ ~~Consolidate CSS files~~ Done
+-8. ✓ ~~Add build/bundle step~~ Done (Vite + esbuild)
+-9. ✓ ~~Add 3D globe toggle~~ Done (Globe.gl)
+-
+----
++1. **Rotate BestTime API key** (user action required)
++2. Set `PROXY_AUTH_TOKEN` in production
+ 
+-## 9. Files Reviewed
+-
+-| File | Lines |
+-|------|-------|
+-| `index.html` | 383 |
+-| `js/app.js` | 4,647 |
+-| `js/main.js` | Entry point |
+-| `js/map/inline-map.js` | 1,508 |
+-| `js/map/globe.js` | 613 |
+-| `js/map/view-toggle.js` | ~100 |
+-| `js/map/popups.js` | 566 |
+-| `js/map/zoom.js` | 225 |
+-| `js/services/overpass.js` | 348 |
+-| `js/panels/pentagon.js` | 205 |
+-| `proxy_server.py` | 289 |
+-| `index.css` | 4,369 |
+-| `vite.config.js` | Build config |
+-| `.gitignore` | – |
++### Future Considerations
++3. Consider splitting `app.js` (4,647 lines) into smaller modules
++4. Add caching for Congress trades API
+ 
+ ---
+ 
+-## 10. Conclusion
++## 8. Conclusion
+ 
+-The Situation Monitor is a comprehensive geopolitical intelligence dashboard with all planned features implemented.
++The Situation Monitor is **stable** with:
+ 
+-**Strengths:**
+-- Full feature set delivered (23 items)
+-- All 341 tests passing
+-- Security measures in place (proxy auth, log exclusion)
+-- Rate limiting for external APIs
+-- Production build system (Vite + esbuild)
+-- 2D/3D visualization toggle
++- **All 341 tests passing**
++- **Production build successful**
++- **23 features completed**
++- **Security measures in place**
+ 
+-**Remaining Concerns:**
+-1. BestTime API key in localStorage (XSS risk) – user action required
+-2. Large monolithic `app.js` (4,647 lines) – potential future refactor
++**Stability Rating:** Production ready
+ 
+-**Status:** Production ready pending API key rotation.
++**Remaining User Action:** Rotate BestTime API key if exposed in git history.
+ 
+ ---
+ 
+-*End of Audit Report*
++*End of Stability Audit Report*
 diff --git a/TODO.md b/TODO.md
-index 3d29c17..b1a48d0 100644
+index b1a48d0..7ef71e5 100644
 --- a/TODO.md
 +++ b/TODO.md
-@@ -84,3 +84,4 @@ npm run test
+@@ -9,7 +9,7 @@
+ |------|----------|
+ | [TODO_A.md](./TODO_A.md) | Completed features (23 items) |
+ | [TODO_B.md](./TODO_B.md) | Pending tasks (1 item) |
+-| [AUDIT.md](./AUDIT.md) | Security & code quality audit |
++| [AUDIT.md](./AUDIT.md) | Stability audit report |
+ 
+ ## Quick Summary
+ 
+@@ -84,4 +84,17 @@ npm run test
  | proxy-auth.test.js | 20 |
  | view-toggle.test.js | 19 |
  | build-config.test.js | 44 |
-+**Status:** All passing (verified 2026-01-20)
++
+ **Status:** All passing (verified 2026-01-20)
++
++## Build Status
++
++**Production build successful**
++
++| Output | Size | Gzipped |
++|--------|------|---------|
++| index.html | 17.54 KB | 3.21 KB |
++| CSS | 64.69 KB | 10.95 KB |
++| JavaScript | 134.44 KB | 41.75 KB |
++
++**Status:** Build completes in ~176ms (verified 2026-01-20)
 diff --git a/TODO_A.md b/TODO_A.md
-index ffe1f15..997e34b 100644
+index 997e34b..3aa89da 100644
 --- a/TODO_A.md
 +++ b/TODO_A.md
-@@ -1,6 +1,6 @@
- # Situation Monitor – Completed Features (TODO_A)
+@@ -103,7 +103,7 @@
+ - [x] **Build/bundle step (Vite + esbuild)**
+   - Production build with minification and tree-shaking
+   - `npm run dev` / `npm run build` / `npm run preview`
+-  - Build output: ~101KB JS (30KB gzipped), ~65KB CSS (11KB gzipped)
++  - Build output: ~134KB JS (42KB gzipped), ~65KB CSS (11KB gzipped)
+   - Files: `vite.config.js`, `js/main.js`
  
--**Last Updated:** 2026-01-19
-+**Last Updated:** 2026-01-20
+ - [x] **App.js syntax error fixed**
+@@ -150,17 +150,19 @@
  
- ---
+ ## Test Coverage
  
+-| Test File | Tests |
+-|-----------|-------|
+-| zoom-scaling.test.js | 34 |
+-| inline-map.test.js | 52 |
+-| data-loaders.test.js | 26 |
+-| pentagon-tracker.test.js | 31 |
+-| curated-venues.test.js | 19 |
+-| weather-alerts.test.js | 19 |
+-| overpass-layers.test.js | 41 |
+-| flight-radar.test.js | 36 |
+-| proxy-auth.test.js | 20 |
+-| view-toggle.test.js | 19 |
+-| build-config.test.js | 44 |
+-| **Total** | **341** |
++| Test File | Tests | Status |
++|-----------|-------|--------|
++| zoom-scaling.test.js | 34 | Pass |
++| inline-map.test.js | 52 | Pass |
++| data-loaders.test.js | 26 | Pass |
++| pentagon-tracker.test.js | 31 | Pass |
++| curated-venues.test.js | 19 | Pass |
++| weather-alerts.test.js | 19 | Pass |
++| overpass-layers.test.js | 41 | Pass |
++| flight-radar.test.js | 36 | Pass |
++| proxy-auth.test.js | 20 | Pass |
++| view-toggle.test.js | 19 | Pass |
++| build-config.test.js | 44 | Pass |
++| **Total** | **341** | **All passing** |
++
++**Verified:** 2026-01-20
 diff --git a/TODO_B.md b/TODO_B.md
-index 911198d..5b538b2 100644
+index 5b538b2..2a44657 100644
 --- a/TODO_B.md
 +++ b/TODO_B.md
-@@ -1,6 +1,6 @@
- # Situation Monitor – Pending Tasks (TODO_B)
+@@ -43,8 +43,21 @@ The following items have been moved to TODO_A.md:
  
--**Last Updated:** 2026-01-19
-+**Last Updated:** 2026-01-20
+ | Item | Status | Notes |
+ |------|--------|-------|
+-| Build/bundle step (Vite + esbuild) | ✓ Done | `npm run build` |
+-| 3D globe visualization toggle | ✓ Done | `js/map/view-toggle.js` |
+-| App.js syntax error | ✓ Done | Closed unclosed function |
++| Build/bundle step (Vite + esbuild) | Done | `npm run build` |
++| 3D globe visualization toggle | Done | `js/map/view-toggle.js` |
++| App.js syntax error | Done | Closed unclosed function |
  
- ---
- 
-diff --git a/index.html b/index.html
-index 9ad4c90..8f23169 100644
---- a/index.html
-+++ b/index.html
-@@ -346,9 +346,6 @@
- 
-     </main>
- 
--    <!-- Map view toggle -->
--    <script src="js/map/view-toggle.js"></script>
--
-     <!-- Application bundle (built by Vite for production) -->
-     <script type="module" src="/js/main.js"></script>
- </body>
-diff --git a/js/constants.js b/js/constants.js
-index 264f570..99b0615 100644
---- a/js/constants.js
-+++ b/js/constants.js
-@@ -743,3 +743,29 @@ const AI_FEEDS = [
-             { name: 'Meta AI', url: 'https://ai.meta.com/blog/rss/' },
-             { name: 'Hugging Face', url: 'https://huggingface.co/blog/feed.xml' }
-         ];
+ See [TODO_A.md](./TODO_A.md) for the complete list of 23 completed features.
 +
-+// Export constants to window for HTML and cross-module access
-+if (typeof window !== 'undefined') {
-+    window.PANELS = PANELS;
-+    window.CORS_PROXIES = CORS_PROXIES;
-+    window.ALERT_KEYWORDS = ALERT_KEYWORDS;
-+    window.FEEDS = FEEDS;
-+    window.INTEL_SOURCES = INTEL_SOURCES;
-+    window.REGION_KEYWORDS = REGION_KEYWORDS;
-+    window.TOPIC_KEYWORDS = TOPIC_KEYWORDS;
-+    window.SECTORS = SECTORS;
-+    window.COMMODITIES = COMMODITIES;
-+    window.US_CITIES = US_CITIES;
-+    window.US_HOTSPOTS = US_HOTSPOTS;
-+    window.INTEL_HOTSPOTS = INTEL_HOTSPOTS;
-+    window.SHIPPING_CHOKEPOINTS = SHIPPING_CHOKEPOINTS;
-+    window.CYBER_REGIONS = CYBER_REGIONS;
-+    window.CONFLICT_ZONES = CONFLICT_ZONES;
-+    window.MILITARY_BASES = MILITARY_BASES;
-+    window.NUCLEAR_FACILITIES = NUCLEAR_FACILITIES;
-+    window.UNDERSEA_CABLES = UNDERSEA_CABLES;
-+    window.SANCTIONED_COUNTRIES = SANCTIONED_COUNTRIES;
-+    window.NEWS_REGIONS = NEWS_REGIONS;
-+    window.MONITOR_COLORS = MONITOR_COLORS;
-+    window.AI_FEEDS = AI_FEEDS;
-+}
-diff --git a/js/main.js b/js/main.js
-index dd688c8..ea491cb 100644
---- a/js/main.js
-+++ b/js/main.js
-@@ -44,28 +44,7 @@ import './panels/pentagon.js';
- // Main application
- import './app.js';
- 
--// Expose globals for HTML onclick handlers
--// These functions are defined in the imported modules above
--if (typeof window !== 'undefined') {
--  // From monitors.js
--  window.openMonitorForm = typeof openMonitorForm !== 'undefined' ? openMonitorForm : undefined;
--  window.closeMonitorForm = typeof closeMonitorForm !== 'undefined' ? closeMonitorForm : undefined;
--  window.saveMonitor = typeof saveMonitor !== 'undefined' ? saveMonitor : undefined;
--
--  // From app.js
--  window.toggleSettings = typeof toggleSettings !== 'undefined' ? toggleSettings : undefined;
--  window.refreshAll = typeof refreshAll !== 'undefined' ? refreshAll : undefined;
--  window.resetPanelOrder = typeof resetPanelOrder !== 'undefined' ? resetPanelOrder : undefined;
--
--  // From pentagon.js
--  window.saveBestTimePrivateKey = typeof saveBestTimePrivateKey !== 'undefined' ? saveBestTimePrivateKey : undefined;
--  window.addPentagonLocationFromInputs = typeof addPentagonLocationFromInputs !== 'undefined' ? addPentagonLocationFromInputs : undefined;
--
--  // From inline-map.js
--  window.MapModule = typeof MapModule !== 'undefined' ? MapModule : undefined;
--
--  // From view-toggle.js
--  window.toggleMapViewMode = typeof toggleMapViewMode !== 'undefined' ? toggleMapViewMode : undefined;
--}
-+// Note: Global functions for HTML onclick handlers are exported directly
-+// by their respective modules (monitors.js, app.js, pentagon.js, view-toggle.js, inline-map.js)
- 
- console.log('[Build] Situation Monitor loaded');
-diff --git a/js/map/inline-map.js b/js/map/inline-map.js
-index db067d3..19cd921 100644
---- a/js/map/inline-map.js
-+++ b/js/map/inline-map.js
-@@ -1500,6 +1500,11 @@ out center;
-     };
- })();
- 
-+// Export to window for HTML onclick handlers
-+if (typeof window !== 'undefined') {
-+    window.MapModule = MapModule;
-+}
++---
 +
- // Auto-initialize when DOM is ready
- if (document.readyState === 'loading') {
-     document.addEventListener('DOMContentLoaded', MapModule.init);
-diff --git a/js/map/view-toggle.js b/js/map/view-toggle.js
-index 304708a..4e1f476 100644
---- a/js/map/view-toggle.js
-+++ b/js/map/view-toggle.js
-@@ -175,3 +175,8 @@ if (document.readyState === 'loading') {
-     // Small delay to ensure other modules are loaded
-     setTimeout(initMapViewToggle, 100);
- }
++## Stability Status
 +
-+// Export functions to window for HTML onclick handlers
-+if (typeof window !== 'undefined') {
-+    window.toggleMapViewMode = toggleMapViewMode;
-+}
-diff --git a/js/panels/monitors.js b/js/panels/monitors.js
-index 5fe865c..e620fff 100644
---- a/js/panels/monitors.js
-+++ b/js/panels/monitors.js
-@@ -43,41 +43,83 @@ function renderMonitorsList() {
-     `).join('');
- }
- 
-+// Color palette for monitors (duplicated from constants.js for module independence)
-+const MONITOR_COLOR_PALETTE = [
-+    '#00ff88', '#ff6600', '#00aaff', '#ff00ff', '#ffcc00',
-+    '#ff3366', '#33ccff', '#99ff33', '#ff6699', '#00ffcc'
-+];
++| Metric | Status |
++|--------|--------|
++| Tests | 341/341 passing |
++| Build | Successful |
++| Test Duration | 333ms |
++| Build Duration | 176ms |
 +
-+let selectedMonitorColor = MONITOR_COLOR_PALETTE[0];
++**Verified:** 2026-01-20
+diff --git a/tests/e2e/map.spec.js b/tests/e2e/map.spec.js
+index ddd134b..163ee76 100644
+--- a/tests/e2e/map.spec.js
++++ b/tests/e2e/map.spec.js
+@@ -68,6 +68,9 @@ test.describe('Map Panel', () => {
+ });
+ 
+ test.describe('Map View Toggle (2D/3D)', () => {
++  // Run these tests serially to avoid race conditions with globe initialization
++  test.describe.configure({ mode: 'serial' });
 +
-+function initMonitorColorPicker() {
-+    const container = document.getElementById('monitorColors');
-+    if (!container) return;
-+
-+    container.innerHTML = MONITOR_COLOR_PALETTE.map(color => `
-+        <div class="monitor-color-option ${color === selectedMonitorColor ? 'selected' : ''}"
-+             data-color="${color}"
-+             style="background: ${color};"
-+             onclick="selectMonitorColor('${color}')"></div>
-+    `).join('');
-+}
-+
-+function selectMonitorColor(color) {
-+    selectedMonitorColor = color;
-+    const container = document.getElementById('monitorColors');
-+    if (!container) return;
-+
-+    container.querySelectorAll('.monitor-color-option').forEach(swatch => {
-+        swatch.classList.toggle('selected', swatch.dataset.color === color);
-+    });
-+}
-+
- function openMonitorForm(editId = null) {
--    const modal = document.getElementById('monitorFormModal');
--    const form = document.getElementById('monitorForm');
-+    const overlay = document.getElementById('monitorFormOverlay');
-     const title = document.getElementById('monitorFormTitle');
- 
--    if (!modal || !form) return;
-+    if (!overlay) return;
-+
-+    // Reset form fields
-+    const nameInput = document.getElementById('monitorName');
-+    const keywordsInput = document.getElementById('monitorKeywords');
-+    const latInput = document.getElementById('monitorLat');
-+    const lonInput = document.getElementById('monitorLon');
-+    const editIdInput = document.getElementById('monitorEditId');
-+
-+    if (nameInput) nameInput.value = '';
-+    if (keywordsInput) keywordsInput.value = '';
-+    if (latInput) latInput.value = '';
-+    if (lonInput) lonInput.value = '';
-+    if (editIdInput) editIdInput.value = '';
- 
--    form.reset();
--    document.getElementById('monitorEditId').value = '';
-+    // Initialize color picker
-+    initMonitorColorPicker();
- 
-     if (editId) {
-         const monitors = loadMonitors();
-         const monitor = monitors.find(m => m.id === editId);
-         if (monitor) {
--            title.textContent = 'Edit Monitor';
--            document.getElementById('monitorEditId').value = editId;
--            document.getElementById('monitorName').value = monitor.name;
--            document.getElementById('monitorKeywords').value = monitor.keywords.join(', ');
--            document.getElementById('monitorLat').value = monitor.lat || '';
--            document.getElementById('monitorLon').value = monitor.lon || '';
--            document.getElementById('monitorColor').value = monitor.color || MONITOR_COLORS[0];
-+            if (title) title.textContent = 'Edit Monitor';
-+            if (editIdInput) editIdInput.value = editId;
-+            if (nameInput) nameInput.value = monitor.name;
-+            if (keywordsInput) keywordsInput.value = monitor.keywords.join(', ');
-+            if (latInput) latInput.value = monitor.lat || '';
-+            if (lonInput) lonInput.value = monitor.lon || '';
-+            selectMonitorColor(monitor.color || MONITOR_COLOR_PALETTE[0]);
-         }
-     } else {
--        title.textContent = 'Add Monitor';
-+        if (title) title.textContent = 'Add Monitor';
-         const usedColors = loadMonitors().map(m => m.color);
--        const nextColor = MONITOR_COLORS.find(c => !usedColors.includes(c)) || MONITOR_COLORS[0];
--        document.getElementById('monitorColor').value = nextColor;
-+        const nextColor = MONITOR_COLOR_PALETTE.find(c => !usedColors.includes(c)) || MONITOR_COLOR_PALETTE[0];
-+        selectMonitorColor(nextColor);
-     }
- 
--    modal.classList.add('visible');
-+    overlay.classList.add('open');
- }
- 
- function closeMonitorForm() {
--    const modal = document.getElementById('monitorFormModal');
--    if (modal) modal.classList.remove('visible');
-+    const modal = document.getElementById('monitorFormOverlay');
-+    if (modal) modal.classList.remove('open');
- }
- 
- function saveMonitor() {
-@@ -85,7 +127,7 @@ function saveMonitor() {
-     const keywordsStr = document.getElementById('monitorKeywords').value.trim();
-     const lat = parseFloat(document.getElementById('monitorLat').value) || null;
-     const lon = parseFloat(document.getElementById('monitorLon').value) || null;
--    const color = document.getElementById('monitorColor').value;
-+    const color = selectedMonitorColor;
-     const editId = document.getElementById('monitorEditId').value;
- 
-     if (!name || !keywordsStr) {
-@@ -236,5 +278,6 @@ if (typeof window !== 'undefined') {
-   window.openMonitorForm = openMonitorForm;
-   window.closeMonitorForm = closeMonitorForm;
-   window.saveMonitor = saveMonitor;
-+  window.selectMonitorColor = selectMonitorColor;
-   window.renderMonitorsList = renderMonitorsList;
- }
-diff --git a/test-results/.last-run.json b/test-results/.last-run.json
-new file mode 100644
-index 0000000..cbcc1fb
---- /dev/null
-+++ b/test-results/.last-run.json
-@@ -0,0 +1,4 @@
-+{
-+  "status": "passed",
-+  "failedTests": []
-+}
-\ No newline at end of file
-diff --git a/test-results/app-Situation-Monitor-Appl-2203d--monitor-button-in-settings-chromium/error-context.md b/test-results/app-Situation-Monitor-Appl-2203d--monitor-button-in-settings-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/app-Situation-Monitor-Appl-2203d--monitor-button-in-settings-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/app-Situation-Monitor-Appl-22f9b-ould-display-settings-title-chromium/error-context.md b/test-results/app-Situation-Monitor-Appl-22f9b-ould-display-settings-title-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/app-Situation-Monitor-Appl-22f9b-ould-display-settings-title-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/app-Situation-Monitor-Appl-2cfca-when-clicking-Panels-button-chromium/error-context.md b/test-results/app-Situation-Monitor-Appl-2cfca-when-clicking-Panels-button-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/app-Situation-Monitor-Appl-2cfca-when-clicking-Panels-button-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/app-Situation-Monitor-Appl-322c4-splay-panel-toggles-section-chromium/error-context.md b/test-results/app-Situation-Monitor-Appl-322c4-splay-panel-toggles-section-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/app-Situation-Monitor-Appl-322c4-splay-panel-toggles-section-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/app-Situation-Monitor-Appl-3501c-lay-custom-monitors-section-chromium/error-context.md b/test-results/app-Situation-Monitor-Appl-3501c-lay-custom-monitors-section-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/app-Situation-Monitor-Appl-3501c-lay-custom-monitors-section-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/app-Situation-Monitor-Appl-acc0c-modal-when-clicking-outside-chromium/error-context.md b/test-results/app-Situation-Monitor-Appl-acc0c-modal-when-clicking-outside-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/app-Situation-Monitor-Appl-acc0c-modal-when-clicking-outside-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/app-Situation-Monitor-Appl-adc7e--when-clicking-close-button-chromium/error-context.md b/test-results/app-Situation-Monitor-Appl-adc7e--when-clicking-close-button-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/app-Situation-Monitor-Appl-adc7e--when-clicking-close-button-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/app-Situation-Monitor-Appl-c26f0-ould-display-layout-section-chromium/error-context.md b/test-results/app-Situation-Monitor-Appl-c26f0-ould-display-layout-section-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/app-Situation-Monitor-Appl-c26f0-ould-display-layout-section-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/app-Situation-Monitor-Appl-d401e-ld-have-reset-layout-button-chromium/error-context.md b/test-results/app-Situation-Monitor-Appl-d401e-ld-have-reset-layout-button-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/app-Situation-Monitor-Appl-d401e-ld-have-reset-layout-button-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/panels-Settings-Modal-shou-17579-ings-modal-on-overlay-click-chromium/error-context.md b/test-results/panels-Settings-Modal-shou-17579-ings-modal-on-overlay-click-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/panels-Settings-Modal-shou-17579-ings-modal-on-overlay-click-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/panels-Settings-Modal-shou-414d9-tings-modal-on-button-click-chromium/error-context.md b/test-results/panels-Settings-Modal-shou-414d9-tings-modal-on-button-click-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/panels-Settings-Modal-shou-414d9-tings-modal-on-button-click-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/panels-Settings-Modal-shou-9c107-modal-on-close-button-click-chromium/error-context.md b/test-results/panels-Settings-Modal-shou-9c107-modal-on-close-button-click-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/panels-Settings-Modal-shou-9c107-modal-on-close-button-click-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/panels-Settings-Modal-shou-b6f6e-y-panel-toggles-in-settings-chromium/error-context.md b/test-results/panels-Settings-Modal-shou-b6f6e-y-panel-toggles-in-settings-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/panels-Settings-Modal-shou-b6f6e-y-panel-toggles-in-settings-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/panels-Settings-Modal-shou-e20c6-onitors-section-in-settings-chromium/error-context.md b/test-results/panels-Settings-Modal-shou-e20c6-onitors-section-in-settings-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/panels-Settings-Modal-shou-e20c6-onitors-section-in-settings-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/test-results/panels-Settings-Modal-should-have-reset-layout-button-chromium/error-context.md b/test-results/panels-Settings-Modal-should-have-reset-layout-button-chromium/error-context.md
-deleted file mode 100644
-index d671023..0000000
---- a/test-results/panels-Settings-Modal-should-have-reset-layout-button-chromium/error-context.md
-+++ /dev/null
-@@ -1,216 +0,0 @@
--# Page snapshot
--
--```yaml
--- generic [ref=e1]:
--  - banner [ref=e2]:
--    - generic [ref=e3]:
--      - heading "Situation Monitor" [level=1] [ref=e4]
--      - generic [ref=e5]: Ready
--    - generic [ref=e6]:
--      - button "+ Monitor" [ref=e7] [cursor=pointer]
--      - button "Panels" [active] [ref=e8] [cursor=pointer]
--      - button "Refresh" [ref=e9] [cursor=pointer]
--  - main [ref=e10]:
--    - generic [ref=e11]:
--      - generic [ref=e12]:
--        - generic [ref=e13]: Global Activity Monitor
--        - generic [ref=e14]:
--          - text: ● Low ● Elevated ● High ▲ Wx ◉ Quake ⚓ Naval ◎ Cable ☢ Nuke ★ Base
--          - button "2D" [ref=e15] [cursor=pointer]
--      - generic [ref=e16]:
--        - img [ref=e17]:
--          - generic [ref=e18]:
--            - generic [ref=e19]:
--              - generic [ref=e21]: ✈
--              - generic [ref=e25]: ✈
--              - generic [ref=e29]: ✈
--              - generic [ref=e33]: ✈
--              - generic [ref=e37]: ✈
--              - generic [ref=e41]: ✈
--            - generic [ref=e222]: ATLANTIC
--            - generic [ref=e223]: PACIFIC
--            - generic [ref=e224]: INDIAN
--            - generic [ref=e225]: ARCTIC
--            - generic [ref=e226]: SOUTHERN
--            - generic [ref=e234]: ◆
--            - generic [ref=e235]: Suez
--            - generic [ref=e237]: ◆
--            - generic [ref=e238]: Panama
--            - generic [ref=e240]: ◆
--            - generic [ref=e241]: Hormuz
--            - generic [ref=e243]: ◆
--            - generic [ref=e244]: Malacca
--            - generic [ref=e246]: ◆
--            - generic [ref=e247]: Bab el-M
--            - generic [ref=e249]: ◆
--            - generic [ref=e250]: Gibraltar
--            - generic [ref=e252]: ◆
--            - generic [ref=e253]: Bosporus
--            - generic [ref=e257]: ◎
--            - generic [ref=e261]: ◎
--            - generic [ref=e265]: ◎
--            - generic [ref=e269]: ◎
--            - generic [ref=e273]: ◎
--            - generic [ref=e277]: ◎
--            - generic [ref=e281]: ◎
--            - generic [ref=e285]: ◎
--            - generic [ref=e289]: ◎
--            - generic [ref=e293]: ◎
--            - generic [ref=e364]: ★
--            - generic [ref=e366]: ★
--            - generic [ref=e368]: ★
--            - generic [ref=e370]: ★
--            - generic [ref=e372]: ★
--            - generic [ref=e374]: ★
--            - generic [ref=e376]: ★
--            - generic [ref=e378]: ★
--            - generic [ref=e380]: ★
--            - generic [ref=e382]: ★
--            - generic [ref=e384]: ★
--            - generic [ref=e386]: ★
--            - generic [ref=e388]: ★
--            - generic [ref=e390]: ★
--            - generic [ref=e392]: ★
--            - generic [ref=e394]: ★
--            - generic [ref=e396]: ★
--            - generic [ref=e400]: DC
--            - generic [ref=e404]: Moscow
--            - generic [ref=e408]: Beijing
--            - generic [ref=e412]: Kyiv
--            - generic [ref=e416]: Taipei
--            - generic [ref=e420]: Tehran
--            - generic [ref=e424]: Tel Aviv
--            - generic [ref=e428]: London
--            - generic [ref=e432]: Brussels
--            - generic [ref=e436]: Pyongyang
--            - generic [ref=e440]: Riyadh
--            - generic [ref=e444]: Delhi
--            - generic [ref=e448]: Singapore
--            - generic [ref=e452]: Tokyo
--            - generic [ref=e456]: Caracas
--            - generic [ref=e460]: Nuuk
--            - generic [ref=e462]: ▲
--            - generic [ref=e464]: ▲
--            - generic [ref=e466]: ▲
--            - generic [ref=e468]: ▲
--            - generic [ref=e470]: ▲
--            - generic [ref=e472]: ▲
--            - generic [ref=e474]: ▲
--            - generic [ref=e476]: ▲
--            - generic [ref=e478]: ▲
--            - generic [ref=e480]: ▲
--            - generic [ref=e482]: ▲
--            - generic [ref=e484]: ▲
--            - generic [ref=e486]: ▲
--            - generic [ref=e488]: ▲
--            - generic [ref=e490]: ▲
--            - generic [ref=e492]: ▲
--            - generic [ref=e494]: ▲
--            - generic [ref=e496]: ▲
--            - generic [ref=e498]: ▲
--            - generic [ref=e500]: ▲
--            - generic [ref=e502]: ▲
--            - generic [ref=e504]: ▲
--            - generic [ref=e506]: ▲
--            - generic [ref=e508]: ▲
--            - generic [ref=e510]: ▲
--        - generic [ref=e603] [cursor=pointer]:
--          - checkbox "Show All Flights" [ref=e604]
--          - text: Show All Flights
--    - generic [ref=e608]:
--      - generic [ref=e609]:
--        - generic [ref=e610]: World / Geopolitical
--        - generic [ref=e611]: "-"
--      - generic [ref=e613]: Loading...
--    - generic [ref=e617]:
--      - generic [ref=e618]:
--        - generic [ref=e619]: Technology / AI
--        - generic [ref=e620]: "-"
--      - generic [ref=e622]: Loading...
--    - generic [ref=e626]:
--      - generic [ref=e627]:
--        - generic [ref=e628]: Financial
--        - generic [ref=e629]: "-"
--      - generic [ref=e631]: Loading...
--    - generic [ref=e635]:
--      - generic [ref=e636]:
--        - generic [ref=e637]: Pentagon Tracker
--        - generic [ref=e638]:
--          - group [ref=e639]:
--            - generic "Config" [ref=e640] [cursor=pointer]
--          - generic [ref=e641]: "-"
--      - generic [ref=e643]: Open Config to set BestTime key and locations
--    - generic [ref=e647]:
--      - generic [ref=e648]:
--        - generic [ref=e649]: Government / Policy
--        - generic [ref=e650]: "-"
--      - generic [ref=e652]: Loading...
--    - generic [ref=e656]:
--      - generic [ref=e658]: Sector Heatmap
--      - generic [ref=e660]: Loading...
--    - generic [ref=e664]:
--      - generic [ref=e665]:
--        - generic [ref=e666]: Markets
--        - generic [ref=e667]: "-"
--      - generic [ref=e669]: Loading...
--    - generic [ref=e673]:
--      - generic [ref=e675]: Commodities / VIX
--      - generic [ref=e677]: Loading...
--    - generic [ref=e681]:
--      - generic [ref=e682]:
--        - generic [ref=e683]: Polymarket Predictions
--        - generic [ref=e684]: "-"
--      - generic [ref=e686]: Loading...
--    - generic [ref=e690]:
--      - generic [ref=e691]:
--        - generic [ref=e692]: Whale Watch
--        - generic [ref=e693]: "-"
--      - generic [ref=e695]: Loading...
--    - generic [ref=e699]:
--      - generic [ref=e700]:
--        - generic [ref=e701]: Main Character
--        - generic [ref=e702]: Today
--      - generic [ref=e704]: Loading...
--    - generic [ref=e708]:
--      - generic [ref=e709]:
--        - generic [ref=e710]: Money Printer
--        - generic [ref=e711]: Fed Balance Sheet
--      - generic [ref=e713]: Loading...
--    - generic [ref=e717]:
--      - generic [ref=e718]:
--        - generic [ref=e719]: Gov Contracts
--        - generic [ref=e720]: "-"
--      - generic [ref=e722]: Loading...
--    - generic [ref=e726]:
--      - generic [ref=e727]:
--        - generic [ref=e728]: AI Arms Race
--        - generic [ref=e729]: "-"
--      - generic [ref=e731]: Loading...
--    - generic [ref=e735]:
--      - generic [ref=e736]:
--        - generic [ref=e737]: Layoffs Tracker
--        - generic [ref=e738]: "-"
--      - generic [ref=e740]: Loading...
--    - generic [ref=e744]:
--      - generic [ref=e745]:
--        - generic [ref=e746]: Venezuela Situation
--        - generic [ref=e747]: "-"
--      - generic [ref=e749]: Loading...
--    - generic [ref=e753]:
--      - generic [ref=e754]:
--        - generic [ref=e755]: Greenland Situation
--        - generic [ref=e756]: "-"
--      - generic [ref=e758]: Loading...
--    - generic [ref=e762]:
--      - generic [ref=e763]:
--        - generic [ref=e764]: Intel Feed
--        - generic [ref=e765]: "-"
--      - generic [ref=e767]: Loading...
--    - generic [ref=e771]:
--      - generic [ref=e772]:
--        - generic [ref=e773]: My Monitors
--        - generic [ref=e774]: "-"
--      - generic [ref=e776]:
--        - text: No monitors configured
--        - generic [ref=e777]: Click Settings → Add Monitor to get started
--```
-\ No newline at end of file
-diff --git a/tests/e2e/app.spec.js b/tests/e2e/app.spec.js
-index 54d6271..b406c64 100644
---- a/tests/e2e/app.spec.js
-+++ b/tests/e2e/app.spec.js
-@@ -223,6 +223,11 @@ test.describe('Situation Monitor Application', () => {
-   });
- 
-   test.describe('Monitor Form Modal', () => {
-+    test.beforeEach(async ({ page }) => {
-+      // Wait for the module to load and window.openMonitorForm to be defined
-+      await page.waitForFunction(() => typeof window.openMonitorForm === 'function', { timeout: 10000 });
-+    });
-+
-     test('should open monitor form when clicking + Monitor button', async ({ page }) => {
-       await page.click('.monitors-btn');
-       const form = page.locator('#monitorFormOverlay');
-diff --git a/tests/e2e/responsive.spec.js b/tests/e2e/responsive.spec.js
-index 7dce818..33e94e0 100644
---- a/tests/e2e/responsive.spec.js
-+++ b/tests/e2e/responsive.spec.js
-@@ -63,6 +63,8 @@ test.describe('Accessibility', () => {
- 
-   test('buttons should be focusable', async ({ page }) => {
-     const refreshBtn = page.locator('#refreshBtn');
-+    // Wait for button to be enabled (not disabled during initial load)
-+    await expect(refreshBtn).toBeEnabled({ timeout: 10000 });
-     await refreshBtn.focus();
-     await expect(refreshBtn).toBeFocused();
-   });
-diff --git a/tests/e2e/view-toggle.spec.js b/tests/e2e/view-toggle.spec.js
-index fba5366..0970665 100644
---- a/tests/e2e/view-toggle.spec.js
-+++ b/tests/e2e/view-toggle.spec.js
-@@ -102,8 +102,8 @@ test.describe('2D/3D Map View Toggle', () => {
-       await toggle.click();
- 
-       // Check localStorage
--      const pref = await page.evaluate(() => localStorage.getItem('mapViewPreference'));
--      expect(pref).toBe('3d');
-+      const pref = await page.evaluate(() => localStorage.getItem('mapViewMode'));
-+      expect(pref).toBe('3D');
-     });
- 
-     test('should save preference to localStorage when switching to 2D', async ({ page }) => {
-@@ -116,17 +116,17 @@ test.describe('2D/3D Map View Toggle', () => {
-       await toggle.click();
- 
-       // Check localStorage
--      const pref = await page.evaluate(() => localStorage.getItem('mapViewPreference'));
--      expect(pref).toBe('2d');
-+      const pref = await page.evaluate(() => localStorage.getItem('mapViewMode'));
-+      expect(pref).toBe('2D');
-     });
- 
-     test('should restore 3D preference on page reload', async ({ page }) => {
-       // Set 3D preference in localStorage
--      await page.evaluate(() => localStorage.setItem('mapViewPreference', '3d'));
-+      await page.evaluate(() => localStorage.setItem('mapViewMode', '3D'));
- 
-       // Reload page
-       await page.reload();
--      await page.waitForFunction(() => typeof window.toggleMapViewMode === 'function', { timeout: 10000 });
-+      await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
- 
-       // Should be in 3D mode
-       const toggle = page.locator('#mapViewToggle');
-@@ -135,11 +135,11 @@ test.describe('2D/3D Map View Toggle', () => {
- 
-     test('should restore 2D preference on page reload', async ({ page }) => {
-       // Set 2D preference in localStorage
--      await page.evaluate(() => localStorage.setItem('mapViewPreference', '2d'));
-+      await page.evaluate(() => localStorage.setItem('mapViewMode', '2D'));
- 
-       // Reload page
-       await page.reload();
--      await page.waitForFunction(() => typeof window.toggleMapViewMode === 'function', { timeout: 10000 });
-+      await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
- 
-       // Should be in 2D mode
-       const toggle = page.locator('#mapViewToggle');
-@@ -148,11 +148,11 @@ test.describe('2D/3D Map View Toggle', () => {
- 
-     test('should default to 2D when no preference in localStorage', async ({ page }) => {
-       // Clear localStorage
--      await page.evaluate(() => localStorage.removeItem('mapViewPreference'));
-+      await page.evaluate(() => localStorage.removeItem('mapViewMode'));
- 
-       // Reload page
-       await page.reload();
--      await page.waitForFunction(() => typeof window.toggleMapViewMode === 'function', { timeout: 10000 });
-+      await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
- 
-       // Should default to 2D
-       const toggle = page.locator('#mapViewToggle');
-@@ -186,7 +186,7 @@ test.describe('2D/3D Map View Toggle', () => {
- test.describe('Map Panel Container', () => {
    test.beforeEach(async ({ page }) => {
      await page.goto('/');
--    await page.waitForFunction(() => typeof window.toggleMapViewMode === 'function', { timeout: 10000 });
-+    await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
-   });
+     await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
+@@ -105,17 +108,19 @@ test.describe('Map View Toggle (2D/3D)', () => {
  
-   test('should have proper dimensions', async ({ page }) => {
-diff --git a/tests/unit/build-config.test.js b/tests/unit/build-config.test.js
-index 503cf3e..cd7dba6 100644
---- a/tests/unit/build-config.test.js
-+++ b/tests/unit/build-config.test.js
-@@ -108,12 +108,17 @@ describe('Build Configuration', () => {
-       expect(mainContent).toContain("import './panels/markets.js'");
-     });
+   test('should toggle back to 2D mode', async ({ page }) => {
+     const toggleBtn = page.locator('#mapViewToggle');
++    const mapSvg = page.locator('#mapSvg');
++    const globeContainer = page.locator('#globeContainer');
  
--    it('main.js exposes global functions for onclick handlers', () => {
--      const mainContent = readFileSync(join(ROOT_DIR, 'js', 'main.js'), 'utf8');
--      expect(mainContent).toContain('window.toggleSettings');
--      expect(mainContent).toContain('window.refreshAll');
--      expect(mainContent).toContain('window.MapModule');
--      expect(mainContent).toContain('window.toggleMapViewMode');
-+    it('modules export global functions for onclick handlers', () => {
-+      // Global functions are exported by their respective modules, not main.js
-+      const appContent = readFileSync(join(ROOT_DIR, 'js', 'app.js'), 'utf8');
-+      expect(appContent).toContain('window.toggleSettings');
-+      expect(appContent).toContain('window.refreshAll');
-+
-+      const inlineMapContent = readFileSync(join(ROOT_DIR, 'js', 'map', 'inline-map.js'), 'utf8');
-+      expect(inlineMapContent).toContain('window.MapModule');
-+
-+      const viewToggleContent = readFileSync(join(ROOT_DIR, 'js', 'map', 'view-toggle.js'), 'utf8');
-+      expect(viewToggleContent).toContain('window.toggleMapViewMode');
-     });
+-    // Toggle to 3D
++    // Toggle to 3D and wait for globe to be visible
+     await toggleBtn.click();
+     await expect(toggleBtn).toHaveText('3D');
++    await expect(globeContainer).toHaveCSS('display', 'block');
+ 
+-    // Toggle back to 2D
++    // Toggle back to 2D and wait for SVG to be visible
+     await toggleBtn.click();
+     await expect(toggleBtn).toHaveText('2D');
+-
+-    const mapSvg = page.locator('#mapSvg');
+     await expect(mapSvg).toBeVisible();
++    await expect(globeContainer).toHaveCSS('display', 'none');
    });
+ });
  
