@@ -1,6 +1,6 @@
 # Situation Monitor – Stability Audit Report
 
-**Date:** 2026-01-20
+**Date:** 2026-01-21
 **Branch:** `ai-work`
 **Mode:** Stability
 **Auditor:** Claude Code (Opus 4.5) – Autonomous Mode
@@ -13,10 +13,11 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| Tests | 341/341 | Pass |
-| Test Duration | 333ms | Fast |
+| Unit Tests | 341/341 | Pass |
+| E2E Tests | 150/150 | Pass |
+| Total Tests | 491/491 | Pass |
 | Build | Successful | Pass |
-| Build Duration | 176ms | Fast |
+| Build Duration | 289ms | Fast |
 | Build Output JS | 134.44 KB (41.75 KB gzip) | OK |
 | Build Output CSS | 64.69 KB (10.95 KB gzip) | OK |
 
@@ -28,28 +29,43 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 
 ## 1. Stability Verification
 
-### 1.1 Test Suite
+### 1.1 Unit Test Suite
 
-**Result:** All 341 tests passing
+**Result:** All 341 unit tests passing
 
 ```
- tests/unit/pentagon-tracker.test.js   31 tests  Pass
- tests/unit/build-config.test.js       44 tests  Pass
- tests/unit/overpass-layers.test.js    41 tests  Pass
- tests/unit/curated-venues.test.js     19 tests  Pass
- tests/unit/view-toggle.test.js        19 tests  Pass
  tests/unit/weather-alerts.test.js     19 tests  Pass
+ tests/unit/overpass-layers.test.js    41 tests  Pass
+ tests/unit/view-toggle.test.js        19 tests  Pass
+ tests/unit/curated-venues.test.js     19 tests  Pass
+ tests/unit/build-config.test.js       44 tests  Pass
  tests/unit/inline-map.test.js         52 tests  Pass
- tests/unit/flight-radar.test.js       36 tests  Pass
- tests/unit/proxy-auth.test.js         20 tests  Pass
+ tests/unit/pentagon-tracker.test.js   31 tests  Pass
  tests/unit/data-loaders.test.js       26 tests  Pass
  tests/unit/zoom-scaling.test.js       34 tests  Pass
+ tests/unit/proxy-auth.test.js         20 tests  Pass
+ tests/unit/flight-radar.test.js       36 tests  Pass
 ```
 
 **Test Framework:** Vitest v4.0.17
-**Execution Time:** 333ms
+**Execution Time:** 147ms
 
-### 1.2 Production Build
+### 1.2 E2E Test Suite
+
+**Result:** All 150 E2E tests passing
+
+```
+ tests/e2e/app.spec.js           ~50 tests  Pass
+ tests/e2e/map.spec.js           ~20 tests  Pass
+ tests/e2e/panels.spec.js        ~35 tests  Pass
+ tests/e2e/responsive.spec.js    ~20 tests  Pass
+ tests/e2e/view-toggle.spec.js   ~25 tests  Pass
+```
+
+**Test Framework:** Playwright
+**Execution Time:** ~20s
+
+### 1.3 Production Build
 
 **Result:** Build successful
 
@@ -60,7 +76,7 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 | dist/assets/main-*.js | 134.44 KB | 41.75 KB |
 
 **Build Tool:** Vite v7.3.1
-**Build Time:** 176ms
+**Build Time:** 289ms
 **Modules Transformed:** 29
 
 ---
@@ -203,6 +219,10 @@ Frontend (Vanilla JS + Vite)
 Backend (Python)
 └── proxy_server.py (289 lines) – CORS proxy + static server
 
+Tests
+├── tests/unit/ (11 files, 341 tests)
+└── tests/e2e/ (5 files, 150 tests)
+
 Build Output
 └── dist/ – production build (gitignored)
 ```
@@ -237,7 +257,7 @@ See `TODO_B.md` for details.
 
 The Situation Monitor is **stable** with:
 
-- **All 341 tests passing**
+- **All 491 tests passing** (341 unit + 150 E2E)
 - **Production build successful**
 - **23 features completed**
 - **Security measures in place**

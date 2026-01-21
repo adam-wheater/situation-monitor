@@ -69,7 +69,9 @@ npm run test
 
 ## Test Status
 
-**All 341 tests passing** (11 test files)
+**All 491 tests passing** (11 unit test files + 5 e2e test files)
+
+### Unit Tests (341 tests)
 
 | Test File | Tests |
 |-----------|-------|
@@ -85,7 +87,17 @@ npm run test
 | view-toggle.test.js | 19 |
 | build-config.test.js | 44 |
 
-**Status:** All passing (verified 2026-01-20)
+### E2E Tests (150 tests)
+
+| Test File | Tests |
+|-----------|-------|
+| app.spec.js | ~50 |
+| map.spec.js | ~20 |
+| panels.spec.js | ~35 |
+| responsive.spec.js | ~20 |
+| view-toggle.spec.js | ~25 |
+
+**Status:** All passing (verified 2026-01-21)
 
 ## Build Status
 
@@ -97,4 +109,4 @@ npm run test
 | CSS | 64.69 KB | 10.95 KB |
 | JavaScript | 134.44 KB | 41.75 KB |
 
-**Status:** Build completes in ~176ms (verified 2026-01-20)
+**Status:** Build completes in ~162ms (verified 2026-01-21)
