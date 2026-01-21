@@ -1,6 +1,6 @@
 # Situation Monitor – Pending Tasks (TODO_B)
 
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-21
 
 ---
 
@@ -55,9 +55,11 @@ See [TODO_A.md](./TODO_A.md) for the complete list of 23 completed features.
 
 | Metric | Status |
 |--------|--------|
-| Tests | 341/341 passing |
+| Unit Tests | 341/341 passing |
+| E2E Tests | 150/150 passing |
 | Build | Successful |
-| Test Duration | 333ms |
-| Build Duration | 176ms |
+| Unit Test Duration | 293ms |
+| E2E Test Duration | 21.2s |
+| Build Duration | 162ms |
 
-**Verified:** 2026-01-20
+**Verified:** 2026-01-21

@@ -1,6 +1,6 @@
 # Situation Monitor – Completed Features (TODO_A)
 
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-21
 
 ---
 
@@ -150,6 +150,8 @@
 
 ## Test Coverage
 
+### Unit Tests (341 tests)
+
 | Test File | Tests | Status |
 |-----------|-------|--------|
 | zoom-scaling.test.js | 34 | Pass |
@@ -163,6 +165,19 @@
 | proxy-auth.test.js | 20 | Pass |
 | view-toggle.test.js | 19 | Pass |
 | build-config.test.js | 44 | Pass |
-| **Total** | **341** | **All passing** |
+| **Unit Total** | **341** | **All passing** |
 
-**Verified:** 2026-01-20
+### E2E Tests (150 tests)
+
+| Test File | Tests | Status |
+|-----------|-------|--------|
+| app.spec.js | ~50 | Pass |
+| map.spec.js | ~20 | Pass |
+| panels.spec.js | ~35 | Pass |
+| responsive.spec.js | ~20 | Pass |
+| view-toggle.spec.js | ~25 | Pass |
+| **E2E Total** | **150** | **All passing** |
+
+**Grand Total:** 491 tests passing
+
+**Verified:** 2026-01-21
