@@ -43,8 +43,21 @@ The following items have been moved to TODO_A.md:
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Build/bundle step (Vite + esbuild) | ✓ Done | `npm run build` |
-| 3D globe visualization toggle | ✓ Done | `js/map/view-toggle.js` |
-| App.js syntax error | ✓ Done | Closed unclosed function |
+| Build/bundle step (Vite + esbuild) | Done | `npm run build` |
+| 3D globe visualization toggle | Done | `js/map/view-toggle.js` |
+| App.js syntax error | Done | Closed unclosed function |
 
 See [TODO_A.md](./TODO_A.md) for the complete list of 23 completed features.
+
+---
+
+## Stability Status
+
+| Metric | Status |
+|--------|--------|
+| Tests | 341/341 passing |
+| Build | Successful |
+| Test Duration | 333ms |
+| Build Duration | 176ms |
+
+**Verified:** 2026-01-20

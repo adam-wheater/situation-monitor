@@ -68,6 +68,9 @@ test.describe('Map Panel', () => {
 });
 
 test.describe('Map View Toggle (2D/3D)', () => {
+  // Run these tests serially to avoid race conditions with globe initialization
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('#mapViewToggle', { timeout: 10000 });
@@ -105,17 +108,19 @@ test.describe('Map View Toggle (2D/3D)', () => {
 
   test('should toggle back to 2D mode', async ({ page }) => {
     const toggleBtn = page.locator('#mapViewToggle');
+    const mapSvg = page.locator('#mapSvg');
+    const globeContainer = page.locator('#globeContainer');
 
-    // Toggle to 3D
+    // Toggle to 3D and wait for globe to be visible
     await toggleBtn.click();
     await expect(toggleBtn).toHaveText('3D');
+    await expect(globeContainer).toHaveCSS('display', 'block');
 
-    // Toggle back to 2D
+    // Toggle back to 2D and wait for SVG to be visible
     await toggleBtn.click();
     await expect(toggleBtn).toHaveText('2D');
-
-    const mapSvg = page.locator('#mapSvg');
     await expect(mapSvg).toBeVisible();
+    await expect(globeContainer).toHaveCSS('display', 'none');
   });
 });
 
