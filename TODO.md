@@ -56,8 +56,14 @@ npm run build
 # Preview production build
 npm run preview
 
-# Run tests
+# Run unit tests
 npm run test
+
+# Run E2E tests
+npx playwright test
+
+# Run E2E tests with retries (recommended)
+npx playwright test --retries=1
 ```
 
 ## Constraints & Notes
@@ -66,6 +72,7 @@ npm run test
 - Overpass layers load only at zoom ≥ 2.0 to reduce API load
 - BestTime API key stored in localStorage (unencrypted)
 - Production build outputs to `dist/` directory
+- E2E tests may be flaky without retries due to server startup timing
 
 ## Test Status
 
@@ -97,7 +104,7 @@ npm run test
 | responsive.spec.js | ~20 |
 | view-toggle.spec.js | ~25 |
 
-**Status:** All passing (verified 2026-01-21)
+**Status:** All passing with retries (verified 2026-01-21)
 
 ## Build Status
 
@@ -109,4 +116,4 @@ npm run test
 | CSS | 64.69 KB | 10.95 KB |
 | JavaScript | 134.44 KB | 41.75 KB |
 
-**Status:** Build completes in ~162ms (verified 2026-01-21)
+**Status:** Build completes in ~915ms (verified 2026-01-21)

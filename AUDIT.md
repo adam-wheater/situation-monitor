@@ -14,10 +14,10 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 | Metric | Value | Status |
 |--------|-------|--------|
 | Unit Tests | 341/341 | Pass |
-| E2E Tests | 150/150 | Pass |
+| E2E Tests | 150/150 | Pass (with retries) |
 | Total Tests | 491/491 | Pass |
 | Build | Successful | Pass |
-| Build Duration | 289ms | Fast |
+| Build Duration | 915ms | Fast |
 | Build Output JS | 134.44 KB (41.75 KB gzip) | OK |
 | Build Output CSS | 64.69 KB (10.95 KB gzip) | OK |
 
@@ -34,25 +34,25 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 **Result:** All 341 unit tests passing
 
 ```
+ tests/unit/build-config.test.js       44 tests  Pass
  tests/unit/weather-alerts.test.js     19 tests  Pass
- tests/unit/overpass-layers.test.js    41 tests  Pass
+ tests/unit/pentagon-tracker.test.js   31 tests  Pass
+ tests/unit/zoom-scaling.test.js       34 tests  Pass
+ tests/unit/inline-map.test.js         52 tests  Pass
  tests/unit/view-toggle.test.js        19 tests  Pass
  tests/unit/curated-venues.test.js     19 tests  Pass
- tests/unit/build-config.test.js       44 tests  Pass
- tests/unit/inline-map.test.js         52 tests  Pass
- tests/unit/pentagon-tracker.test.js   31 tests  Pass
  tests/unit/data-loaders.test.js       26 tests  Pass
- tests/unit/zoom-scaling.test.js       34 tests  Pass
- tests/unit/proxy-auth.test.js         20 tests  Pass
  tests/unit/flight-radar.test.js       36 tests  Pass
+ tests/unit/overpass-layers.test.js    41 tests  Pass
+ tests/unit/proxy-auth.test.js         20 tests  Pass
 ```
 
 **Test Framework:** Vitest v4.0.17
-**Execution Time:** 147ms
+**Execution Time:** ~500ms
 
 ### 1.2 E2E Test Suite
 
-**Result:** All 150 E2E tests passing
+**Result:** All 150 E2E tests passing (with retries)
 
 ```
  tests/e2e/app.spec.js           ~50 tests  Pass
@@ -63,7 +63,9 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 ```
 
 **Test Framework:** Playwright
-**Execution Time:** ~20s
+**Execution Time:** ~2 minutes (with retries)
+
+**Note:** E2E tests may experience intermittent failures due to server startup timing. This is a test infrastructure issue, not a code bug. Running with `npx playwright test --retries=1` ensures reliable results.
 
 ### 1.3 Production Build
 
@@ -76,7 +78,7 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 | dist/assets/main-*.js | 134.44 KB | 41.75 KB |
 
 **Build Tool:** Vite v7.3.1
-**Build Time:** 289ms
+**Build Time:** 915ms
 **Modules Transformed:** 29
 
 ---
@@ -253,7 +255,37 @@ See `TODO_B.md` for details.
 
 ---
 
-## 8. Conclusion
+## 8. E2E Test Flakiness Analysis
+
+### Root Cause
+
+The E2E tests occasionally fail due to:
+1. **Server startup timing** – Vite preview server may not be fully ready when tests begin
+2. **Proxy connection refused** – `/proxy/ping` fails when proxy server isn't running
+
+### Evidence
+
+```
+Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/
+[vite] http proxy error: /proxy/ping - ECONNREFUSED
+```
+
+### Mitigation
+
+- Running with `--retries=1` flag resolves all intermittent failures
+- All 150 E2E tests pass with retries enabled
+- This is a test infrastructure issue, not a code defect
+
+### Recommendation
+
+Update CI/CD pipeline to use:
+```bash
+npx playwright test --retries=1
+```
+
+---
+
+## 9. Conclusion
 
 The Situation Monitor is **stable** with:
 

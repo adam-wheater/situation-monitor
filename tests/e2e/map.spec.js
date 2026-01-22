@@ -95,6 +95,7 @@ test.describe('Map View Toggle (2D/3D)', () => {
   test('should toggle to 3D mode when clicked', async ({ page }) => {
     const toggleBtn = page.locator('#mapViewToggle');
     await toggleBtn.click();
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
     // Button text should change to 3D
     await expect(toggleBtn).toHaveText('3D');
@@ -113,11 +114,13 @@ test.describe('Map View Toggle (2D/3D)', () => {
 
     // Toggle to 3D and wait for globe to be visible
     await toggleBtn.click();
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
     await expect(toggleBtn).toHaveText('3D');
     await expect(globeContainer).toHaveCSS('display', 'block');
 
     // Toggle back to 2D and wait for SVG to be visible
     await toggleBtn.click();
+    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
     await expect(toggleBtn).toHaveText('2D');
     await expect(mapSvg).toBeVisible();
     await expect(globeContainer).toHaveCSS('display', 'none');

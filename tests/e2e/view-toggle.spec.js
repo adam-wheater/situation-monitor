@@ -53,10 +53,12 @@ test.describe('2D/3D Map View Toggle', () => {
 
       // Click to switch to 3D
       await toggle.click();
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
       await expect(toggle).toHaveText('3D');
 
       // Click to switch back to 2D
       await toggle.click();
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       await expect(toggle).toHaveText('2D');
     });
 
@@ -69,8 +71,9 @@ test.describe('2D/3D Map View Toggle', () => {
       await expect(svg).toBeVisible();
       await expect(globe).toHaveCSS('display', 'none');
 
-      // Switch to 3D
+      // Switch to 3D - wait for network idle after click (globe may load assets)
       await toggle.click();
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
       // SVG hidden, globe visible
       await expect(svg).toHaveCSS('display', 'none');
@@ -82,13 +85,15 @@ test.describe('2D/3D Map View Toggle', () => {
       const svg = page.locator('#mapSvg');
       const globe = page.locator('#globeContainer');
 
-      // Switch to 3D
+      // Switch to 3D - wait for network idle after click (globe may load assets)
       await toggle.click();
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
       await expect(svg).toHaveCSS('display', 'none');
       await expect(globe).toHaveCSS('display', 'block');
 
       // Switch back to 2D
       await toggle.click();
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       await expect(svg).toBeVisible();
       await expect(globe).toHaveCSS('display', 'none');
     });
@@ -100,6 +105,7 @@ test.describe('2D/3D Map View Toggle', () => {
 
       // Switch to 3D
       await toggle.click();
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
       // Check localStorage
       const pref = await page.evaluate(() => localStorage.getItem('mapViewMode'));
@@ -111,9 +117,11 @@ test.describe('2D/3D Map View Toggle', () => {
 
       // Switch to 3D first
       await toggle.click();
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
       // Switch back to 2D
       await toggle.click();
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       // Check localStorage
       const pref = await page.evaluate(() => localStorage.getItem('mapViewMode'));
@@ -175,6 +183,7 @@ test.describe('2D/3D Map View Toggle', () => {
 
       // Switch to 3D
       await viewToggle.click();
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
       // Map controls should still be present (though their functionality may differ)
       const mapControls = page.locator('#mapControls');
