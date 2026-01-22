@@ -4,16 +4,6 @@
   },
   "permissions": {
     "defaultMode": "acceptEdits",
-    "allow": [
-      "Bash",
-      "Read",
-      "Edit",
-      "Write",
-      "WebFetch",
-      "WebSearch",
-      "Task",
-      "Skill"
-    ],
-    "deny": []
+    "allow": ["Bash","Read","Edit","Write","WebFetch","WebSearch"]
   }
 }
