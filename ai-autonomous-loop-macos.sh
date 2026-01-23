@@ -52,6 +52,10 @@ MUTATION_EVERY=5
 TMUX_TIME_LIMIT=1800
 COPILOT_TIME_LIMIT=900
 
+# Copilot CLI model to use for non-interactive review prompts.
+# Override for your account/setup, e.g.: COPILOT_MODEL=claude-sonnet-4.5
+: "${COPILOT_MODEL:=gpt-5.2-codex}"
+
 MAX_STAGNANT_ITERS=5
 MIN_MUTATION_SCORE=60
 MAX_WALL_HOURS=48
@@ -396,7 +400,7 @@ $(cat "$STATE_DIR/last.diff")
 EOF
 )"
 
-    run_with_timeout "$COPILOT_TIME_LIMIT" "$COPILOT_CMD" -p "$COPILOT_PROMPT" || true
+    run_with_timeout "$COPILOT_TIME_LIMIT" "$COPILOT_CMD" --model "$COPILOT_MODEL" -p "$COPILOT_PROMPT" || true
   done
 
   if ! git diff --quiet; then
