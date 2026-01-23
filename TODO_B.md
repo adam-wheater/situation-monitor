@@ -56,12 +56,12 @@ See [TODO_A.md](./TODO_A.md) for the complete list of 23 completed features.
 | Metric | Status |
 |--------|--------|
 | Unit Tests | 341/341 passing |
-| E2E Tests | 137+/150 passing (flaky tests due to server timing) |
+| E2E Tests | 150/150 passing (2 flaky, pass on retry) |
 | Build | Successful |
-| Unit Test Duration | ~435ms |
-| E2E Test Duration | ~4.5min (with retries) |
-| Build Duration | ~915ms |
+| Unit Test Duration | ~340ms |
+| E2E Test Duration | ~10.7min (with retries) |
+| Build Duration | ~193ms |
 
-**Note:** E2E tests for view-toggle feature experience intermittent failures due to server connection timing issues during 3D globe mode switching. This is a test infrastructure issue, not a code bug. Run with `--retries=2` for reliable results.
+**Note:** 2 E2E tests experience intermittent failures due to modal timing but pass on retry. Run with `--retries=2` for reliable results.
 
 **Verified:** 2026-01-23

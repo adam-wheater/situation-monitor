@@ -72,12 +72,12 @@ npx playwright test --retries=2
 - Overpass layers load only at zoom ≥ 2.0 to reduce API load
 - BestTime API key stored in localStorage (unencrypted)
 - Production build outputs to `dist/` directory
-- E2E tests may be flaky due to server startup timing; use `--retries=2`
+- E2E tests may have minor flakiness; use `--retries=2`
 
 ## Test Status
 
 **All 341 unit tests passing** (11 test files)
-**137+ E2E tests passing** (5 test files, some flaky due to server timing)
+**All 150 E2E tests passing** (5 test files, 2 flaky tests pass on retry)
 
 ### Unit Tests (341 tests)
 
@@ -99,13 +99,13 @@ npx playwright test --retries=2
 
 | Test File | Tests |
 |-----------|-------|
-| app.spec.js | ~50 |
-| map.spec.js | ~20 |
-| panels.spec.js | ~35 |
-| responsive.spec.js | ~20 |
-| view-toggle.spec.js | ~25 |
+| app.spec.js | 63 |
+| map.spec.js | 13 |
+| panels.spec.js | 37 |
+| responsive.spec.js | 14 |
+| view-toggle.spec.js | 23 |
 
-**Status:** Unit tests all passing; E2E tests have known flakiness due to server connection timing (verified 2026-01-23)
+**Status:** All tests passing (verified 2026-01-23)
 
 ## Build Status
 
@@ -117,4 +117,4 @@ npx playwright test --retries=2
 | CSS | 64.69 KB | 10.95 KB |
 | JavaScript | 134.44 KB | 41.75 KB |
 
-**Status:** Build completes in ~915ms (verified 2026-01-23)
+**Build Time:** ~193ms (verified 2026-01-23)
