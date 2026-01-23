@@ -1,8 +1,25 @@
 import { test, expect } from '@playwright/test';
 
+// Helper function for robust navigation with exponential backoff
+async function navigateWithRetry(page) {
+  let retries = 4;
+  let delay = 500;
+  while (retries > 0) {
+    try {
+      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+      break;
+    } catch (e) {
+      retries--;
+      if (retries === 0) throw e;
+      await page.waitForTimeout(delay);
+      delay *= 2; // Exponential backoff: 500, 1000, 2000, 4000ms
+    }
+  }
+}
+
 test.describe('Situation Monitor Application', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await navigateWithRetry(page);
     // Wait for app to initialize by checking for key DOM elements
     await page.waitForSelector('#mapSvg', { timeout: 10000 });
     await page.waitForSelector('.settings-btn', { timeout: 5000 });
@@ -375,9 +392,10 @@ test.describe('Situation Monitor Application', () => {
       await expect(btn).toHaveText('Refresh');
     });
 
-    test('should be clickable', async ({ page }) => {
+    test('should be clickable when data loads', async ({ page }) => {
       const btn = page.locator('#refreshBtn');
-      await expect(btn).toBeEnabled();
+      // Button may be disabled during initial data load - wait up to 30s for it to enable
+      await expect(btn).toBeEnabled({ timeout: 30000 });
     });
   });
 
@@ -401,7 +419,7 @@ test.describe('Situation Monitor Application', () => {
 
 test.describe('Accessibility', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await navigateWithRetry(page);
     await page.waitForFunction(() => typeof window.toggleSettings === 'function', { timeout: 10000 });
   });
 

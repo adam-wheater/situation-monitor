@@ -148,7 +148,7 @@
     "@stryker-mutator/javascript-mutator": "^4.0.0",
     "@stryker-mutator/vitest-runner": "^9.4.0",
     "playwright": "^1.57.0",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.18"
   },
   "scripts": {
     "dev": "vite",

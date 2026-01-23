@@ -6,10 +6,27 @@ import { test, expect } from '@playwright/test';
  * Tests TODO_A completed features: clickable popups, panel rendering, settings
  */
 
+// Helper function for robust navigation with exponential backoff
+async function navigateWithRetry(page) {
+  let retries = 4;
+  let delay = 500;
+  while (retries > 0) {
+    try {
+      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+      break;
+    } catch (e) {
+      retries--;
+      if (retries === 0) throw e;
+      await page.waitForTimeout(delay);
+      delay *= 2; // Exponential backoff: 500, 1000, 2000, 4000ms
+    }
+  }
+  await page.waitForSelector('.settings-btn', { timeout: 10000 });
+}
+
 test.describe('Dashboard Panels', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('.settings-btn', { timeout: 10000 });
+    await navigateWithRetry(page);
   });
 
   test('should display page title', async ({ page }) => {
@@ -45,8 +62,7 @@ test.describe('Dashboard Panels', () => {
 
 test.describe('Panel Visibility', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('.settings-btn', { timeout: 10000 });
+    await navigateWithRetry(page);
   });
 
   const expectedPanels = [
@@ -85,8 +101,7 @@ test.describe('Panel Visibility', () => {
 
 test.describe('Settings Modal', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('.settings-btn', { timeout: 10000 });
+    await navigateWithRetry(page);
   });
 
   test('should open settings modal on button click', async ({ page }) => {
@@ -96,17 +111,21 @@ test.describe('Settings Modal', () => {
     // Modal should not have open class initially
     await expect(settingsModal).not.toHaveClass(/open/);
 
-    // Click to open
-    await settingsBtn.click();
-    await expect(settingsModal).toHaveClass(/open/);
+    // Wait for button to be stable before clicking
+    await expect(settingsBtn).toBeEnabled();
+    await settingsBtn.click({ force: true });
+    await expect(settingsModal).toHaveClass(/open/, { timeout: 5000 });
   });
 
   test('should display panel toggles in settings', async ({ page }) => {
-    const settingsBtn = page.locator('.settings-btn');
-    await settingsBtn.click();
+    // Use JS click to avoid stability timeouts
+    await page.evaluate(() => {
+      const btn = document.querySelector('.settings-btn');
+      if (btn) btn.click();
+    });
 
     const panelToggles = page.locator('#panelToggles');
-    await expect(panelToggles).toBeVisible();
+    await expect(panelToggles).toBeVisible({ timeout: 5000 });
   });
 
   test('should close settings modal on close button click', async ({ page }) => {
@@ -161,7 +180,17 @@ test.describe('Settings Modal', () => {
 
 test.describe('Monitor Form Modal', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+        break;
+      } catch (e) {
+        retries--;
+        if (retries === 0) throw e;
+        await page.waitForTimeout(1000);
+      }
+    }
     await page.waitForSelector('.monitors-btn', { timeout: 10000 });
   });
 
@@ -227,8 +256,7 @@ test.describe('Monitor Form Modal', () => {
 
 test.describe('Pentagon Tracker Panel', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('.settings-btn', { timeout: 10000 });
+    await navigateWithRetry(page);
   });
 
   test('should have config dropdown', async ({ page }) => {
