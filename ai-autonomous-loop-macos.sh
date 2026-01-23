@@ -279,8 +279,12 @@ QUALITY RULES:
 TODO.md is the source of truth.
 EOF
 
-git add .claude/settings.json CLAUDE.md || true
-git commit -m "Enforce autonomous Claude permissions" || true
+# Do not auto-commit bootstrap config by default.
+# If you want this committed automatically, set: AI_LOOP_AUTOCOMMIT_BOOTSTRAP=1
+if [ "${AI_LOOP_AUTOCOMMIT_BOOTSTRAP:-0}" = "1" ]; then
+  git add .claude/settings.json CLAUDE.md || true
+  git commit -m "Enforce autonomous Claude permissions" || true
+fi
 
 # ----------------------------
 # Main loop
@@ -398,6 +402,12 @@ EOF
   if ! git diff --quiet; then
     git add -A
     git commit -m "Copilot review $ITER"
+  fi
+
+  # Avoid generated artifacts blocking checkouts/merges.
+  # Set AI_LOOP_KEEP_ARTIFACTS=1 to retain Playwright traces, mutation reports, etc.
+  if [ "${AI_LOOP_KEEP_ARTIFACTS:-0}" != "1" ]; then
+    rm -rf "$STATE_DIR"/last.diff test-results playwright-report reports || true
   fi
 
   # ---------------- Merge ----------------
