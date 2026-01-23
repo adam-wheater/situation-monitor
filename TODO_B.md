@@ -56,12 +56,12 @@ See [TODO_A.md](./TODO_A.md) for the complete list of 23 completed features.
 | Metric | Status |
 |--------|--------|
 | Unit Tests | 341/341 passing |
-| E2E Tests | 150/150 passing (2 flaky, pass on retry) |
+| E2E Tests | 150/150 passing (1 flaky, passes on retry) |
 | Build | Successful |
-| Unit Test Duration | ~340ms |
-| E2E Test Duration | ~10.7min (with retries) |
-| Build Duration | ~193ms |
+| Unit Test Duration | ~312ms |
+| E2E Test Duration | ~1.8min (with retries) |
+| Build Duration | ~173ms |
 
-**Note:** 2 E2E tests experience intermittent failures due to modal timing but pass on retry. Run with `--retries=2` for reliable results.
+**Note:** 1 E2E test experiences intermittent failures due to modal timing but passes on retry. Run with `--retries=2` for reliable results.
 
 **Verified:** 2026-01-23
