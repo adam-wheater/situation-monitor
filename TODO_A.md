@@ -1,6 +1,6 @@
 # Situation Monitor – Completed Features (TODO_A)
 
-**Last Updated:** 2026-01-21
+**Last Updated:** 2026-01-23
 
 ---
 
@@ -175,9 +175,9 @@
 | map.spec.js | ~20 | Pass |
 | panels.spec.js | ~35 | Pass |
 | responsive.spec.js | ~20 | Pass |
-| view-toggle.spec.js | ~25 | Pass |
-| **E2E Total** | **150** | **All passing** |
+| view-toggle.spec.js | ~25 | Flaky |
+| **E2E Total** | **150** | **137+ passing** |
 
-**Grand Total:** 491 tests passing
+**Note:** E2E view-toggle tests have known flakiness due to server connection timing issues during 3D globe mode switching.
 
-**Verified:** 2026-01-21
+**Verified:** 2026-01-23

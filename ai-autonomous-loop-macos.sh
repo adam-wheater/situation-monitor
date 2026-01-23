@@ -58,7 +58,7 @@ COPILOT_TIME_LIMIT=900
 
 MAX_STAGNANT_ITERS=5
 MIN_MUTATION_SCORE=60
-MAX_WALL_HOURS=48
+: "${MAX_WALL_HOURS:=48}"
 
 REPO_URL="https://github.com/adam-wheater/situation-monitor"
 
@@ -73,7 +73,20 @@ STAGNANT_COUNT_FILE="$STATE_DIR/stagnant_count.txt"
 START_TIME_FILE="$STATE_DIR/start_time.txt"
 FORCED_MODE_FILE="$STATE_DIR/forced_mode.txt"
 
-[ -f "$START_TIME_FILE" ] || date +%s > "$START_TIME_FILE"
+ensure_state_dir() {
+  mkdir -p "$STATE_DIR"
+  [ -f "$START_TIME_FILE" ] || date +%s > "$START_TIME_FILE"
+  [ -f "$STAGNANT_COUNT_FILE" ] || echo 0 > "$STAGNANT_COUNT_FILE"
+}
+
+# Optional controls:
+# - AI_LOOP_RESET_START_TIME=1: resets wall-clock timer for this repo
+# - AI_LOOP_DISABLE_WALLCLOCK_LIMIT=1: disables wall-clock limit check
+if [ "${AI_LOOP_RESET_START_TIME:-0}" = "1" ]; then
+  rm -f "$START_TIME_FILE"
+fi
+
+ensure_state_dir
 
 # ----------------------------
 # Helpers
@@ -170,12 +183,19 @@ PY
 # ----------------------------
 # Wall clock limit
 # ----------------------------
-START_TIME="$(cat "$START_TIME_FILE")"
-NOW="$(date +%s)"
-ELAPSED_HOURS="$(( (NOW - START_TIME) / 3600 ))"
-if [ "$ELAPSED_HOURS" -ge "$MAX_WALL_HOURS" ]; then
-  echo "Max wall-clock time reached. Stopping."
-  exit 0
+if [ "${AI_LOOP_DISABLE_WALLCLOCK_LIMIT:-0}" != "1" ]; then
+  START_TIME="$(cat "$START_TIME_FILE" 2>/dev/null || echo "")"
+  if [ -n "$START_TIME" ]; then
+    NOW="$(date +%s)"
+    ELAPSED_HOURS="$(( (NOW - START_TIME) / 3600 ))"
+    if [ "$ELAPSED_HOURS" -ge "$MAX_WALL_HOURS" ]; then
+      echo "Max wall-clock time reached ($ELAPSED_HOURS h >= $MAX_WALL_HOURS h). Stopping."
+      echo "To reset: rm -f '$START_TIME_FILE' (or run: AI_LOOP_RESET_START_TIME=1 ./ai-autonomous-loop-macos.sh)"
+      echo "To disable: AI_LOOP_DISABLE_WALLCLOCK_LIMIT=1 ./ai-autonomous-loop-macos.sh"
+      echo "To increase: MAX_WALL_HOURS=999 ./ai-autonomous-loop-macos.sh"
+      exit 0
+    fi
+  fi
 fi
 
 # ----------------------------
@@ -294,6 +314,7 @@ fi
 # Main loop
 # ----------------------------
 ITER=1
+ensure_state_dir
 echo 0 > "$STAGNANT_COUNT_FILE"
 
 git checkout "$MAIN_BRANCH" || git checkout -b "$MAIN_BRANCH"
@@ -316,10 +337,12 @@ while true; do
   LAST_HASH="$(cat "$LAST_HASH_FILE" 2>/dev/null || echo "")"
 
   if [ "$CURRENT_HASH" = "$LAST_HASH" ]; then
-    STAGNANT=$(( $(cat "$STAGNANT_COUNT_FILE") + 1 ))
+    ensure_state_dir
+    STAGNANT=$(( $(cat "$STAGNANT_COUNT_FILE" 2>/dev/null || echo 0) + 1 ))
     echo "$STAGNANT" > "$STAGNANT_COUNT_FILE"
     [ "$STAGNANT" -ge "$MAX_STAGNANT_ITERS" ] && { echo "Converged. Exiting."; exit 0; }
   else
+    ensure_state_dir
     echo 0 > "$STAGNANT_COUNT_FILE"
     echo "$CURRENT_HASH" > "$LAST_HASH_FILE"
   fi

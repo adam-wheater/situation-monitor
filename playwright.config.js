@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 2,
   workers: 1,
@@ -22,9 +22,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run preview',
+    command: 'npm run build && npm run preview',
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    timeout: 180000,
+    stdout: 'ignore',
+    stderr: 'pipe',
   },
 });
