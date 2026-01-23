@@ -76,24 +76,24 @@ npx playwright test --retries=2
 
 ## Test Status
 
-**All 341 unit tests passing** (11 test files)
-**All 150 E2E tests passing** (5 test files, 2 flaky tests pass on retry)
+**All 341 unit tests passing** (11 test files, ~312ms)
+**All 150 E2E tests passing** (5 test files, 1 flaky test passes on retry)
 
 ### Unit Tests (341 tests)
 
 | Test File | Tests |
 |-----------|-------|
-| zoom-scaling.test.js | 34 |
-| inline-map.test.js | 52 |
-| data-loaders.test.js | 26 |
-| pentagon-tracker.test.js | 31 |
-| curated-venues.test.js | 19 |
-| weather-alerts.test.js | 19 |
-| overpass-layers.test.js | 41 |
-| flight-radar.test.js | 36 |
-| proxy-auth.test.js | 20 |
 | view-toggle.test.js | 19 |
+| curated-venues.test.js | 19 |
 | build-config.test.js | 44 |
+| inline-map.test.js | 52 |
+| weather-alerts.test.js | 19 |
+| pentagon-tracker.test.js | 31 |
+| overpass-layers.test.js | 41 |
+| proxy-auth.test.js | 20 |
+| flight-radar.test.js | 36 |
+| data-loaders.test.js | 26 |
+| zoom-scaling.test.js | 34 |
 
 ### E2E Tests (150 tests)
 
@@ -117,4 +117,4 @@ npx playwright test --retries=2
 | CSS | 64.69 KB | 10.95 KB |
 | JavaScript | 134.44 KB | 41.75 KB |
 
-**Build Time:** ~193ms (verified 2026-01-23)
+**Build Time:** ~173ms (verified 2026-01-23)

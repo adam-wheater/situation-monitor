@@ -16,7 +16,7 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 | Unit Tests | 341/341 | Pass |
 | E2E Tests | 150/150 | Pass |
 | Build | Successful | Pass |
-| Build Duration | 193ms | Fast |
+| Build Duration | 173ms | Fast |
 | Build Output JS | 134.44 KB (41.75 KB gzip) | OK |
 | Build Output CSS | 64.69 KB (10.95 KB gzip) | OK |
 
@@ -33,21 +33,21 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 **Result:** All 341 unit tests passing
 
 ```
- tests/unit/build-config.test.js       44 tests  Pass
- tests/unit/weather-alerts.test.js     19 tests  Pass
- tests/unit/pentagon-tracker.test.js   31 tests  Pass
- tests/unit/zoom-scaling.test.js       34 tests  Pass
- tests/unit/inline-map.test.js         52 tests  Pass
  tests/unit/view-toggle.test.js        19 tests  Pass
  tests/unit/curated-venues.test.js     19 tests  Pass
- tests/unit/data-loaders.test.js       26 tests  Pass
- tests/unit/flight-radar.test.js       36 tests  Pass
+ tests/unit/build-config.test.js       44 tests  Pass
+ tests/unit/inline-map.test.js         52 tests  Pass
+ tests/unit/weather-alerts.test.js     19 tests  Pass
+ tests/unit/pentagon-tracker.test.js   31 tests  Pass
  tests/unit/overpass-layers.test.js    41 tests  Pass
  tests/unit/proxy-auth.test.js         20 tests  Pass
+ tests/unit/flight-radar.test.js       36 tests  Pass
+ tests/unit/data-loaders.test.js       26 tests  Pass
+ tests/unit/zoom-scaling.test.js       34 tests  Pass
 ```
 
 **Test Framework:** Vitest v4.0.18
-**Execution Time:** ~340ms
+**Execution Time:** ~312ms
 
 ### 1.2 E2E Test Suite
 
@@ -62,9 +62,9 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 ```
 
 **Test Framework:** Playwright
-**Execution Time:** ~10.7 minutes (with retries)
+**Execution Time:** ~1.8 minutes (with retries)
 
-**Note:** 2 tests are flaky due to modal timing but pass on retry with `--retries=2`.
+**Note:** 1 test is flaky due to modal timing but passes on retry with `--retries=2`.
 
 ### 1.3 Production Build
 
@@ -77,7 +77,7 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 | dist/assets/main-*.js | 134.44 KB | 41.75 KB |
 
 **Build Tool:** Vite v7.3.1
-**Build Time:** 193ms
+**Build Time:** 173ms
 **Modules Transformed:** 29
 
 ---

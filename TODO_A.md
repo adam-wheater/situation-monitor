@@ -154,18 +154,18 @@
 
 | Test File | Tests | Status |
 |-----------|-------|--------|
-| zoom-scaling.test.js | 34 | Pass |
-| inline-map.test.js | 52 | Pass |
-| data-loaders.test.js | 26 | Pass |
-| pentagon-tracker.test.js | 31 | Pass |
-| curated-venues.test.js | 19 | Pass |
-| weather-alerts.test.js | 19 | Pass |
-| overpass-layers.test.js | 41 | Pass |
-| flight-radar.test.js | 36 | Pass |
-| proxy-auth.test.js | 20 | Pass |
 | view-toggle.test.js | 19 | Pass |
+| curated-venues.test.js | 19 | Pass |
 | build-config.test.js | 44 | Pass |
-| **Unit Total** | **341** | **All passing** |
+| inline-map.test.js | 52 | Pass |
+| weather-alerts.test.js | 19 | Pass |
+| pentagon-tracker.test.js | 31 | Pass |
+| overpass-layers.test.js | 41 | Pass |
+| proxy-auth.test.js | 20 | Pass |
+| flight-radar.test.js | 36 | Pass |
+| data-loaders.test.js | 26 | Pass |
+| zoom-scaling.test.js | 34 | Pass |
+| **Unit Total** | **341** | **All passing (~312ms)** |
 
 ### E2E Tests (150 tests)
 
@@ -173,11 +173,11 @@
 |-----------|-------|--------|
 | app.spec.js | 63 | Pass |
 | map.spec.js | 13 | Pass |
-| panels.spec.js | 37 | Pass |
+| panels.spec.js | 37 | Pass (1 flaky) |
 | responsive.spec.js | 14 | Pass |
 | view-toggle.spec.js | 23 | Pass |
-| **E2E Total** | **150** | **All passing** |
+| **E2E Total** | **150** | **All passing (~1.8min)** |
 
-**Note:** 2 tests are flaky due to timing but pass on retry with `--retries=2`.
+**Note:** 1 test is flaky due to modal timing but passes on retry with `--retries=2`.
 
 **Verified:** 2026-01-23
