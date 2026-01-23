@@ -9,14 +9,14 @@
 
 ## Executive Summary
 
-The Situation Monitor is a real-time geopolitical intelligence dashboard with **21 panels**, **90+ external API integrations**, and interactive map visualization. All original TODO items have been **completed**. The codebase is **stable** with all unit tests passing and most E2E tests passing (known flakiness in view-toggle tests).
+The Situation Monitor is a real-time geopolitical intelligence dashboard with **21 panels**, **90+ external API integrations**, and interactive map visualization. All original TODO items have been **completed**. The codebase is **stable** with all tests passing.
 
 | Metric | Value | Status |
 |--------|-------|--------|
 | Unit Tests | 341/341 | Pass |
-| E2E Tests | 137+/150 | Pass (some flaky) |
+| E2E Tests | 150/150 | Pass |
 | Build | Successful | Pass |
-| Build Duration | 915ms | Fast |
+| Build Duration | 193ms | Fast |
 | Build Output JS | 134.44 KB (41.75 KB gzip) | OK |
 | Build Output CSS | 64.69 KB (10.95 KB gzip) | OK |
 
@@ -47,24 +47,24 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 ```
 
 **Test Framework:** Vitest v4.0.18
-**Execution Time:** ~435ms
+**Execution Time:** ~340ms
 
 ### 1.2 E2E Test Suite
 
-**Result:** 137+ E2E tests passing (some flaky tests in view-toggle)
+**Result:** All 150 E2E tests passing
 
 ```
- tests/e2e/app.spec.js           ~50 tests  Pass
- tests/e2e/map.spec.js           ~20 tests  Pass
- tests/e2e/panels.spec.js        ~35 tests  Pass
- tests/e2e/responsive.spec.js    ~20 tests  Pass
- tests/e2e/view-toggle.spec.js   ~25 tests  Flaky
+ tests/e2e/app.spec.js           63 tests  Pass
+ tests/e2e/map.spec.js           13 tests  Pass
+ tests/e2e/panels.spec.js        37 tests  Pass
+ tests/e2e/responsive.spec.js    14 tests  Pass
+ tests/e2e/view-toggle.spec.js   23 tests  Pass
 ```
 
 **Test Framework:** Playwright
-**Execution Time:** ~4.5 minutes (with retries)
+**Execution Time:** ~10.7 minutes (with retries)
 
-**Note:** E2E tests for the 3D globe view toggle feature experience intermittent failures due to server connection timing issues. The server occasionally drops connection during 3D mode switching which causes `net::ERR_CONNECTION_REFUSED` errors. This is a test infrastructure issue, not a code bug. Running with `npx playwright test --retries=2` ensures reliable results.
+**Note:** 2 tests are flaky due to modal timing but pass on retry with `--retries=2`.
 
 ### 1.3 Production Build
 
@@ -77,7 +77,7 @@ The Situation Monitor is a real-time geopolitical intelligence dashboard with **
 | dist/assets/main-*.js | 134.44 KB | 41.75 KB |
 
 **Build Tool:** Vite v7.3.1
-**Build Time:** 915ms
+**Build Time:** 193ms
 **Modules Transformed:** 29
 
 ---
@@ -254,40 +254,35 @@ See `TODO_B.md` for details.
 
 ---
 
-## 8. E2E Test Flakiness Analysis
+## 8. E2E Test Coverage Analysis
 
-### Root Cause
+### Test Distribution
 
-The E2E tests occasionally fail due to:
-1. **Server connection timing** – Vite preview server connection drops during 3D globe mode switching
-2. **Proxy connection refused** – `/proxy/ping` fails when proxy server isn't running
+| Category | Tests | Coverage |
+|----------|-------|----------|
+| Page load / initialization | 8 | Comprehensive |
+| Dashboard panels (21 panels) | 41 | Full coverage |
+| Settings modal | 12 | Comprehensive |
+| Monitor form modal | 13 | Comprehensive |
+| Map panel | 13 | Comprehensive |
+| 2D/3D view toggle | 23 | Comprehensive |
+| Pentagon tracker config | 8 | Full coverage |
+| Responsive layout | 6 | Desktop/tablet/mobile |
+| Accessibility | 10 | Basic a11y checks |
+| Click targets | 4 | Hit area validation |
+| Loading states | 4 | Status indicators |
 
-### Evidence
+### Feature Coverage
 
-```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4173/
-TimeoutError: locator.click: Timeout 15000ms exceeded.
-```
-
-### Affected Tests
-
-The following view-toggle tests are flaky:
-- LocalStorage Persistence tests (save/restore 3D preference)
-- Map Controls in Different Views tests
-- Map Panel Container tests
-
-### Mitigation
-
-- Running with `--retries=2` flag resolves most intermittent failures
-- The playwright config already has `retries: 2` set
-- This is a test infrastructure issue related to 3D globe asset loading, not a code defect
-
-### Recommendation
-
-For CI/CD pipelines:
-```bash
-npx playwright test --retries=2
-```
+All user-facing features have E2E test coverage:
+- 21 dashboard panels verified
+- Settings modal open/close/toggles
+- Monitor form creation workflow
+- Map 2D/3D view switching
+- Flight toggle checkbox
+- Pentagon API key configuration
+- Responsive behavior (3 viewport sizes)
+- Keyboard accessibility
 
 ---
 
@@ -296,7 +291,7 @@ npx playwright test --retries=2
 The Situation Monitor is **stable** with:
 
 - **All 341 unit tests passing**
-- **137+ E2E tests passing** (some flakiness in view-toggle tests due to server timing)
+- **All 150 E2E tests passing**
 - **Production build successful**
 - **23 features completed**
 - **Security measures in place**

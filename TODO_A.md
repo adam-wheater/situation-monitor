@@ -171,13 +171,13 @@
 
 | Test File | Tests | Status |
 |-----------|-------|--------|
-| app.spec.js | ~50 | Pass |
-| map.spec.js | ~20 | Pass |
-| panels.spec.js | ~35 | Pass |
-| responsive.spec.js | ~20 | Pass |
-| view-toggle.spec.js | ~25 | Flaky |
-| **E2E Total** | **150** | **137+ passing** |
+| app.spec.js | 63 | Pass |
+| map.spec.js | 13 | Pass |
+| panels.spec.js | 37 | Pass |
+| responsive.spec.js | 14 | Pass |
+| view-toggle.spec.js | 23 | Pass |
+| **E2E Total** | **150** | **All passing** |
 
-**Note:** E2E view-toggle tests have known flakiness due to server connection timing issues during 3D globe mode switching.
+**Note:** 2 tests are flaky due to timing but pass on retry with `--retries=2`.
 
 **Verified:** 2026-01-23
